@@ -9,13 +9,13 @@ const swatches: Array<{ name: string; hex: string; note: string }> = [
   { name: "ink-800", hex: "#0D0F14", note: "raised surface" },
   { name: "ink-700", hex: "#141821", note: "card / panel" },
   { name: "ink-500", hex: "#2A313B", note: "hairline" },
-  { name: "ink-300", hex: "#8A929C", note: "muted text — 6.33:1 on ink-900" },
-  { name: "ink-100", hex: "#E8EBEF", note: "body text — 16.66:1 on ink-900" },
-  { name: "ink-000", hex: "#F7F9FB", note: "display text — 18.87:1 on ink-900" },
+  { name: "ink-300", hex: "#8A929C", note: "muted text, 6.33:1 on ink-900" },
+  { name: "ink-100", hex: "#E8EBEF", note: "body text, 16.66:1 on ink-900" },
+  { name: "ink-000", hex: "#F7F9FB", note: "display text, 18.87:1 on ink-900" },
   { name: "blue-800", hex: "#273669", note: "brand navy, exact. Fills only" },
   { name: "blue-600", hex: "#445EA5", note: "brand royal, exact. Fills, large text, borders" },
-  { name: "blue-400", hex: "#5B78BE", note: "interactive text — 4.62:1 on ink-900" },
-  { name: "blue-300", hex: "#7E97DC", note: "hover / focus — 6.97:1 on ink-900" },
+  { name: "blue-400", hex: "#5B78BE", note: "interactive text, 4.62:1 on ink-900" },
+  { name: "blue-300", hex: "#7E97DC", note: "hover / focus, 6.97:1 on ink-900" },
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -35,7 +35,7 @@ export default function StyleguidePage() {
       <Container>
         <div className="py-16">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-blue-400">
-            PRD section 6 — internal review
+            PRD section 6, internal review
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold text-ink-000">
             Design system
@@ -44,7 +44,7 @@ export default function StyleguidePage() {
 
         <Hairline />
 
-        <Section title="Colour — PRD 6.2">
+        <Section title="Colour (PRD 6.2)">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {swatches.map((s) => (
               <div key={s.name} className="rounded-panel border border-ink-500">
@@ -68,7 +68,7 @@ export default function StyleguidePage() {
 
         <Hairline />
 
-        <Section title="Typography — PRD 6.3">
+        <Section title="Typography (PRD 6.3)">
           <div className="flex flex-col gap-6">
             <div>
               <p className="mb-2 font-mono text-xs text-ink-300">Display / Space Grotesk 600</p>
@@ -85,7 +85,7 @@ export default function StyleguidePage() {
             <div>
               <p className="mb-2 font-mono text-xs text-ink-300">Mono / IBM Plex Mono 500</p>
               <p className="font-mono text-sm tracking-wide text-blue-400">
-                07°15&apos;S / 112°45&apos;E — SURABAYA — 2026
+                07°15&apos;S / 112°45&apos;E, SURABAYA, 2026
               </p>
             </div>
           </div>

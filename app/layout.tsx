@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 // Self-hosted via next/font (PRD 6.3) — no render-blocking Google Fonts
@@ -35,7 +37,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Spatial Analysis & Transportation Laboratory",
-    template: "%s — Spatial Analysis & Transportation Laboratory",
+    template: "%s - Spatial Analysis & Transportation Laboratory",
   },
   description:
     "Research laboratory in the Department of Urban and Regional Planning, Institut Teknologi Sepuluh Nopember (ITS), Surabaya. Spatial analysis, transportation, and decision support research.",
@@ -46,7 +48,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body className="flex min-h-[100dvh] flex-col">
+        <Header />
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </body>
     </html>
   );
 }
