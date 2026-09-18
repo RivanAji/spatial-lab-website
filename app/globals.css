@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — PRD section 6 (Design System).
+ *
+ * Brand anchors #273669 (navy) and #445EA5 (royal) are sampled exactly from
+ * the lab logo and are reserved for fills, borders and large text. Neither
+ * survives as small text on the near-black ground (1.72:1 and 3.22:1), so
+ * --blue-400 / --blue-300 are a derived ramp at the same hue that carries
+ * body-size interactive text at 4.62:1 and 6.97:1. See PRD 6.2 for the
+ * measured contrast table — do not "simplify" this ramp back to the two
+ * brand values, that is the bug this ramp exists to avoid.
+ */
+@theme {
+  /* These resolve through the --display-font / --body-font / --mono-font
+     custom properties that next/font injects on <html> in layout.tsx.
+     Fallback stacks below only apply if next/font fails to load. */
+  --font-display: var(--display-font), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--body-font), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--mono-font), ui-monospace, "SFMono-Regular", monospace;
+
+  --color-ink-900: #08090b;
+  --color-ink-800: #0d0f14;
+  --color-ink-700: #141821;
+  --color-ink-600: #1e2430;
+  --color-ink-500: #2a313b;
+  --color-ink-300: #8a929c;
+  --color-ink-100: #e8ebef;
+  --color-ink-000: #f7f9fb;
+
+  --color-blue-900: #141c35;
+  --color-blue-800: #273669;
+  --color-blue-600: #445ea5;
+  --color-blue-400: #5b78be;
+  --color-blue-300: #7e97dc;
+
+  --radius-control: 3px;
+  --radius-panel: 4px;
+}
+
+@media (prefers-color-scheme: light) {
+  /* The site is dark-mode-first and locks to one theme (PRD 6.2). No light
+     palette is defined; a light-mode override would need its own token
+     pass, not a quick invert. */
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ink-900);
+  color: var(--color-ink-100);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--color-blue-600);
+  color: var(--color-ink-000);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-blue-300);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
