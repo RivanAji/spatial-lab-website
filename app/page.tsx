@@ -1,17 +1,12 @@
-// Placeholder — Phase 1 scope is the deploy pipeline, not page content.
-// Real homepage sections land in Phase 4 (PRD section 9).
+import { Hero } from "@/components/hero/Hero";
+
+// Homepage. Research Teams, Research Archive, and Footer land in Phase 4
+// (PRD section 9) — this is Phase 3's hero, built and reviewed on its own
+// first because it's the highest-risk, highest-value piece (PRD Phase 3).
 export default function Home() {
   return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-300">
-        Phase 1 — pipeline check
-      </p>
-      <h1 className="font-display text-3xl font-semibold text-ink-000">
-        Spatial Analysis &amp; Transportation Laboratory
-      </h1>
-      <p className="max-w-md font-body text-sm text-ink-300">
-        If this deployed automatically after a push to main, the pipeline works.
-      </p>
+    <main className="min-h-[100dvh]">
+      <Hero />
     </main>
   );
 }

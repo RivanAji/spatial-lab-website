@@ -36,6 +36,23 @@
 
   --radius-control: 3px;
   --radius-panel: 4px;
+
+  /* Idle pulse on the Surabaya locator only (PRD 6.5) — approved,
+     motivated motion: storytelling for the lab's own location. Gated by
+     motion-safe: in HeroCanvas.tsx, so prefers-reduced-motion drops it. */
+  --animate-locator-pulse: locator-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes locator-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
 }
 
 @media (prefers-color-scheme: light) {
