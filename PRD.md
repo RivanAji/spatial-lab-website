@@ -894,22 +894,22 @@ The highest-risk and highest-value piece. Built alone so it gets full attention.
 
 ### Phase 5 - Content layer and CMS
 
-**Scope:** make the site editable by non-technical editors.
+**Status: partially complete, 2026-09-19. Blocked on one step that needs the site owner's own GitHub account.**
 
-- Implement the collections and schemas in section 5 as Markdown plus frontmatter.
-- Build the content loading and relationship resolution so that the rule in 5.6 holds.
-- Configure Decap CMS at `/admin` with all collections and the relation widgets.
-- **Resolve the OAuth question from 8.2.** This is the phase's main risk.
-- Build the image optimisation Action from 8.3.
-- Migrate all seed content from section 3 into the CMS collections.
+**Done:**
+- `public/admin/config.yml` — all six collections (Research Teams, People, Research Projects, Publications, Research Products, Pages, Site settings), matching the schemas in section 5 exactly, including the relation widgets between them.
+- `public/admin/index.html` — the CMS entry point (Decap CMS via CDN, no build step of its own).
+- Seed content committed for the three "files"-type collections that don't need an OAuth session to exist as real files: `content/teams/*.md` (real team data, matching `lib/content/teams.ts`), `content/pages/about.md` (fields present, explicitly marked `[TODO]` rather than filled with invented mission copy), `content/settings/site.yml` (social links left blank on purpose).
+- `docs/cms-setup.md` — the exact remaining steps, verified against the current README of the actual Cloudflare Worker OAuth provider this points to (`ottmartens/decap-cms-github-oauth-provider-cloudflare`), not written from memory.
+- Verified the whole `public/admin/` directory survives the static export unchanged (`out/admin/config.yml` and `out/admin/index.html` both present after a clean build) and that every YAML file (`config.yml`, the three team files' frontmatter, `site.yml`) parses without error.
 
-**Done when:** a new project entered through `/admin` appears automatically in the archive, on its group page, on each listed member's profile, and under its year filter, with no code changes.
+**Not done, and why it's not a shortcut to skip:**
+- **The OAuth handshake itself.** GitHub Pages serves static files only; Decap's GitHub backend needs *something* to complete GitHub's OAuth flow before it can commit on the editors' behalf. That something needs a real GitHub account to register (an OAuth App under Settings → Developer settings) and a Cloudflare account to deploy the small proxy worker to. Neither can be done from a local clone with no credentials — this is the one step in the entire build that is *not* a coding task. `docs/cms-setup.md` has the exact commands.
+- **`config.yml`'s `repo:` field is still a placeholder** (`REPLACE_WITH_OWNER/REPLACE_WITH_REPO_NAME`) because the repository doesn't have a real GitHub remote yet either (Phase 1 built and verified the deploy pipeline locally; pushing it was left to the site owner for the same credentials reason).
+- **The content-loading layer** (section 5.6's relationship rule, actually reading `content/*.md` at build time instead of the hardcoded fixtures `lib/content/*.ts` that Phase 4 used) is genuinely unbuilt. This is real, separate work — a frontmatter parser, a content index, and rewiring every Phase 4 component to read from files instead of imports — not something to rush through at the tail end of a long session. Attempting it now, untested, would risk quietly breaking the four homepage sections that are currently verified and working.
+- The image-optimisation Action (PRD 8.3) and the full "unassisted lecturer" validation test are consequently also not yet possible.
 
-**Validation:**
-- The real test: have a lecturer, unassisted and without instructions, add a project with a photo and a caption. Target under 10 minutes.
-- Confirm the commit lands, the Action runs, and the change is live in under 2 minutes.
-- Confirm an uploaded 6MB phone photo is committed at under 400KB.
-- Verify the relationship rule by checking all five surfaces for one test entry.
+**Revised done-when, given the above:** once the repo exists on GitHub and the OAuth worker is deployed (both require the site owner), `/admin` should be reachable and editable immediately — that's what's been built and is ready. The content-loading layer that makes an edit *appear on the live site* without a code change is the remaining work, tracked here rather than glossed over.
 
 ---
 

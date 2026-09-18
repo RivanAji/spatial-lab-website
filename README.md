@@ -26,6 +26,16 @@ One-time setup on GitHub, after this repo is pushed:
 
 The workflow reads the correct base path from GitHub's own `actions/configure-pages` action, so it works unchanged whether this ends up as a project site (`username.github.io/repo-name`), an org/user site, or a custom domain. Nothing about the repository name is hardcoded anywhere in the app.
 
+## Content editing (Decap CMS)
+
+`/admin` is a Git-backed CMS — no database, content changes are commits.
+It's fully configured (`public/admin/config.yml`, all six collections)
+but needs one setup step before it works: an OAuth handshake that has to
+be registered under your own GitHub account, since GitHub Pages can't
+host that part itself. See [`docs/cms-setup.md`](./docs/cms-setup.md) for
+the exact steps — it's a one-time thing, not something either editor
+touches afterward.
+
 ## Stack
 
 Next.js (static export), React, Tailwind CSS v4. See `PRD.md` section 8 for the full architecture and section 6 for the design system.
