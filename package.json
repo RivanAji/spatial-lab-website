@@ -7,7 +7,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "build:map": "node scripts/build-map-grid.mjs"
+    "build:map": "node scripts/build-map-grid.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs"
   },
   "type": "module",
   "dependencies": {
