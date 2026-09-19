@@ -434,13 +434,24 @@ export function PublicationsShowcase(): ReactNode {
   );
 }
 
+// Title above the image, truncated with an ellipsis at 2 lines (CSS
+// line-clamp, not a manual word-slice — so it always breaks cleanly at
+// a word boundary regardless of title length), year and author small
+// below. No team label (site owner's request, 2026-09-19: "gaperlu ada
+// keterangan ini masuk decision support and climate... bikin terlalu
+// padat") — a card in a team-filtered slider naming its own team on
+// every card was redundant with the filter that put it there, and it
+// was the single densest line on the card.
 function PublicationCard({ publication }: { publication: (typeof publications)[number] }) {
-  const team = teams.find((t) => t.slug === publication.team);
   return (
     <Link
       href={`/publications/${publication.slug}`}
-      className="group flex w-72 flex-shrink-0 snap-start flex-col gap-4 sm:w-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className="group flex w-72 flex-shrink-0 snap-start flex-col gap-3 sm:w-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
+      <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-000">
+        {publication.title}
+      </h3>
+
       {/* Honest empty slot when no coverImage is set — see this file's
           top comment and lib/content/types.ts. Never a stock photo
           standing in for a real one. */}
@@ -455,14 +466,10 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
           />
         )}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <p className="font-mono text-xs text-ink-300">
-          {publication.year} · {team?.displayName}
-        </p>
-        <h3 className="font-display text-base font-semibold leading-snug text-ink-000">
-          {publication.title}
-        </h3>
-        <p className="font-body text-sm text-ink-300">{publication.authors}</p>
+
+      <div className="flex items-baseline gap-2">
+        <p className="font-mono text-xs text-ink-300">{publication.year}</p>
+        <p className="font-body text-xs text-ink-300">{publication.authors}</p>
       </div>
     </Link>
   );
@@ -478,11 +485,43 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
 // (see globals.css's --animate-travel-path comment) — Motion animates
 // natively without issue.
 //
-// Sized at roughly half the previous card's width, with every font size
-// stepped down to match: the site owner's own budget for this ("kurangi
-// 50% lebarnya... optimalkan dengan memperkecil fontnya") was explicitly
-// about making room for the hero, this row, and what's below it to all
-// read as visible together on first load, not just a cosmetic shrink.
+// Refined a second time the same day: the site owner's exact words were
+// "animasinya masih terlihat AI Slop" (still reads as AI slop) even
+// with the flip itself working. Three concrete craft fixes, not a
+// change of concept (the flip stays; that was an explicit direction
+// this same day):
+// - `perspective` raised from 1000 to 1800: a shallow perspective value
+//   exaggerates the fisheye distortion on the card's edges mid-rotation,
+//   which is exactly the "cheap CSS-tutorial flip-card" tell. A larger
+//   value flattens that distortion, closer to how a real object turning
+//   at a distance would actually look.
+// - `scale` now dips slightly (1 -> 0.94 -> 1) alongside the rotation
+//   instead of rotateY alone — a flat rotation with no other motion
+//   reads as a mechanical hinge; a small lift-and-settle reads as a
+//   card actually being turned. This is the same physical-motion
+//   principle behind the hero canvas's pointer parallax and the travel-
+//   path markers elsewhere in this file, applied here instead of left
+//   as the one un-crafted motion moment in the section.
+// - Faster, at 0.4s: a slow rotation on an element this small (now
+//   roughly half its previous height, see below) reads as sluggish,
+//   which is its own kind of over-animated-for-no-reason tell (core
+//   antislop R-19 — motion must have a purpose, and "make a small card
+//   feel weighty" isn't one).
+//
+// Height halved (site owner: "tingginya aja yang dikurangi 50%, jadi
+// lebih tipis") — width stays, since the site owner separately
+// confirmed the width was already right. Front-face content re-laid
+// out for the flatter shape (tight stack, not spread top/bottom — there
+// isn't room to spread across ~90px any more) and the back face's
+// illustration shrunk and its tagline clamped to 3 lines so nothing
+// overflows a face this short.
+//
+// Radius: both faces share one value (rounded-xl, 12px) rather than the
+// previous rounded-2xl (16px) — at half the height a 16px radius reads
+// disproportionately large relative to the card's own corners, which is
+// its own small inconsistency; 12px is the value that still reads soft
+// (matching the rest of this section) without looking oversized on a
+// card this flat.
 function TeamFilterCard({
   team,
   Illustration,
@@ -513,27 +552,27 @@ function TeamFilterCard({
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      style={{ perspective: 1000 }}
-      className="h-44 w-40 shrink-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-48 sm:w-44"
+      style={{ perspective: 1800 }}
+      className="h-[88px] w-40 shrink-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-24 sm:w-44"
     >
       <motion.div
         className="relative h-full w-full"
         style={{ transformStyle: "preserve-3d" }}
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        transition={{ duration: reducedMotion ? 0 : 0.55, ease: EASE }}
+        animate={{ rotateY: flipped ? 180 : 0, scale: reducedMotion ? 1 : [1, 0.94, 1] }}
+        transition={{ duration: reducedMotion ? 0 : 0.4, ease: EASE }}
       >
         {/* Front */}
         <div
           style={{ backfaceVisibility: "hidden" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border bg-ink-900 p-4 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
-          <p className="font-mono text-[10px] text-ink-300">
+          <p className="font-mono text-[9px] text-ink-300">
             {String(team.number).padStart(2, "0")}
           </p>
-          <h3 className="font-display text-sm font-semibold leading-snug text-ink-000">
+          <h3 className="line-clamp-3 font-display text-xs font-semibold leading-snug text-ink-000">
             {team.name}
           </h3>
         </div>
@@ -542,14 +581,16 @@ function TeamFilterCard({
         <div
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border bg-ink-900 p-4 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
-          <div aria-hidden="true" className="h-14 w-full text-ink-100">
+          <div aria-hidden="true" className="h-6 w-full text-ink-100">
             <Illustration playing={playing} />
           </div>
-          <p className="font-body text-xs leading-snug text-ink-300">{team.tagline}</p>
+          <p className="line-clamp-3 font-body text-[10px] leading-snug text-ink-300">
+            {team.tagline}
+          </p>
         </div>
       </motion.div>
     </button>
