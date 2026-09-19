@@ -1,4 +1,5 @@
 import { Hero } from "@/components/hero/Hero";
+import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
 import { ResearchArchive } from "@/components/sections/ResearchArchive";
 import { Hairline } from "@/components/ui/Hairline";
@@ -11,6 +12,18 @@ import { Container } from "@/components/ui/Container";
 // rather than a separate page section — that's what makes it reachable
 // without a full scroll, which was the point of shrinking the hero in the
 // first place.
+//
+// Hero and Publications share one wrapper (2026-09-19, second pass): the
+// site owner's own words were that the team-card row and the publications
+// slider are "juga masih bagian dari hero" (still part of the hero) —
+// visually one continuous unit with the flag backdrop running behind
+// both, matching how rbp-portfolio.vercel.app's own backdrop fills the
+// whole first screen rather than just the headline area. `relative
+// overflow-hidden` here (not on Hero's own <section> any more) is what
+// lets HeroBackdrop's `absolute inset-0` size itself against the two
+// sections' real combined height instead of a guessed pixel value — see
+// HeroBackdrop.tsx's own comment for the fuller story of why a fixed
+// height kept being wrong.
 //
 // The separate Research Teams section (asymmetric trio panel, PRD 7.3)
 // was removed the same day per the site owner's direct request — its job
@@ -27,8 +40,11 @@ import { Container } from "@/components/ui/Container";
 export default function Home() {
   return (
     <main>
-      <Hero />
-      <PublicationsShowcase />
+      <div className="relative overflow-hidden">
+        <HeroBackdrop />
+        <Hero />
+        <PublicationsShowcase />
+      </div>
       <Container>
         <Hairline />
       </Container>

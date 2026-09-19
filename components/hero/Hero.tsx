@@ -1,6 +1,5 @@
 import { Container } from "@/components/ui/Container";
 import { HeroCanvas } from "./HeroCanvas";
-import { HeroBackdrop } from "./HeroBackdrop";
 import { HeroCtas } from "./HeroCtas";
 
 // Content is fixed by the brief (section 3.4) and PRD 7.2 — not placeholder
@@ -27,15 +26,17 @@ import { HeroCtas } from "./HeroCtas";
 // Visual container: the ASCII map sits in a square card (rounded-4xl,
 // soft border, inset padding, gentle shadow) matching the reference
 // this whole redesign follows, https://github.com/DavidHDev/rbp-portfolio
-// (its own hero visual uses the same frame). HeroBackdrop is that
-// reference's WebGL flow shader, scoped to this section. Nav is `fixed`
-// and out of document flow (components/layout/Header.tsx), so this
-// section carries its own top clearance instead of relying on a
+// (its own hero visual uses the same frame). The WebGL flow shader
+// ("HeroBackdrop") that used to render here directly moved up to
+// app/page.tsx (2026-09-19, second pass) so it can be sized against
+// this section's AND PublicationsShowcase's combined height instead of
+// just this one — see HeroBackdrop.tsx's own comment for why. Nav is
+// `fixed` and out of document flow (components/layout/Header.tsx), so
+// this section carries its own top clearance instead of relying on a
 // document-flow header bar.
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-6 pt-20 md:pb-8 md:pt-24">
-      <HeroBackdrop />
+    <section className="pb-6 pt-20 md:pb-8 md:pt-24">
       <Container>
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-6">
           <div className="flex flex-col gap-4">
