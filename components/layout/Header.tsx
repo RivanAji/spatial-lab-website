@@ -19,11 +19,18 @@ import logo from "@/public/brand/logo-white.png";
 // — this project had been drifting toward that anyway through this
 // whole redesign; this is the site owner making it explicit.
 //
-// The ITS mark beside it is the university's own official logo, fetched
-// directly from its.ac.id's own site header (not a third-party source)
-// and recoloured the same way: the source SVG uses exactly one fill
-// colour (#187DC2), so swapping it for white is a faithful, lossless
-// recolour of the same shapes, not a redraw.
+// The ITS institutional mark (also recoloured white, same source and
+// method) sits in this header's own top-right corner, mirroring the lab
+// mark's top-left position — both stay visible on scroll.
+//
+// Vertical alignment (2026-09-19): the lab mark, nav pill and ITS mark
+// used to be three independently `fixed` elements each pinned at the
+// same `top-*` value — which lines up their boxes' tops, not their
+// visual centres, since the nav pill is taller than either logo once
+// its own padding is counted. Replaced with one fixed 3-column grid bar
+// (`items-center`) so all three sit on a true shared centreline
+// regardless of each child's own height, instead of hand-tuning offsets
+// per child to fake the same result.
 
 // Replaces the earlier ThreeUI AnimatedTopDock per the site owner's
 // direction (2026-09-19): "keep the dock concept, drop the boxed-item
@@ -84,7 +91,7 @@ function DesktopNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed left-1/2 top-5 z-50 hidden -translate-x-1/2 md:block"
+      className="hidden md:block"
       onMouseLeave={() => {
         setHovered(null);
         updateIndicator(pathname ?? null);
@@ -132,29 +139,41 @@ export function Header() {
 
   return (
     <header>
-      {/* Small brand mark, independent of the centred nav pill — the
-          reference has no logo (personal-name site), but this project
-          still needs one visible; a separate mark beside a centred
-          pill is a common enough pairing that it doesn't fight the
-          minimal language. The ITS mark sits beside the lab's own,
-          separated by a hairline rather than merged into one image, so
-          each stays a distinct, real logo rather than a combined lockup
-          this project has no authority to invent. */}
-      <Link
-        href="/"
-        aria-label="Spatial Analysis & Transportation Laboratory, home"
-        className="fixed left-6 top-5 z-50 hidden items-center gap-3 md:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
-      >
-        <Image src={logo} alt="" priority height={32} className="h-8 w-auto" />
-        <span aria-hidden="true" className="h-6 w-px bg-white/15" />
+      {/* Desktop: one fixed 3-column grid bar (logo / nav / logo) instead
+          of three separately `fixed` elements each guessing at a `top`
+          offset — `items-center` gives the lab mark, nav pill and ITS
+          mark a genuine shared centreline no matter how tall the pill's
+          own padding makes it, which three independent fixed offsets
+          could only ever approximate. */}
+      <div className="fixed inset-x-0 top-0 z-50 hidden h-20 items-center px-6 md:grid md:grid-cols-[1fr_auto_1fr]">
+        {/* Small brand mark, independent of the centred nav pill — the
+            reference has no logo (personal-name site), but this project
+            still needs one visible; a separate mark beside a centred
+            pill is a common enough pairing that it doesn't fight the
+            minimal language. */}
+        <Link
+          href="/"
+          aria-label="Spatial Analysis & Transportation Laboratory, home"
+          className="justify-self-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
+        >
+          <Image src={logo} alt="" priority height={32} className="h-8 w-auto" />
+        </Link>
+
+        <DesktopNav />
+
+        {/* ITS institutional mark, the header's own top-right corner
+            (2026-09-19: briefly tried scoping this to the hero's content
+            flow instead, so it would scroll away; the site owner's
+            actual ask was the header's corner, not the hero's —
+            corrected here). Same size as the lab mark, same recolour
+            method (source SVG uses one fill colour, #187DC2, swapped for
+            white losslessly). */}
         <img
           src="/brand/its-logo-white.svg"
           alt="Institut Teknologi Sepuluh Nopember"
-          className="h-6 w-auto opacity-90"
+          className="h-8 w-auto justify-self-end opacity-90"
         />
-      </Link>
-
-      <DesktopNav />
+      </div>
 
       {/* Mobile: unchanged in-flow bar (the floating pill's fixed-width
           items were never going to fit four labels plus a logo at
