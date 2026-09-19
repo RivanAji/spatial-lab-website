@@ -15,7 +15,11 @@ export function ResearchTeams() {
   const [team01, team02, team03] = teams;
 
   return (
-    <section className="py-20 md:py-28">
+    // id + scroll-mt: the hero's "Explore Research" CTA (HeroCtas.tsx)
+    // scrolls here via #research. scroll-mt-24 keeps the section from
+    // landing directly under the fixed nav pill (components/layout/
+    // Header.tsx), which would otherwise cover its heading.
+    <section id="research" className="scroll-mt-24 py-20 md:py-28">
       <Container>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.5fr_1fr] lg:grid-rows-2">
           <TeamPanel team={team01} lead className="lg:row-span-2" />

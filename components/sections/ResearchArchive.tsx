@@ -48,8 +48,15 @@ export function ResearchArchive() {
     <section className="py-20 md:py-28">
       <Container>
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <h2 className="font-display text-3xl font-semibold uppercase text-ink-000 md:text-4xl">
-            Research Archive
+          {/* The one selective Fraunces moment on the page (2026-09-19),
+              matching how the reference uses it — its own equivalent
+              section heading ("My projects") is the only place font-serif
+              appears in that whole codebase. Sentence case, not the
+              uppercase-tracked treatment used elsewhere (hero H1, team
+              panels): forcing tracked caps onto a serif with soft,
+              warm letterforms defeats the point of reaching for it here. */}
+          <h2 className="font-serif text-3xl font-medium text-ink-000 md:text-4xl">
+            Research archive
           </h2>
 
           <div className="flex flex-col gap-4">

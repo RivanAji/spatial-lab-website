@@ -12,12 +12,23 @@
  * brand values, that is the bug this ramp exists to avoid.
  */
 @theme {
-  /* These resolve through the --display-font / --body-font / --mono-font
+  /* These resolve through the --sans-font / --mono-font / --serif-font
      custom properties that next/font injects on <html> in layout.tsx.
-     Fallback stacks below only apply if next/font fails to load. */
-  --font-display: var(--display-font), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--body-font), ui-sans-serif, system-ui, sans-serif;
+     Fallback stacks below only apply if next/font fails to load.
+     `font-display` and `font-body` are kept as two utility names for one
+     value on purpose (2026-09-19): the reference this matches
+     (github.com/DavidHDev/rbp-portfolio) uses a single Geist Sans face
+     for both headings and body copy, sized and weighted for hierarchy
+     rather than switched between two type families. Keeping both
+     Tailwind utility names avoids touching every className across the
+     codebase that already says font-display or font-body — only the
+     font itself changed, not which elements use "the heading font" vs
+     "the body font". font-serif is new: Fraunces, reserved for the rare,
+     selective display accent the reference uses on section headlines. */
+  --font-display: var(--sans-font), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--sans-font), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--mono-font), ui-monospace, "SFMono-Regular", monospace;
+  --font-serif: var(--serif-font), Georgia, serif;
 
   --color-ink-900: #08090b;
   --color-ink-800: #0d0f14;
@@ -63,6 +74,13 @@
 
 html {
   color-scheme: dark;
+  /* components/shaders/shader-flow.tsx (kept verbatim from its source,
+     see that file's header comment) reads a plain --background variable
+     to know what colour to fade its canvas out to. This project's own
+     background token is --color-ink-900 (Tailwind's @theme convention);
+     this is an alias so the vendored shader works unmodified rather than
+     hand-editing the CSS variable name inside it. */
+  --background: var(--color-ink-900);
 }
 
 body {
@@ -74,6 +92,16 @@ body {
 ::selection {
   background: var(--color-blue-600);
   color: var(--color-ink-000);
+}
+
+/* The "Explore Research" hero CTA scrolls to #research (HeroCtas.tsx)
+   rather than navigating to a route. Smooth scrolling is gated behind
+   prefers-reduced-motion like every other motion in this project — under
+   reduced motion the anchor still jumps, just instantly. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 :focus-visible {

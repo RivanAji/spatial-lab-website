@@ -1,22 +1,27 @@
-import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { HeroCanvas } from "./HeroCanvas";
+import { HeroBackdrop } from "./HeroBackdrop";
+import { HeroCtas } from "./HeroCtas";
+import { TeamsTeaser } from "./TeamsTeaser";
 
 // Content is fixed by the brief (section 3.4) and PRD 7.2 — not placeholder
-// copy, the actual launch copy. Exactly three text elements in the stack
-// (headline, subtext, CTA): no eyebrow, no trust strip, no tagline under
-// the CTA (PRD 6.6 / hero stack discipline).
+// copy, the actual launch copy. Headline/subtext/CTA row stays the
+// disciplined three-element stack (PRD 6.6) — the teams teaser added
+// 2026-09-19 is a distinct structural block below that stack, not a
+// fourth text element competing with it.
 //
-// Visual container updated 2026-09-19: the ASCII map now sits in a square
-// card (rounded-4xl, soft border, inset padding, gentle shadow) rather
-// than an uncontained wide composition — the exact recipe read off
-// https://rbp-portfolio.vercel.app's own hero visual (a canvas, framed
-// the same way), which this redesign follows. Nav is now `fixed` and out
-// of document flow (components/layout/Header.tsx), so this section carries
-// its own top clearance instead of relying on a document-flow header bar.
+// Visual container: the ASCII map sits in a square card (rounded-4xl,
+// soft border, inset padding, gentle shadow) matching the reference
+// this whole redesign follows, https://github.com/DavidHDev/rbp-portfolio
+// (its own hero visual uses the same frame). HeroBackdrop is that
+// reference's WebGL flow shader, scoped to this section. Nav is `fixed`
+// and out of document flow (components/layout/Header.tsx), so this
+// section carries its own top clearance instead of relying on a
+// document-flow header bar.
 export function Hero() {
   return (
     <section className="relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-32">
+      <HeroBackdrop />
       <Container>
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-8">
           <div className="flex flex-col gap-7">
@@ -35,9 +40,7 @@ export function Hero() {
               Exploring cities through space, mobility, data and intelligent
               systems.
             </p>
-            <div>
-              <Button href="/research">Explore Research</Button>
-            </div>
+            <HeroCtas />
           </div>
 
           {/* Being second in source order, this sits below the headline
@@ -52,6 +55,10 @@ export function Hero() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-16 md:mt-20">
+          <TeamsTeaser />
         </div>
       </Container>
     </section>
