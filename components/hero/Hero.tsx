@@ -1,6 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { HeroCanvas } from "./HeroCanvas";
 import { HeroCtas } from "./HeroCtas";
+import { GRID_COLS, GRID_ROWS } from "@/data/asia-grid";
 
 // Content is fixed by the brief (section 3.4) and PRD 7.2 — not placeholder
 // copy, the actual launch copy. Headline/subtext/CTA row is the disciplined
@@ -17,28 +18,43 @@ import { HeroCtas } from "./HeroCtas";
 // headline, subtext and map visual to all read smaller still, so that on
 // first load the hero, the publications team-card row, and some of what's
 // below it are all visible together without a full scroll. Type scale
-// stepped down one notch each (h1, subtext), the map's container shrunk
-// from max-w-105 (420px) to max-w-64/72 (256/288px, it's a square so
-// height follows width automatically — see HeroCanvas.tsx's
-// aspect-square), and top/bottom padding tightened further on top of the
-// first pass's reduction.
+// stepped down one notch each (h1, subtext), and top/bottom padding
+// tightened further on top of the first pass's reduction.
 //
-// Visual container: the ASCII map sits in a square card (rounded-4xl,
-// soft border, inset padding, gentle shadow) matching the reference
-// this whole redesign follows, https://github.com/DavidHDev/rbp-portfolio
-// (its own hero visual uses the same frame). The WebGL flow shader
-// ("HeroBackdrop") that used to render here directly moved up to
-// app/page.tsx (2026-09-19, second pass) so it can be sized against
-// this section's AND PublicationsShowcase's combined height instead of
-// just this one — see HeroBackdrop.tsx's own comment for why. Nav is
-// `fixed` and out of document flow (components/layout/Header.tsx), so
-// this section carries its own top clearance instead of relying on a
+// Visual container no longer forces a square (2026-09-19, third pass):
+// the map's real aspect ratio (GRID_COLS x GRID_ROWS, currently
+// 96x63 — see scripts/build-map-grid.mjs) isn't 1:1, and squeezing it
+// into a square card was letterboxing it (empty bands top and bottom)
+// once HeroCanvas.tsx started respecting that real ratio instead of
+// distorting the map to fill a square. Rather than crop the map or
+// force the distortion back, the card's HEIGHT now matches this
+// column's actual sibling — the headline/subtext/CTA stack — via
+// `md:items-stretch` on the grid row and `md:h-full` here, with the
+// card's WIDTH derived from that height through the same GRID_COLS/
+// GRID_ROWS ratio (an inline `aspectRatio`, not a hand-typed class, so
+// it can't drift out of sync with the grid again the way the old
+// hard-coded max-w-64/72 values eventually would have). Below `md`,
+// where there's no sibling height to match, it falls back to sizing by
+// width instead (`w-full` with height following from the same ratio),
+// which is the same self-contained behaviour the square card had.
+//
+// Visual container: the ASCII map sits in a card (rounded-4xl, soft
+// border, inset padding, gentle shadow) matching the reference this
+// whole redesign follows, https://github.com/DavidHDev/rbp-portfolio
+// (its own hero visual uses the same frame, square only because that
+// reference has no real geographic data to respect the shape of). The
+// WebGL flow shader ("HeroBackdrop") that used to render here directly
+// moved up to app/page.tsx (2026-09-19) so it can be sized against this
+// section's AND PublicationsShowcase's combined height instead of just
+// this one — see HeroBackdrop.tsx's own comment for why. Nav is `fixed`
+// and out of document flow (components/layout/Header.tsx), so this
+// section carries its own top clearance instead of relying on a
 // document-flow header bar.
 export function Hero() {
   return (
     <section className="pb-6 pt-20 md:pb-8 md:pt-24">
       <Container>
-        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-6">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:items-stretch md:gap-6">
           <div className="flex flex-col gap-4">
             {/* Title case, not the all-caps treatment used elsewhere in
                 the hero (mono coordinates, nav) — changed 2026-09-19 at
@@ -66,8 +82,11 @@ export function Hero() {
               reference's own hero (photo card pinned to the column's
               far edge, not stretched to fill it). */}
           <div className="flex justify-center md:justify-end">
-            <div className="w-full max-w-64 rounded-4xl border border-white/8 bg-ink-900 p-1.5 shadow-sm sm:max-w-72">
-              <div className="overflow-hidden rounded-[1.6rem]">
+            <div
+              className="w-full max-w-64 rounded-4xl border border-white/8 bg-ink-900 p-1.5 shadow-sm sm:max-w-72 md:h-full md:w-auto md:max-w-none"
+              style={{ aspectRatio: `${GRID_COLS} / ${GRID_ROWS}` }}
+            >
+              <div className="h-full w-full overflow-hidden rounded-[1.6rem]">
                 <HeroCanvas />
               </div>
             </div>

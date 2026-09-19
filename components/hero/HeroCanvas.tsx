@@ -111,6 +111,7 @@ export function HeroCanvas() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
+  const locatorRef = useRef<HTMLDivElement>(null);
   const cellsRef = useRef<CellDraw[] | undefined>(undefined);
   const particlesRef = useRef<Particle[] | undefined>(undefined);
   const reduced = usePrefersReducedMotion();
@@ -159,6 +160,22 @@ export function HeroCanvas() {
       cellSize = Math.min(cellW, cellH);
       offsetX = (rect.width - cellSize * GRID_COLS) / 2;
       offsetY = (rect.height - cellSize * GRID_ROWS) / 2;
+
+      // Locator position, in the same pixel space as the canvas cells
+      // above — NOT a static CSS percentage of the panel (that was the
+      // actual bug the site owner caught, not a UTM/WGS mixup: once the
+      // grid started letterboxing inside a taller-than-the-grid panel,
+      // a plain `(row+0.5)/GRID_ROWS * 100%` stopped matching where the
+      // canvas was actually drawing that row, since it never accounted
+      // for offsetY). Recomputed here, in the same function that
+      // recomputes offsetX/offsetY, so the two can never drift apart
+      // again — every place this needs updating updates together.
+      if (locatorRef.current) {
+        const lx = offsetX + (SURABAYA_CELL.col + 0.5) * cellSize;
+        const ly = offsetY + (SURABAYA_CELL.row + 0.5) * cellSize;
+        locatorRef.current.style.left = `${lx}px`;
+        locatorRef.current.style.top = `${ly}px`;
+      }
     }
 
     resize();
@@ -327,9 +344,6 @@ export function HeroCanvas() {
     };
   }, [reduced, resolveSeed]);
 
-  const locatorLeftPct = ((SURABAYA_CELL.col + 0.5) / GRID_COLS) * 100;
-  const locatorTopPct = ((SURABAYA_CELL.row + 0.5) / GRID_ROWS) * 100;
-
   return (
     // A real <button>, not a styled <div role="img"> (PRD 6.4 / this
     // project's own "real interactive elements only" rule) — clicking it
@@ -342,26 +356,36 @@ export function HeroCanvas() {
     <button
       type="button"
       aria-label="Stylised map of Asia rendered as a character grid, with Indonesia highlighted and Surabaya marked as the laboratory's location, at 07 degrees 15 minutes south, 112 degrees 45 minutes east. Activate to replay the resolve animation."
-      className="relative aspect-square w-full cursor-pointer select-none appearance-none border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
+      className="relative h-full w-full cursor-pointer select-none appearance-none border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
     >
       <div ref={wrapRef} className="absolute inset-0" aria-hidden="true">
         <div ref={parallaxRef} className="absolute inset-0">
           <canvas ref={canvasRef} className="absolute inset-0" />
 
-          <div
-            className="absolute flex flex-col items-center"
-            style={{ left: `${locatorLeftPct}%`, top: `${locatorTopPct}%` }}
-          >
-            <div className="relative -translate-x-1/2 -translate-y-1/2">
-              <span
-                className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"
-                style={{ animationDelay: "1.6s" }}
-              />
-              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-000" />
-              <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
-              <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
-            </div>
-            <div className="mt-3 whitespace-nowrap text-center">
+          {/* Zero-size anchor at the exact pixel point resize() computes,
+              not a flex container: an earlier version wrapped this in
+              `flex items-center`, which centres children on the
+              CONTAINER's shrink-to-fit width (driven by the coordinate
+              label's text, ~112px wide) rather than on `left`/`top`
+              themselves — the dot rendered ~56px right of the point it
+              was actually given, a second, purely markup-level bug
+              layered on top of the letterbox-offset one this ref was
+              added to fix. Every marker below (including the label) is
+              its own absolutely-positioned, self-centring element
+              instead, so nothing here can drift off the anchor again
+              regardless of any sibling's size. */}
+          <div ref={locatorRef} className="absolute" style={{ left: "50%", top: "50%" }}>
+            <span
+              className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"
+              style={{ animationDelay: "1.6s" }}
+            />
+            <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-000" />
+            <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
+            <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
+            <div
+              className="absolute left-1/2 top-1/2 whitespace-nowrap text-center"
+              style={{ transform: "translate(-50%, 14px)" }}
+            >
               <p className="font-mono text-[10px] tracking-wide text-ink-300">
                 {SURABAYA_COORDS}
               </p>
