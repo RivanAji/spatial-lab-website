@@ -868,8 +868,8 @@ function TeamFilterCard({
   const glowRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
 
-  const flipped = active || hovered;
-  const playing = flipped && !reducedMotion;
+  const revealed = active || hovered;
+  const playing = revealed && !reducedMotion;
 
   function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -900,63 +900,50 @@ function TeamFilterCard({
       onMouseMove={handlePointerMove}
       onFocus={() => setHovered(true)}
       onBlur={handleLeave}
-      style={{ perspective: 1800 }}
-      className="relative h-28 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className={cn(
+        "relative h-28 w-full overflow-hidden rounded-xl border bg-ink-900 text-left transition-[border-color] duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
+        active ? "border-ink-000" : "border-white/8",
+      )}
     >
+      {/* Crossfade, not a flip (site owner's call, after weighing it
+          against the flip): the card was already fixed-height so
+          nothing below it moves either way, and a plain opacity
+          crossfade gets there with far less to go wrong than a 3D
+          rotation — no perspective, no backface-visibility, no
+          competing transitions on the same face mid-turn, all of which
+          had already needed a fix once each. It's also the more honest
+          match for "hovernya seperti Explore Research": that control
+          has no rotation at all, just a plain, fast state change. */}
       <motion.div
-        className="relative h-full w-full"
-        style={{ transformStyle: "preserve-3d" }}
-        animate={{ rotateY: flipped ? 180 : 0, scale: reducedMotion ? 1 : [1, 0.97, 1] }}
-        transition={{ duration: reducedMotion ? 0 : 0.45, ease: EASE }}
+        className="absolute inset-0 flex flex-col justify-center gap-1 p-3"
+        initial={false}
+        animate={{ opacity: revealed ? 0 : 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.25, ease: EASE }}
       >
-        {/* Front */}
-        <div
-          style={{ backfaceVisibility: "hidden" }}
-          className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 transition-[border-color] duration-300 hover:bg-white/4 p-3",
-            active ? "border-ink-000" : "border-white/8",
-          )}
-        >
-          <p className="font-mono text-[10px] text-ink-300">
-            {String(team.number).padStart(2, "0")}
-          </p>
-          <h3 className="font-display text-sm font-semibold leading-snug text-ink-000 sm:text-base">
-            {team.name}
-          </h3>
-        </div>
+        <p className="font-mono text-[10px] text-ink-300">
+          {String(team.number).padStart(2, "0")}
+        </p>
+        <h3 className="font-display text-sm font-semibold leading-snug text-ink-000 sm:text-base">
+          {team.name}
+        </h3>
+      </motion.div>
 
-        {/* Back — same hover:bg-white/4 tint as the front (and as
-            ContactButton/"Explore Research" in HeroCtas.tsx), so
-            whichever face is actually facing the visitor while hovered
-            gets the same treatment; backface-visibility: hidden keeps
-            the non-facing side out of hit-testing, so only the visible
-            one ever shows the tint.
-            transition-[border-color] only, not transition-colors (site
-            owner: a black flash was visible mid-flip) — the background
-            was animating through its own 300ms fade on the SAME face
-            that was simultaneously mid-rotation from the flip's 450ms
-            transform, and the two competing transitions is what read as
-            a dark flash. The background now applies the moment :hover
-            engages, no separate fade of its own; only the border still
-            eases, which was never part of the complaint. */}
-        <div
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-          className={cn(
-            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 transition-[border-color] duration-300 hover:bg-white/4 p-3",
-            active ? "border-ink-000" : "border-white/8",
-          )}
-        >
-          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-            <p className="line-clamp-3 font-body text-[11px] leading-snug text-ink-300">
-              {team.tagline}
-            </p>
-            <div
-              ref={parallaxRef}
-              aria-hidden="true"
-              className="h-16 w-24 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
-            >
-              <Illustration playing={playing} />
-            </div>
+      <motion.div
+        className="absolute inset-0 flex flex-col justify-center p-3"
+        initial={false}
+        animate={{ opacity: revealed ? 1 : 0 }}
+        transition={{ duration: reducedMotion ? 0 : 0.25, ease: EASE }}
+      >
+        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+          <p className="line-clamp-3 font-body text-[11px] leading-snug text-ink-300">
+            {team.tagline}
+          </p>
+          <div
+            ref={parallaxRef}
+            aria-hidden="true"
+            className="h-16 w-24 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
+          >
+            <Illustration playing={playing} />
           </div>
         </div>
       </motion.div>
