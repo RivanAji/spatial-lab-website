@@ -32,9 +32,9 @@ export function Hero() {
                 assumed — "Transportation Laboratory" is the line that
                 decides this. */}
             <h1 className="font-display text-3xl font-semibold uppercase leading-[1.1] tracking-tight text-ink-000 sm:text-4xl lg:text-[2.75rem]">
-              Spatial Analysis &amp;
+              Transportation &amp;
               <br />
-              Transportation Laboratory
+              Spatial Analysis Laboratory
             </h1>
             <p className="max-w-[38ch] font-body text-lg leading-relaxed text-ink-300">
               Exploring cities through space, mobility, data and intelligent
