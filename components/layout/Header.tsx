@@ -2,20 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { List, X } from "@phosphor-icons/react";
 import { Container } from "@/components/ui/Container";
+import logo from "@/public/brand/logo.png";
 
-// PRD 4.1 — four items, single line at desktop, height under 80px. Below
-// `md` the links move into a toggled panel instead of squeezing onto one
-// row: at 375px width the four links plus the wordmark had zero pixels of
-// right-side gutter left (measured directly, not eyeballed — the "About"
-// link's right edge landed exactly on the viewport edge), which is the
-// kind of "technically no scrollbar but no margin either" bug that's easy
-// to miss in a quick look and breaks for real the moment copy gets a
-// pixel longer.
+// Updated nav per the site owner's direction (2026-09-19): Research,
+// Roadmap, People, About. Note Roadmap has no real content yet (PRD 7.9
+// defers building that section to Phase 9) — the link is live because
+// that's what was asked for, but /roadmap is a Phase 6+ page like the
+// other three, not yet built.
+//
+// Below `md` the links move into a toggled panel instead of squeezing
+// onto one row: at 375px width four links plus a wordmark had zero
+// pixels of right-side gutter left (measured directly, not eyeballed —
+// the last link's right edge landed exactly on the viewport edge), which
+// is the kind of "technically no scrollbar but no margin either" bug
+// that's easy to miss in a quick look and breaks for real the moment
+// copy gets a pixel longer.
 const NAV_ITEMS = [
   { label: "Research", href: "/research" },
-  { label: "Projects", href: "/research-projects" },
+  { label: "Roadmap", href: "/roadmap" },
   { label: "People", href: "/people" },
   { label: "About", href: "/about" },
 ];
@@ -24,15 +31,21 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="relative z-10 border-b border-ink-600">
+    // Sticky, not fixed: stays in normal flow (no manual top-padding
+    // compensation needed on every page) but pins to the viewport top
+    // past its own position. Solid ink-900 background — the same value
+    // as the page ground, so it reads as "the page keeps its header
+    // visible," not as a floating glass panel over the content.
+    <header className="sticky top-0 z-50 border-b border-ink-600 bg-ink-900">
       <Container>
         <div className="flex h-16 items-center justify-between md:h-[72px]">
           <Link
             href="/"
             onClick={() => setOpen(false)}
-            className="font-mono text-[13px] uppercase tracking-[0.2em] text-ink-000 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300"
+            aria-label="Spatial Analysis & Transportation Laboratory, home"
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300"
           >
-            Spatial Lab
+            <Image src={logo} alt="" priority height={36} className="h-9 w-auto" />
           </Link>
 
           <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
