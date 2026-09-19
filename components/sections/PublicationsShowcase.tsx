@@ -50,19 +50,22 @@ import { cn } from "@/lib/cn";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 // ---- Illustration 1: Sustainable Urban Transportation ----
-// Rebuilt substantially (site owner's request, 2026-09-19: the original
-// 5-node graph "tampak biasa sekali" / read as too plain). Now a small
-// street grid with static low-opacity building blocks for urban
-// texture, real intersections, and two independent vehicle glyphs
-// (not one dot) running their own routes at different speeds — one the
-// full outer loop, one a shorter spur — each oriented to the direction
-// of travel via `offset-rotate: auto`. Still plain <rect>/<circle>
-// elements for the travelling glyphs, not motion.*, driven by the CSS
-// --animate-travel-path keyframes (globals.css) — Motion doesn't
-// animate offsetDistance (see that file's comment); everything else
-// here that ISN'T on an offset-path still safely uses Motion.
+// Rebuilt a third time (site owner: the stroke-only version was "cuma
+// titik dan garis" — just dots and lines, not substantial). Roads are
+// now filled asphalt bands (a wide low-opacity fill strip) with a
+// dashed centre line on top, not a bare stroke; buildings are solid
+// filled blocks with a window-dot grid on the two largest, not empty
+// outlines; vehicles are bigger and fully opaque with a lighter
+// "windshield" stripe. Still plain <rect>/<circle>/<g> elements for
+// anything on an offset-path, not motion.* — Motion doesn't animate
+// offsetDistance (see globals.css's --animate-travel-path comment).
 function TransportIllustration({ playing }: { playing: boolean }) {
-  const roads = ["M8 28 L132 28", "M8 68 L132 68", "M35 8 L35 82", "M104 8 L104 82"];
+  const roads: { d: string; band: string }[] = [
+    { d: "M8 28 L132 28", band: "M8 26h124v4h-124z" },
+    { d: "M8 68 L132 68", band: "M8 66h124v4h-124z" },
+    { d: "M35 8 L35 82", band: "M33 8h4v74h-4z" },
+    { d: "M104 8 L104 82", band: "M102 8h4v74h-4z" },
+  ];
   const intersections: [number, number][] = [
     [35, 28],
     [104, 28],
@@ -70,43 +73,76 @@ function TransportIllustration({ playing }: { playing: boolean }) {
     [104, 68],
   ];
   const buildings: [number, number, number, number][] = [
-    [14, 12, 12, 10],
-    [50, 12, 10, 8],
-    [112, 12, 12, 10],
-    [14, 74, 12, 8],
-    [50, 76, 10, 6],
-    [112, 74, 12, 8],
+    [14, 12, 14, 11],
+    [50, 12, 11, 9],
+    [112, 12, 14, 11],
+    [14, 73, 14, 9],
+    [112, 73, 14, 9],
   ];
   const loopRoute = "M8 28 L132 28 L132 68 L8 68 Z";
   const spurRoute = "M35 8 L35 82";
 
   return (
     <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
-      {buildings.map(([x, y, w, h], i) => (
-        <motion.rect
+      {/* Asphalt bands, filled, under everything else — this is what
+          gives the roads actual mass instead of reading as bare lines. */}
+      {roads.map((r, i) => (
+        <motion.path
           key={i}
-          x={x}
-          y={y}
-          width={w}
-          height={h}
-          rx={1}
-          stroke="currentColor"
-          strokeWidth="0.6"
+          d={r.band}
+          fill="currentColor"
           initial={{ opacity: 0 }}
-          animate={{ opacity: playing ? 0.18 : 0 }}
-          transition={{ duration: 0.4, delay: 0.04 * i, ease: EASE }}
+          animate={{ opacity: playing ? 0.1 : 0 }}
+          transition={{ duration: 0.4, delay: 0.1 + i * 0.08, ease: EASE }}
         />
       ))}
 
-      {roads.map((d, i) => (
+      {buildings.map(([x, y, w, h], i) => (
+        <motion.g
+          key={i}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: playing ? 1 : 0 }}
+          transition={{ duration: 0.4, delay: 0.04 * i, ease: EASE }}
+        >
+          <rect x={x} y={y} width={w} height={h} rx={1.2} fill="currentColor" opacity={0.22} />
+          <rect
+            x={x}
+            y={y}
+            width={w}
+            height={h}
+            rx={1.2}
+            stroke="currentColor"
+            strokeWidth="0.6"
+            opacity={0.5}
+          />
+          {w > 12 &&
+            [0, 1].flatMap((row) =>
+              [0, 1].map((col) => (
+                <rect
+                  key={`${row}-${col}`}
+                  x={x + 3 + col * (w - 8)}
+                  y={y + 3 + row * (h - 7)}
+                  width="2"
+                  height="2.2"
+                  fill="currentColor"
+                  opacity={0.5}
+                />
+              )),
+            )}
+        </motion.g>
+      ))}
+
+      {/* Dashed centre lines, drawn over the asphalt bands. */}
+      {roads.map((r, i) => (
         <motion.path
           key={i}
-          d={d}
+          d={r.d}
           stroke="currentColor"
-          strokeWidth="1.2"
+          strokeWidth="0.8"
+          strokeDasharray="3 2.5"
           strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0.3 }}
-          animate={playing ? { pathLength: 1, opacity: 0.55 } : { pathLength: 0, opacity: 0 }}
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={playing ? { pathLength: 1, opacity: 0.6 } : { pathLength: 0, opacity: 0 }}
           transition={{ duration: 0.5, delay: 0.2 + i * 0.1, ease: EASE }}
         />
       ))}
@@ -116,7 +152,7 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           key={i}
           cx={x}
           cy={y}
-          r={2.4}
+          r={2.8}
           fill="currentColor"
           initial={{ scale: 0, opacity: 0 }}
           animate={playing ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
@@ -131,11 +167,11 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           motion.* — see the file-top note on why the travelling glyphs
           stay off Motion's animate prop. */}
       <rect
-        width="3.6"
-        height="2.2"
-        x="-1.8"
-        y="-1.1"
-        rx="0.7"
+        width="4.2"
+        height="2.6"
+        x="-2.1"
+        y="-1.3"
+        rx="0.9"
         fill="currentColor"
         opacity={playing ? 0.3 : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
@@ -146,13 +182,7 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           animationDelay: "1.02s",
         }}
       />
-      <rect
-        width="4.4"
-        height="2.6"
-        x="-2.2"
-        y="-1.3"
-        rx="0.8"
-        fill="currentColor"
+      <g
         opacity={playing ? undefined : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
         style={{
@@ -161,16 +191,19 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           animationDuration: "3.8s",
           animationDelay: "0.9s",
         }}
-      />
+      >
+        <rect width="5.4" height="3" x="-2.7" y="-1.5" rx="1" fill="currentColor" />
+        <rect width="2.4" height="1.4" x="-1.2" y="-0.7" rx="0.4" fill="var(--color-ink-900)" />
+      </g>
 
       {/* Vehicle 2: the vertical spur, a shorter, quicker route, plus its
           own trail. */}
       <rect
-        width="3"
-        height="1.8"
-        x="-1.5"
-        y="-0.9"
-        rx="0.6"
+        width="3.4"
+        height="2"
+        x="-1.7"
+        y="-1"
+        rx="0.7"
         fill="currentColor"
         opacity={playing ? 0.28 : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
@@ -181,14 +214,8 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           animationDelay: "1.28s",
         }}
       />
-      <rect
-        width="3.6"
-        height="2.2"
-        x="-1.8"
-        y="-1.1"
-        rx="0.7"
-        fill="currentColor"
-        opacity={playing ? 0.75 : 0}
+      <g
+        opacity={playing ? 0.85 : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
         style={{
           offsetPath: `path("${spurRoute}")`,
@@ -196,7 +223,10 @@ function TransportIllustration({ playing }: { playing: boolean }) {
           animationDuration: "2.3s",
           animationDelay: "1.15s",
         }}
-      />
+      >
+        <rect width="4.4" height="2.6" x="-2.2" y="-1.3" rx="0.9" fill="currentColor" />
+        <rect width="1.9" height="1.2" x="-0.95" y="-0.6" rx="0.35" fill="var(--color-ink-900)" />
+      </g>
     </svg>
   );
 }
@@ -253,7 +283,12 @@ function DataScienceIllustration({ playing }: { playing: boolean }) {
           }
           transition={{ duration: 0.45, delay: layer.delay, ease: EASE }}
         >
-          <rect x={layer.x} y={layer.y} width="40" height="30" rx="2" stroke="currentColor" strokeWidth="1" />
+          {/* Filled panel first, so the layer reads as a solid translucent
+              plate stacked on the others, not an empty wireframe box —
+              the pattern on top is the layer's data, the fill is its
+              mass. */}
+          <rect x={layer.x} y={layer.y} width="40" height="30" rx="2" fill="currentColor" opacity={0.45} />
+          <rect x={layer.x} y={layer.y} width="40" height="30" rx="2" stroke="currentColor" strokeWidth="1.2" />
           {i === 0 && (
             // points layer
             <g fill="currentColor">
@@ -328,18 +363,36 @@ function DataScienceIllustration({ playing }: { playing: boolean }) {
         animate={{ pathLength: playing ? 1 : 0 }}
         transition={{ duration: 0.5, delay: 0.4, ease: EASE }}
       />
-      {[tree.root, tree.a, tree.b, tree.a1, tree.a2].map(([x, y], i) => (
-        <motion.circle
-          key={i}
-          cx={x}
-          cy={y}
-          r={i === 0 ? 2.6 : i === 3 ? 2.4 : 2}
-          fill="currentColor"
-          opacity={i === 2 || i === 4 ? 0.4 : 1}
-          initial={{ scale: 0 }}
-          animate={{ scale: playing ? 1 : 0 }}
-          transition={{ duration: 0.25, delay: 0.45 + i * 0.08, ease: EASE }}
-        />
+      {/* The resolved leaf (a1) renders as a filled square badge, not
+          another circle — a distinct shape reading as "the answer",
+          not just one more dot in the same family. */}
+      {[tree.root, tree.a, tree.b, tree.a1, tree.a2].map(([x, y], i) =>
+        i === 3 ? (
+          <motion.rect
+            key={i}
+            x={x - 3}
+            y={y - 3}
+            width={6}
+            height={6}
+            rx={1.4}
+            fill="currentColor"
+            initial={{ scale: 0 }}
+            animate={{ scale: playing ? 1 : 0 }}
+            style={{ transformOrigin: `${x}px ${y}px` }}
+            transition={{ duration: 0.3, delay: 0.45 + i * 0.08, ease: EASE }}
+          />
+        ) : (
+          <motion.circle
+            key={i}
+            cx={x}
+            cy={y}
+            r={i === 0 ? 2.6 : 2}
+            fill="currentColor"
+            opacity={i === 2 || i === 4 ? 0.4 : 1}
+            initial={{ scale: 0 }}
+            animate={{ scale: playing ? 1 : 0 }}
+            transition={{ duration: 0.25, delay: 0.45 + i * 0.08, ease: EASE }}
+          />
       ))}
       {/* Root node pulse, looping while revealed — same idle-pulse
           language as the hero locator (HeroCanvas.tsx), animating `r`
@@ -398,6 +451,46 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
 
   return (
     <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
+      {/* A small filled sun disc anchors "climate" as a literal, legible
+          mark rather than leaving the whole scene abstract (branches,
+          bars, a wave) — sits in the otherwise-empty top-left corner, so
+          it doesn't compete with the branch/bar reveal below it. */}
+      <motion.g
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={playing ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.6 }}
+        style={{ transformOrigin: "16px 14px" }}
+        transition={{ duration: 0.35, delay: 0.05, ease: EASE }}
+      >
+        <circle cx="16" cy="14" r="4.2" fill="currentColor" />
+        {/* Six rays at 60-degree intervals, pre-computed rather than
+            calling Math.sin/cos at render time — a trig result can land
+            on a different float bit between the server and client
+            (Node's V8 vs. the browser's), which is a real hydration
+            mismatch caught in dev, not a hypothetical one. */}
+        {[
+          [22.5, 14, 25, 14],
+          [19.25, 19.63, 20.5, 21.79],
+          [12.75, 19.63, 11.5, 21.79],
+          [9.5, 14, 7, 14],
+          [12.75, 8.37, 11.5, 6.21],
+          [19.25, 8.37, 20.5, 6.21],
+        ].map(([x1, y1, x2, y2], i) => {
+          return (
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              opacity="0.6"
+            />
+          );
+        })}
+      </motion.g>
+
       {branches.map((b, i) => (
         <motion.line
           key={i}
@@ -489,7 +582,24 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
         />
       ))}
 
-      {/* Climate wave, slow ambient drift once revealed. */}
+      {/* Climate wave: a filled area under the line, not a bare stroke,
+          so it reads as a small area chart rather than a squiggle — the
+          line on top still carries the drawn-in reveal and the drift
+          loop; the fill just rides along with it (same x drift, no
+          separate pathLength draw-in, since a filled shape doesn't
+          "draw in" the way a stroke does). */}
+      <motion.path
+        d="M4 84 Q 16 78, 28 84 T 52 84 T 76 84 L76 90 L4 90 Z"
+        fill="currentColor"
+        initial={{ opacity: 0, x: 0 }}
+        animate={
+          playing ? { opacity: 0.12, x: [0, -24, 0] } : { opacity: 0, x: 0 }
+        }
+        transition={{
+          opacity: { duration: 0.4, delay: 0.5 },
+          x: { duration: 6, delay: 1, repeat: Infinity, ease: "linear" },
+        }}
+      />
       <motion.path
         d="M4 84 Q 16 78, 28 84 T 52 84 T 76 84"
         stroke="currentColor"
