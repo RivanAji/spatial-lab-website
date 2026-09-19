@@ -13,29 +13,15 @@ const NOISE_CHARS = [".", "·", ":"] as const;
 const ASIA_CHARS = [".", ":", "+"] as const;
 const INDONESIA_CHARS = ["+", "*", "#"] as const;
 
-// Click-to-replay particle text (2026-09-19, site owner's request): real
-// short phrases the map dissolves into and resolves out of, not invented
-// marketing copy — every one of these is a literal copy of a team name or
-// a `focus` keyword from lib/content/teams.ts (PRD 3.2's real, confirmed
-// team structure). Hardcoded here rather than imported from that module
-// on purpose: the hero's content has stayed deliberately fixed and
-// decoupled from the CMS-editable team data all session (PRD 7.2 — "not
-// placeholder copy, the actual launch copy"), and these are decorative
-// texture, not a live data binding that needs to track edits to teams.ts.
-const PARTICLE_PHRASES = [
-  "SUSTAINABLE URBAN TRANSPORTATION",
-  "SPATIAL DATA SCIENCE AND AI",
-  "DECISION SUPPORT AND CLIMATE CHANGE",
-  "POLICY",
-  "TRANSIT-ORIENTED DEVELOPMENT",
-  "MACHINE LEARNING",
-  "BIG DATA",
-  "SPATIAL DATA INFRASTRUCTURE",
-  "CLIMATE RESILIENCE",
-  "SCENARIO BUILDING",
-  "POLICY AND DECISION EVALUATION",
-  "TRANSPORT, SPATIAL AND ECONOMIC INTEGRATION",
-] as const;
+// Click-to-replay particles (2026-09-19, site owner's request, revised
+// the same day: "hilangkan aja teksnya, buat ukuran partikelnya lebih
+// kecil" — drop the readable phrase text, make the particles smaller).
+// Back to plain glyphs, the same small alphabet the map itself is built
+// from, not full words — scattered at arbitrary positions across the
+// panel (not grid-locked) rather than one per cell, which is what still
+// makes this a distinct "particle" pass from the map's own noise
+// texture, just abstract instead of literal text.
+const PARTICLE_CHARS = [".", "·", ":", "+", "*"] as const;
 
 type CellDraw = {
   x: number; // column
@@ -86,24 +72,27 @@ function buildCells(): CellDraw[] {
 }
 
 type Particle = {
-  text: string;
+  char: string;
   xFrac: number; // 0-1, position within the canvas
   yFrac: number;
 };
 
-// Scattered across the whole panel, not tied to the character grid — the
-// grid is fixed-size cells that can't fit a multi-word phrase, so these
-// draw as their own, larger-type pass at arbitrary positions, like the
-// reference (contentarchitecture.dev) scatters its own text fragments.
-// A fresh scatter (new positions, same phrase pool) every time it's
-// built, so a replay doesn't look identical to the one before it.
+// Scattered across the whole panel, not tied to the character grid — a
+// separate pass at arbitrary positions (not one per cell), which is what
+// still makes this its own particle layer rather than just the map's
+// existing noise texture. A fresh scatter every time it's built, so a
+// replay doesn't look identical to the one before it.
 function buildParticles(): Particle[] {
-  const shuffled = [...PARTICLE_PHRASES].sort(() => Math.random() - 0.5);
-  return shuffled.map((text) => ({
-    text,
-    xFrac: 0.08 + Math.random() * 0.84,
-    yFrac: 0.08 + Math.random() * 0.84,
-  }));
+  const count = 40;
+  const out: Particle[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push({
+      char: PARTICLE_CHARS[Math.floor(Math.random() * PARTICLE_CHARS.length)],
+      xFrac: 0.05 + Math.random() * 0.9,
+      yFrac: 0.05 + Math.random() * 0.9,
+    });
+  }
+  return out;
 }
 
 function usePrefersReducedMotion() {
@@ -210,22 +199,23 @@ export function HeroCanvas() {
         ctx!.fillText(char, px, py);
       }
 
-      // Particle phrases: visible while the map is still noise, gone
-      // well before it finishes resolving (fades out over the first 70%
-      // of the resolve, not the whole thing) — they read as the data the
-      // map is resolving OUT of, not a caption sitting on top of the
-      // finished map.
+      // Particles: visible while the map is still noise, gone well
+      // before it finishes resolving (fades out over the first 70% of
+      // the resolve, not the whole thing) — they read as the data the
+      // map is resolving OUT of, not decoration sitting on top of the
+      // finished map. Sized close to the map's own glyphs, not larger —
+      // "buat ukuran partikelnya lebih kecil".
       if (progress < 1) {
         const particleProgress = Math.min(progress / 0.7, 1);
         const alpha = (1 - particleProgress) * 0.5;
         if (alpha > 0.01) {
           ctx!.save();
-          ctx!.textAlign = "left";
-          ctx!.textBaseline = "alphabetic";
-          ctx!.font = `${Math.max(cellSize * 2.4, 10)}px var(--font-mono, monospace)`;
+          ctx!.textAlign = "center";
+          ctx!.textBaseline = "middle";
+          ctx!.font = `${Math.max(cellSize * 1.1, 7)}px var(--font-mono, monospace)`;
           ctx!.fillStyle = `rgba(232, 235, 239, ${alpha})`;
           for (const particle of particlesRef.current!) {
-            ctx!.fillText(particle.text, particle.xFrac * panelWidth, particle.yFrac * panelHeight);
+            ctx!.fillText(particle.char, particle.xFrac * panelWidth, particle.yFrac * panelHeight);
           }
           ctx!.restore();
         }
@@ -284,8 +274,8 @@ export function HeroCanvas() {
       // Click to replay (site owner's request): re-runs the exact same
       // resolve-from-noise choreography the map already does once on
       // load, just re-triggered on demand, with a freshly scattered set
-      // of particle phrases (buildParticles again) so a second click
-      // doesn't look identical to the first. Deliberately does NOT
+      // of particles (buildParticles again) so a second click doesn't
+      // look identical to the first. Deliberately does NOT
       // rebuild `cellsRef` — that array's length has to stay in lock-
       // step with `resolveSeed` (computed once, in the same order, by
       // the component body), and buildCells()'s ambient-noise threshold

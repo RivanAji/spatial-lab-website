@@ -21,25 +21,6 @@ import path from "node:path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 
-// Square grid (2026-09-19 revision): the hero's visual moved from a wide
-// landscape composition into a square card (matching the reference site
-// this redesign is based on, https://rbp-portfolio.vercel.app, whose own
-// hero visual is a square-cropped canvas). A wide 108x46 grid inside a
-// square card would letterbox into a thin horizontal band with empty
-// space top and bottom, so both the resolution and the crop change here,
-// not just the CSS container.
-// Resolution bumped 64 -> 96 (2026-09-19, site owner caught it): at 64x64
-// each cell is roughly 0.77deg lon x 0.5deg lat, coarse enough that
-// Java's own eastern reach past Surabaya rasterised as a fragment that
-// looked detached from the rest of the archipelago (checked directly by
-// dumping the raw grid to a terminal preview, not assumed) — close
-// enough in screen space to read as "near Bali/Nusa Tenggara" even
-// though the underlying coordinate was correct the whole time. At 96x96
-// the same point sits inside a single, clearly connected landmass
-// (verified the same way, against the same source polygon).
-const GRID_COLS = 96;
-const GRID_ROWS = 96;
-
 // Crop chosen for composition, not geographic completeness: tightened to
 // mainland Southeast Asia through the Philippines and all of Indonesia,
 // dropping China/Mongolia/Japan/the Koreas that the old wide crop kept
@@ -50,6 +31,36 @@ const LON_MIN = 92;
 const LON_MAX = 141;
 const LAT_MIN = -11;
 const LAT_MAX = 21;
+
+// Grid aspect (revised again 2026-09-19, third time on this same map —
+// site owner: "proyeksinya kok menciut ga normal"): the "square grid"
+// revision this used to carry forced a 1:1 cell grid (64x64, then
+// 96x96) onto the crop above, which is NOT 1:1 in degrees (49deg of
+// longitude by 32deg of latitude, a 1.53:1 ratio) — every cell was
+// silently representing 0.51deg of longitude but only 0.33deg of
+// latitude, then drawn as an equal-sided square pixel. That mismatch,
+// not any curvature/CRS effect (checked: cos(latitude) across this
+// crop's -11 to 21deg band is 0.93-1.0, under 7% either way, negligible
+// at this scale), is what squashed real shapes — confirmed by the
+// distortion disappearing once the grid's own column:row ratio was
+// derived from the crop's actual longitude:latitude ratio instead of
+// being forced square.
+//
+// Fixed by decoupling the GRID's aspect from the CONTAINER's: the
+// container stays a square card (matching the reference site,
+// https://rbp-portfolio.vercel.app), but the grid itself is computed
+// here from the crop bounds above, not hand-typed and left to drift out
+// of sync with them again — an equirectangular projection with square
+// degree-cells, letterboxed inside the square container by the fit-
+// and-centre logic HeroCanvas.tsx already had, written for exactly this
+// shape of grid before the square-grid revision temporarily broke it.
+// No crop content is lost restoring this (unlike narrowing LON_MAX,
+// which would have cropped Papua, part of Indonesia, out of frame) —
+// the tradeoff is a visible empty margin above and below the map inside
+// its square card, the honest cost of drawing the real shapes without
+// distorting them.
+const GRID_COLS = 96;
+const GRID_ROWS = Math.round((GRID_COLS * (LAT_MAX - LAT_MIN)) / (LON_MAX - LON_MIN));
 
 // Surabaya, per the brief (spatial lab_brief.md section 3.2): 07°15'S / 112°45'E.
 const SURABAYA = { lon: 112.75, lat: -7.25 };
