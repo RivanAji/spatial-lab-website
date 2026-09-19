@@ -79,7 +79,12 @@ function TransportIllustration({ playing }: { playing: boolean }) {
     [14, 73, 14, 9],
     [112, 73, 14, 9],
   ];
-  const loopRoute = "M8 28 L132 28 L132 68 L8 68 Z";
+  // Fixed (site owner caught it): this used to run along x=8 and x=132,
+  // the canvas edges where the horizontal roads happen to end — but
+  // there's no vertical road drawn there, only at x=35 and x=104. The
+  // loop now traces exactly the rectangle between the four intersection
+  // points above, which are real road segments the whole way round.
+  const loopRoute = "M35 28 L104 28 L104 68 L35 68 Z";
   const spurRoute = "M35 8 L35 82";
 
   return (
