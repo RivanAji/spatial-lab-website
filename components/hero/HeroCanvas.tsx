@@ -250,7 +250,7 @@ export function HeroCanvas() {
     <div
       role="img"
       aria-label="Stylised map of Asia rendered as a character grid, with Indonesia highlighted and Surabaya marked as the laboratory's location, at 07 degrees 15 minutes south, 112 degrees 45 minutes east."
-      className="relative aspect-[108/62] w-full select-none"
+      className="relative aspect-square w-full select-none"
     >
       <div ref={wrapRef} className="absolute inset-0" aria-hidden="true">
         <div ref={parallaxRef} className="absolute inset-0">

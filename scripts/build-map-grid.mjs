@@ -21,19 +21,26 @@ import path from "node:path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 
-const GRID_COLS = 108;
-const GRID_ROWS = 46;
+// Square grid (2026-09-19 revision): the hero's visual moved from a wide
+// landscape composition into a square card (matching the reference site
+// this redesign is based on, https://rbp-portfolio.vercel.app, whose own
+// hero visual is a square-cropped canvas). A wide 108x46 grid inside a
+// square card would letterbox into a thin horizontal band with empty
+// space top and bottom, so both the resolution and the crop change here,
+// not just the CSS container.
+const GRID_COLS = 64;
+const GRID_ROWS = 64;
 
-// Crop chosen for composition, not geographic completeness: keeps East,
-// Southeast and South Asia (China, Mongolia, Japan, the Koreas, mainland
-// Southeast Asia) recognisable while giving Indonesia's archipelago enough
-// room in the lower half that it isn't a speck. West Asia and most of
-// Russia fall outside on purpose, matching the brief's own illustrative
-// diagram (PRD 3.2 / brief section 3.2), which never included them either.
-const LON_MIN = 68;
-const LON_MAX = 148;
-const LAT_MIN = -12;
-const LAT_MAX = 54;
+// Crop chosen for composition, not geographic completeness: tightened to
+// mainland Southeast Asia through the Philippines and all of Indonesia,
+// dropping China/Mongolia/Japan/the Koreas that the old wide crop kept
+// for context — a square frame doesn't have room for both that northern
+// reach and enough room for Indonesia's archipelago to read clearly, and
+// Indonesia is the actual focal point (PRD 3.1 / brief 3.2).
+const LON_MIN = 92;
+const LON_MAX = 141;
+const LAT_MIN = -11;
+const LAT_MAX = 21;
 
 // Surabaya, per the brief (spatial lab_brief.md section 3.2): 07°15'S / 112°45'E.
 const SURABAYA = { lon: 112.75, lat: -7.25 };
