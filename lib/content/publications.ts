@@ -11,6 +11,18 @@ import type { Publication } from "./types";
 // decision-support-climate, not spatial-data-science-ai as an earlier
 // draft of this table had it — Kurniawati isn't a member of that second
 // team, and climate is the better thematic fit anyway.
+//
+// coverImage: three entries below carry a TEMPORARY placeholder — stock
+// map photography from Unsplash, saved under public/images/
+// publications-dummy/ — at the site owner's explicit request, purely so
+// the new gallery card layout (PublicationsShowcase.tsx) could be
+// previewed with real images instead of empty slots. These are NOT real
+// covers and are not a quiet reversal of PRD 6.6's "no invented
+// content"/"no stock photography standing in for real output" rule —
+// they're marked here, and the plan is for the site owner to replace or
+// remove them with actual cover art once that exists. Every other
+// publication's coverImage stays unset, rendering the honest empty slot
+// this file's own type comment (lib/content/types.ts) describes.
 export const publications: Publication[] = [
   // Team 01 — Sustainable Urban Transportation
   {
@@ -98,6 +110,7 @@ export const publications: Publication[] = [
     venue: "Journal of Regional and City Planning 34(2)",
     team: "sustainable-urban-transportation",
     citations: 4,
+    coverImage: "/images/publications-dummy/transport-map.jpg", // dummy, see file-top note
   },
 
   // Team 02 — Spatial Data Science and AI for Urban Analytics
@@ -172,6 +185,7 @@ export const publications: Publication[] = [
     year: 2023,
     venue: "Land 12(4)",
     team: "spatial-data-science-ai",
+    coverImage: "/images/publications-dummy/data-map.jpg", // dummy, see file-top note
   },
 
   // Team 03 — Decision Support and Climate Change
@@ -256,6 +270,7 @@ export const publications: Publication[] = [
     year: 2026,
     venue: "BIO Web of Conferences",
     team: "decision-support-climate",
+    coverImage: "/images/publications-dummy/climate-map.jpg", // dummy, see file-top note
   },
   {
     slug: "dampak-perubahan-lahan-stok-karbon-surabaya",

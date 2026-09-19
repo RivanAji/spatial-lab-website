@@ -634,6 +634,21 @@ export function PublicationsShowcase(): ReactNode {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  // Auto-scroll marquee (2026-09-19, site owner's request): the gallery
+  // now drifts continuously right-to-left on its own, and pauses the
+  // instant a pointer or keyboard focus reaches it — but never stops
+  // being a real scroll container, so wheel/trackpad/touch scrolling
+  // and the prev/next buttons keep working exactly as before whether
+  // it's paused or not. `loop` gates the whole thing off under
+  // prefers-reduced-motion, matching every other looping animation in
+  // this project (HeroCanvas's idle scan, the team cards' travel-path
+  // markers): under reduced motion this is a perfectly ordinary
+  // scrollable row that never moves on its own, full stop.
+  const loop = !reducedMotion;
+  const interactingRef = useRef(false);
+  const pauseUntilRef = useRef(0);
 
   // Years are computed from every publication, not the filtered subset —
   // matching ResearchArchive.tsx's own year-filter behaviour, so a year
@@ -656,8 +671,17 @@ export function PublicationsShowcase(): ReactNode {
   function updateScrollButtons() {
     const el = scrollerRef.current;
     if (!el) return;
-    setCanScrollPrev(el.scrollLeft > 4);
-    setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    const hasOverflow = el.scrollWidth > el.clientWidth + 4;
+    if (loop) {
+      // Looping means there's no real "start" or "end" to disable
+      // against — both directions always have more to scroll to, as
+      // long as there's anything to scroll at all.
+      setCanScrollPrev(hasOverflow);
+      setCanScrollNext(hasOverflow);
+    } else {
+      setCanScrollPrev(el.scrollLeft > 4);
+      setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    }
   }
 
   useEffect(() => {
@@ -672,9 +696,81 @@ export function PublicationsShowcase(): ReactNode {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTeam, activeYear]);
 
+  // The continuous drift itself. Runs its own rAF loop rather than a CSS
+  // animation because the content is a real, natively-scrollable list
+  // (wheel/touch/keyboard all need to keep working on it), and because
+  // the loop point (see below) depends on a measured DOM width that
+  // changes with the active filter.
+  //
+  // Looping technique: filtered is rendered TWICE back-to-back (see the
+  // JSX below) whenever `loop` is on, so the track is exactly two
+  // identical copies of the same content. Once scrollLeft passes the
+  // first copy's width (scrollWidth / 2, since both copies are pixel-
+  // identical), subtracting that same width lands on the visually
+  // identical point in the second copy — a seamless wrap with no jump,
+  // rather than snapping back to 0 (which would visibly skip past
+  // whatever's scrolled out of view). This only touches scrollLeft
+  // during the auto-increment itself, never fighting a manual scroll,
+  // touch drag, or the prev/next buttons' own smooth-scroll animation —
+  // see the pause handling below for how those stay uninterrupted.
+  useEffect(() => {
+    if (!loop) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const SPEED_PX_PER_SEC = 26;
+    let raf = 0;
+    let last = performance.now();
+    // The authoritative position lives here, not in el.scrollLeft's own
+    // getter: at 26px/s, a 60Hz frame only advances ~0.4px, and most
+    // browsers round scrollLeft writes to the nearest integer pixel —
+    // reading that rounded value back as the basis for the NEXT frame's
+    // addition (the first version of this effect did exactly that)
+    // throws away the sub-pixel remainder every single frame, so the
+    // rounded value never crosses the next whole pixel and the row
+    // never visibly moves at all. Accumulating in a plain JS float
+    // instead, and only ever writing (never reading back) el.scrollLeft
+    // from it, keeps that remainder alive across frames the way a
+    // canvas or WebGL animation loop would.
+    let pos = el.scrollLeft;
+
+    function tick(now: number) {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(now - last, 100); // clamp a backgrounded-tab gap
+      last = now;
+
+      const hasOverflow = el!.scrollWidth > el!.clientWidth + 4;
+      if (!hasOverflow) return;
+
+      const paused = interactingRef.current || now < pauseUntilRef.current;
+      if (paused) {
+        // Resync to wherever manual scrolling / a button's own
+        // smooth-scroll left the row, so resuming continues from
+        // there instead of jumping back to the last auto-scrolled
+        // position.
+        pos = el!.scrollLeft;
+        return;
+      }
+
+      pos += (SPEED_PX_PER_SEC * dt) / 1000;
+      const half = el!.scrollWidth / 2;
+      if (pos >= half) pos -= half;
+      el!.scrollLeft = pos;
+    }
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [loop, filtered.length]);
+
   function scrollByPage(direction: 1 | -1) {
     const el = scrollerRef.current;
     if (!el) return;
+    // A brief cooldown so the auto-drift doesn't fight this smooth
+    // scroll while it's animating — the arrow buttons sit outside the
+    // hover-tracked row itself, so without this the rAF loop above
+    // would keep nudging scrollLeft on top of the button's own
+    // animation for as long as the pointer stayed over the button.
+    pauseUntilRef.current = performance.now() + 700;
     el.scrollBy({ left: direction * el.clientWidth * 0.9, behavior: "smooth" });
   }
 
@@ -773,14 +869,63 @@ export function PublicationsShowcase(): ReactNode {
             </Button>
           </div>
         ) : (
+          // No scroll-snap any more (had been snap-x snap-mandatory):
+          // mandatory snap actively fights a continuously-incrementing
+          // scrollLeft, which is what the auto-drift above needs to do
+          // every frame — every browser tested pulled the track back
+          // toward the nearest snap point mid-drift, reading as
+          // stutter, not smooth motion. Pause handlers below cover the
+          // "kalau kursor diarahkan kesana animasinya berhenti, tapi
+          // bisa discroll tetep" ask: hover/focus/touch pause the
+          // auto-increment (interactingRef), while native wheel/touch/
+          // keyboard scrolling is untouched either way, since this stays
+          // an ordinary overflow-x-auto container throughout.
           <div
             ref={scrollerRef}
             onScroll={updateScrollButtons}
-            className="mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onMouseEnter={() => {
+              interactingRef.current = true;
+            }}
+            onMouseLeave={() => {
+              interactingRef.current = false;
+            }}
+            onFocus={() => {
+              interactingRef.current = true;
+            }}
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                interactingRef.current = false;
+              }
+            }}
+            onPointerDown={() => {
+              interactingRef.current = true;
+            }}
+            onPointerUp={() => {
+              interactingRef.current = false;
+              pauseUntilRef.current = performance.now() + 600;
+            }}
+            onPointerCancel={() => {
+              interactingRef.current = false;
+              pauseUntilRef.current = performance.now() + 600;
+            }}
+            className="mt-8 flex gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {filtered.map((pub) => (
-              <PublicationCard key={pub.slug} publication={pub} />
-            ))}
+            {/* Rendered twice when looping (see the auto-drift effect
+                above) — the second copy is purely a visual continuation
+                for the wrap-around, not real additional content, so it's
+                hidden from assistive tech and pulled out of tab order
+                (PublicationCard's hiddenDuplicate prop) rather than
+                doubling every publication's link in the page's a11y
+                tree. */}
+            {(loop ? [0, 1] : [0]).flatMap((copy) =>
+              filtered.map((pub) => (
+                <PublicationCard
+                  key={`${pub.slug}-${copy}`}
+                  publication={pub}
+                  hiddenDuplicate={copy === 1}
+                />
+              )),
+            )}
           </div>
         )}
       </Container>
@@ -788,42 +933,71 @@ export function PublicationsShowcase(): ReactNode {
   );
 }
 
-// Title above the image, truncated with an ellipsis at 2 lines (CSS
-// line-clamp, not a manual word-slice — so it always breaks cleanly at
-// a word boundary regardless of title length), year and author small
-// below. No team label (site owner's request, 2026-09-19: "gaperlu ada
-// keterangan ini masuk decision support and climate... bikin terlalu
-// padat") — a card in a team-filtered slider naming its own team on
-// every card was redundant with the filter that put it there, and it
-// was the single densest line on the card.
-function PublicationCard({ publication }: { publication: (typeof publications)[number] }) {
+// Rebuilt as a compact, image-forward card (2026-09-19, site owner's
+// direct request, replacing the "title above / image / meta below"
+// stack): the title now sits IN FRONT of the image as an overlaid
+// caption instead of its own block above the card, on a gradient +
+// backdrop-blur scrim so it stays legible over whatever the cover
+// photo is doing underneath (the scrim is the "boundary agak blur" the
+// site owner asked for — a real, functional legibility aid over
+// variable imagery, not decoration; see antislop-ui's dose-cap note on
+// glass — this is the one deliberate use on the page, sized to a thin
+// caption strip, not a full panel). One-line title (line-clamp-1, not
+// the old 2-line clamp) — the site owner's other complaint was that
+// full titles ran long across two lines and crowded the card; anything
+// past one line now ends in the browser's own ellipsis instead.
+//
+// Height is ~80% of the old image box (aspect-[4/3] -> aspect-[3/2] at
+// a narrower width — see the width note below), which is also most of
+// the card's total height reduction: there's no separate title block
+// above it any more, and the meta line below is a single small row.
+//
+// Width is fixed, not responsive-fluid, and specifically tuned so six
+// cards are visible without scrolling on a typical laptop viewport: at
+// a 1280px-wide screen (a common laptop logical width — 13" MacBook Air
+// class and up), this section's Container leaves 1120px of content
+// width; 170px cards + 5 * 20px gaps (gap-5) = 1120px exactly. Below
+// `lg` the row still scrolls (see PublicationsShowcase's marquee), it
+// just shows fewer than six at once, which is expected on a phone or
+// tablet, not a bug.
+function PublicationCard({
+  publication,
+  hiddenDuplicate = false,
+}: {
+  publication: (typeof publications)[number];
+  hiddenDuplicate?: boolean;
+}) {
   return (
     <Link
       href={`/publications/${publication.slug}`}
-      className="group flex w-72 flex-shrink-0 snap-start flex-col gap-3 sm:w-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      aria-hidden={hiddenDuplicate || undefined}
+      tabIndex={hiddenDuplicate ? -1 : undefined}
+      className="group flex w-32 flex-shrink-0 flex-col gap-2 sm:w-36 lg:w-[170px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
-      <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-000">
-        {publication.title}
-      </h3>
-
       {/* Honest empty slot when no coverImage is set — see this file's
           top comment and lib/content/types.ts. Never a stock photo
-          standing in for a real one. */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-panel border border-ink-500 bg-ink-800 transition-colors group-hover:border-ink-300">
+          standing in for a real one (the three dummy exceptions are
+          flagged at their source in lib/content/publications.ts). */}
+      <div className="relative aspect-[3/2] overflow-hidden rounded-panel border border-ink-500 bg-ink-800 transition-colors group-hover:border-ink-300">
         {publication.coverImage && (
           <Image
             src={publication.coverImage}
             alt=""
             fill
-            sizes="(min-width: 640px) 320px, 288px"
+            sizes="170px"
             className="object-cover"
           />
         )}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-900 via-ink-900/75 to-transparent px-2 pb-1.5 pt-5 backdrop-blur-[1.5px]">
+          <h3 className="line-clamp-1 font-display text-[11px] font-semibold leading-snug text-ink-000">
+            {publication.title}
+          </h3>
+        </div>
       </div>
 
-      <div className="flex items-baseline gap-2">
-        <p className="font-mono text-xs text-ink-300">{publication.year}</p>
-        <p className="font-body text-xs text-ink-300">{publication.authors}</p>
+      <div className="flex items-baseline gap-1.5">
+        <p className="shrink-0 font-mono text-[10px] text-ink-300">{publication.year}</p>
+        <p className="line-clamp-1 font-body text-[10px] text-ink-300">{publication.authors}</p>
       </div>
     </Link>
   );
