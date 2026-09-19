@@ -37,13 +37,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { CalendarBlank, CaretDown, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
 import type { TeamSlug } from "@/lib/content/types";
 import { Container } from "@/components/ui/Container";
-import { FilterChip } from "@/components/ui/FilterChip";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
@@ -684,6 +683,57 @@ export function PublicationsShowcase(): ReactNode {
     }
   }
 
+  // Coverflow depth (site owner's reference: collectui.com's cover-flow
+  // sliders — a centred item reading larger and brighter, everything
+  // else receding toward the frame's edges, "ga kaku" than a flat row).
+  // Pure function of scroll position, so it's driven by BOTH the
+  // auto-drift's rAF tick and the scroller's native `scroll` event —
+  // whichever is moving the row at a given moment, the cards stay in
+  // sync with it. Direct DOM writes, not React state (Motion's own
+  // guidance: a per-frame value like this belongs in a ref/DOM
+  // mutation, not a re-render — twenty-plus cards re-rendering on every
+  // scroll tick would be the actual performance bug). Reads are
+  // batched before writes (one getBoundingClientRect pass, then one
+  // style pass) so this can't trigger the layout-thrashing a naive
+  // read/write/read/write loop would.
+  //
+  // Gated off entirely under reduced motion: scroll-linked scaling is
+  // still a vestibular trigger for some users even though the user's
+  // own scroll drives it, not an autonomous loop — this project gates
+  // all non-essential motion the same way regardless of that
+  // distinction (HeroCanvas's idle scan, the marquee drift above), so
+  // reduced motion here means a flat, static row, full stop.
+  function updateCoverflow() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cards = el.querySelectorAll<HTMLElement>("[data-coverflow-card]");
+    if (reducedMotion) {
+      cards.forEach((card) => {
+        card.style.transform = "";
+        card.style.opacity = "";
+      });
+      return;
+    }
+
+    const containerRect = el.getBoundingClientRect();
+    const centerX = containerRect.left + containerRect.width / 2;
+    const halfWidth = containerRect.width / 2 || 1;
+
+    const reads: { card: HTMLElement; distance: number }[] = [];
+    cards.forEach((card) => {
+      const r = card.getBoundingClientRect();
+      reads.push({ card, distance: Math.abs(r.left + r.width / 2 - centerX) });
+    });
+
+    for (const { card, distance } of reads) {
+      const t = Math.min(distance / halfWidth, 1); // 0 at centre, 1 at the frame's edge
+      const scale = 1.08 - t * 0.22;
+      const opacity = 1 - t * 0.55;
+      card.style.transform = `scale(${scale.toFixed(3)})`;
+      card.style.opacity = opacity.toFixed(3);
+    }
+  }
+
   useEffect(() => {
     // Filter changes can shrink the slider's scrollWidth out from under an
     // old scroll position (e.g. it was scrolled right, then a filter drops
@@ -693,8 +743,22 @@ export function PublicationsShowcase(): ReactNode {
     if (!el) return;
     el.scrollTo({ left: 0 });
     updateScrollButtons();
+    // Cards for the new filter haven't painted at their final layout
+    // position the instant this effect runs — one rAF later, they have.
+    requestAnimationFrame(updateCoverflow);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTeam, activeYear]);
+
+  // Re-run on resize too (a wider/narrower frame moves the centre point
+  // and every card's distance from it, independent of any scrolling).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => updateCoverflow());
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reducedMotion]);
 
   // The continuous drift itself. Runs its own rAF loop rather than a CSS
   // animation because the content is a real, natively-scrollable list
@@ -756,6 +820,7 @@ export function PublicationsShowcase(): ReactNode {
       const half = el!.scrollWidth / 2;
       if (pos >= half) pos -= half;
       el!.scrollLeft = pos;
+      updateCoverflow();
     }
 
     raf = requestAnimationFrame(tick);
@@ -813,21 +878,17 @@ export function PublicationsShowcase(): ReactNode {
           ))}
         </div>
 
+        {/* Year filter: a single compact dropdown widget, not a row of
+            year chips (site owner's request, 2026-09-19 — the old row
+            was up to a dozen buttons wide and wrapped onto its own
+            lines). Stays up here next to the prev/next controls rather
+            than moving to a page rail: it's a control FOR the gallery
+            directly below it, and a full-width horizontal marquee has
+            no natural left/right edge to dock a sidebar against
+            (especially on mobile, where a rail would either vanish or
+            eat a third of the screen). See YearFilterMenu below. */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
-            <FilterChip active={activeYear === "all"} onClick={() => setActiveYear("all")}>
-              All years
-            </FilterChip>
-            {years.map((year) => (
-              <FilterChip
-                key={year}
-                active={activeYear === String(year)}
-                onClick={() => setActiveYear(String(year))}
-              >
-                {year}
-              </FilterChip>
-            ))}
-          </div>
+          <YearFilterMenu years={years} activeYear={activeYear} onChange={setActiveYear} />
 
           {filtered.length > 0 && (
             <div className="flex gap-2">
@@ -869,63 +930,84 @@ export function PublicationsShowcase(): ReactNode {
             </Button>
           </div>
         ) : (
-          // No scroll-snap any more (had been snap-x snap-mandatory):
-          // mandatory snap actively fights a continuously-incrementing
-          // scrollLeft, which is what the auto-drift above needs to do
-          // every frame — every browser tested pulled the track back
-          // toward the nearest snap point mid-drift, reading as
-          // stutter, not smooth motion. Pause handlers below cover the
-          // "kalau kursor diarahkan kesana animasinya berhenti, tapi
-          // bisa discroll tetep" ask: hover/focus/touch pause the
-          // auto-increment (interactingRef), while native wheel/touch/
-          // keyboard scrolling is untouched either way, since this stays
-          // an ordinary overflow-x-auto container throughout.
-          <div
-            ref={scrollerRef}
-            onScroll={updateScrollButtons}
-            onMouseEnter={() => {
-              interactingRef.current = true;
-            }}
-            onMouseLeave={() => {
-              interactingRef.current = false;
-            }}
-            onFocus={() => {
-              interactingRef.current = true;
-            }}
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          // The "frame" (site owner's reference: the collectui.com
+          // cover-flow examples, praised specifically for not looking
+          // "kaku" against a flat row) — a rounded, bordered panel the
+          // slider sits inside, echoing the same double-bezel treatment
+          // the hero's map card already uses (Hero.tsx), rather than
+          // the gallery floating directly on the page background. The
+          // edge fade (mask-image on the scroller, not this frame) is
+          // what actually sells "not kaku": cards dissolve into the
+          // frame's own background as they near either edge instead of
+          // being guillotined by a hard clip.
+          <div className="mt-8 rounded-4xl border border-white/8 bg-ink-900 p-4 md:p-6">
+            {/* No scroll-snap any more (had been snap-x snap-mandatory):
+                mandatory snap actively fights a continuously-incrementing
+                scrollLeft, which is what the auto-drift above needs to do
+                every frame — every browser tested pulled the track back
+                toward the nearest snap point mid-drift, reading as
+                stutter, not smooth motion. Pause handlers below cover the
+                "kalau kursor diarahkan kesana animasinya berhenti, tapi
+                bisa discroll tetep" ask: hover/focus/touch pause the
+                auto-increment (interactingRef), while native wheel/touch/
+                keyboard scrolling is untouched either way, since this stays
+                an ordinary overflow-x-auto container throughout. */}
+            <div
+              ref={scrollerRef}
+              onScroll={() => {
+                updateScrollButtons();
+                updateCoverflow();
+              }}
+              onMouseEnter={() => {
+                interactingRef.current = true;
+              }}
+              onMouseLeave={() => {
                 interactingRef.current = false;
-              }
-            }}
-            onPointerDown={() => {
-              interactingRef.current = true;
-            }}
-            onPointerUp={() => {
-              interactingRef.current = false;
-              pauseUntilRef.current = performance.now() + 600;
-            }}
-            onPointerCancel={() => {
-              interactingRef.current = false;
-              pauseUntilRef.current = performance.now() + 600;
-            }}
-            className="mt-8 flex gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {/* Rendered twice when looping (see the auto-drift effect
-                above) — the second copy is purely a visual continuation
-                for the wrap-around, not real additional content, so it's
-                hidden from assistive tech and pulled out of tab order
-                (PublicationCard's hiddenDuplicate prop) rather than
-                doubling every publication's link in the page's a11y
-                tree. */}
-            {(loop ? [0, 1] : [0]).flatMap((copy) =>
-              filtered.map((pub) => (
-                <PublicationCard
-                  key={`${pub.slug}-${copy}`}
-                  publication={pub}
-                  hiddenDuplicate={copy === 1}
-                />
-              )),
-            )}
+              }}
+              onFocus={() => {
+                interactingRef.current = true;
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  interactingRef.current = false;
+                }
+              }}
+              onPointerDown={() => {
+                interactingRef.current = true;
+              }}
+              onPointerUp={() => {
+                interactingRef.current = false;
+                pauseUntilRef.current = performance.now() + 600;
+              }}
+              onPointerCancel={() => {
+                interactingRef.current = false;
+                pauseUntilRef.current = performance.now() + 600;
+              }}
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+              }}
+              className="flex items-center gap-5 overflow-x-auto py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {/* Rendered twice when looping (see the auto-drift effect
+                  above) — the second copy is purely a visual continuation
+                  for the wrap-around, not real additional content, so it's
+                  hidden from assistive tech and pulled out of tab order
+                  (PublicationCard's hiddenDuplicate prop) rather than
+                  doubling every publication's link in the page's a11y
+                  tree. */}
+              {(loop ? [0, 1] : [0]).flatMap((copy) =>
+                filtered.map((pub) => (
+                  <PublicationCard
+                    key={`${pub.slug}-${copy}`}
+                    publication={pub}
+                    hiddenDuplicate={copy === 1}
+                  />
+                )),
+              )}
+            </div>
           </div>
         )}
       </Container>
@@ -972,7 +1054,15 @@ function PublicationCard({
       href={`/publications/${publication.slug}`}
       aria-hidden={hiddenDuplicate || undefined}
       tabIndex={hiddenDuplicate ? -1 : undefined}
-      className="group flex w-32 flex-shrink-0 flex-col gap-2 sm:w-36 lg:w-[170px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      // The coverflow scale/opacity in PublicationsShowcase writes
+      // directly to this element's style every scroll tick (see
+      // updateCoverflow) — a ref array would work too, but a data
+      // attribute lets that function find "every card currently in the
+      // DOM" with one querySelectorAll, including the duplicated loop
+      // copy, without PublicationCard having to forward a ref prop
+      // through two render paths for the same component.
+      data-coverflow-card=""
+      className="group flex w-32 flex-shrink-0 flex-col gap-2 [will-change:transform,opacity] sm:w-36 lg:w-[170px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       {/* Honest empty slot when no coverImage is set — see this file's
           top comment and lib/content/types.ts. Never a stock photo
@@ -1000,6 +1090,140 @@ function PublicationCard({
         <p className="line-clamp-1 font-body text-[10px] text-ink-300">{publication.authors}</p>
       </div>
     </Link>
+  );
+}
+
+// Year filter, rebuilt as one compact dropdown widget (2026-09-19, site
+// owner's direct request), replacing what used to be a full row of up
+// to a dozen FilterChip buttons ("All years" plus eleven individual
+// years) — at any width narrower than roughly four cards, that row wrapped
+// onto two or three lines and read as visual noise sitting above a
+// slider that's trying to be the section's main event.
+//
+// Placement: stays at the top of the section, beside the prev/next
+// scroll buttons, rather than moving to a page-edge rail — it's a
+// control for the gallery immediately below it, and there's no natural
+// left/right dock for a full-bleed horizontal marquee to sit next to
+// (a side rail would either disappear below `md` or eat a third of a
+// phone screen). What changed is the CONTROL, not its position: one
+// small trigger instead of a long chip row.
+function YearFilterMenu({
+  years,
+  activeYear,
+  onChange,
+}: {
+  years: number[];
+  activeYear: string;
+  onChange: (year: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const label = activeYear === "all" ? "All years" : activeYear;
+
+  function select(year: string) {
+    onChange(year);
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex items-center gap-2 rounded-full border py-2 pl-3.5 pr-3 font-mono text-[13px] uppercase tracking-[0.08em] transition-colors duration-150",
+          open || activeYear !== "all"
+            ? "border-ink-000 text-ink-000"
+            : "border-ink-500 text-ink-300 hover:border-ink-300 hover:text-ink-100",
+        )}
+      >
+        <CalendarBlank size={14} weight="bold" aria-hidden="true" />
+        {label}
+        <CaretDown
+          size={12}
+          weight="bold"
+          aria-hidden="true"
+          className={cn("transition-transform duration-200", open && "rotate-180")}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="listbox"
+            aria-label="Filter by year"
+            initial={reducedMotion ? false : { opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reducedMotion ? undefined : { opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: reducedMotion ? 0 : 0.16, ease: EASE }}
+            className="absolute left-0 top-[calc(100%+8px)] z-20 w-60 rounded-2xl border border-white/8 bg-ink-800 p-2 shadow-[0_16px_48px_rgba(0,0,0,0.45)]"
+            style={{ transformOrigin: "top left" }}
+          >
+            <button
+              type="button"
+              role="option"
+              aria-selected={activeYear === "all"}
+              onClick={() => select("all")}
+              className={cn(
+                "w-full rounded-xl px-3 py-2 text-left font-mono text-[12px] uppercase tracking-[0.06em] transition-colors",
+                activeYear === "all"
+                  ? "bg-white/10 text-ink-000"
+                  : "text-ink-300 hover:bg-white/5 hover:text-ink-100",
+              )}
+            >
+              All years
+            </button>
+            <div className="mt-1 grid grid-cols-3 gap-1">
+              {years.map((year) => (
+                <button
+                  key={year}
+                  type="button"
+                  role="option"
+                  aria-selected={activeYear === String(year)}
+                  onClick={() => select(String(year))}
+                  className={cn(
+                    "rounded-lg px-2 py-2 text-center font-mono text-[12px] transition-colors",
+                    activeYear === String(year)
+                      ? "bg-white/10 text-ink-000"
+                      : "text-ink-300 hover:bg-white/5 hover:text-ink-100",
+                  )}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
