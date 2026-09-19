@@ -25,13 +25,15 @@ export function Hero() {
       <Container>
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-8">
           <div className="flex flex-col gap-7">
-            {/* Uppercase tracked display type, matching the brief's own
-                mockups (section 3.4/19) and the mono/technical-annotation
-                language used elsewhere in the hero. Size and column width
-                were tuned together against the real rendered width, not
-                assumed — "Transportation Laboratory" is the line that
-                decides this. */}
-            <h1 className="font-display text-3xl font-semibold uppercase leading-[1.1] tracking-tight text-ink-000 sm:text-4xl lg:text-[2.75rem]">
+            {/* Title case, not the all-caps treatment used elsewhere in
+                the hero (mono coordinates, nav) — changed 2026-09-19 at
+                the site owner's request, moving away from the uppercase
+                mockup styling in the brief (section 3.4/19). Written in
+                title case directly rather than relying on CSS
+                `capitalize` (inconsistent across browsers around
+                punctuation like "&"), so what's in the markup is what
+                renders. */}
+            <h1 className="font-display text-3xl font-semibold leading-[1.1] tracking-tight text-ink-000 sm:text-4xl lg:text-[2.75rem]">
               Transportation &amp;
               <br />
               Spatial Analysis Laboratory
