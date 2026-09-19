@@ -913,7 +913,7 @@ function TeamFilterCard({
         <div
           style={{ backfaceVisibility: "hidden" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 transition-colors duration-300 hover:bg-white/4 p-3",
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 transition-[border-color] duration-300 hover:bg-white/4 p-3",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
@@ -930,11 +930,19 @@ function TeamFilterCard({
             whichever face is actually facing the visitor while hovered
             gets the same treatment; backface-visibility: hidden keeps
             the non-facing side out of hit-testing, so only the visible
-            one ever shows the tint. */}
+            one ever shows the tint.
+            transition-[border-color] only, not transition-colors (site
+            owner: a black flash was visible mid-flip) — the background
+            was animating through its own 300ms fade on the SAME face
+            that was simultaneously mid-rotation from the flip's 450ms
+            transform, and the two competing transitions is what read as
+            a dark flash. The background now applies the moment :hover
+            engages, no separate fade of its own; only the border still
+            eases, which was never part of the complaint. */}
         <div
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 transition-colors duration-300 hover:bg-white/4 p-3",
+            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 transition-[border-color] duration-300 hover:bg-white/4 p-3",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
