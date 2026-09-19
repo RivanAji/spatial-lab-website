@@ -37,7 +37,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
@@ -493,7 +493,12 @@ export function PublicationsShowcase(): ReactNode {
             three small cards, breaking the left/right edges every
             other row in this section already lines up to. Grid columns
             stretch to fill, matching that. */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* items-start: a hovered card now grows taller to reveal its
+            content (see TeamFilterCard below) — without this, CSS
+            Grid's default row-stretch would visually stretch the OTHER
+            two cards' borders to match, when only the hovered one
+            should actually grow. */}
+        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-3">
           {teams.map((team, index) => (
             <TeamFilterCard
               key={team.slug}
@@ -619,35 +624,37 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
   );
 }
 
-// Rebuilt a third time the same day, replacing the flip entirely (site
-// owner's direct request): "hovernya seperti Explore Research... tetap
-// muncul deskripsi... lengkap dengan animasinya" — the flip hid the
-// description and illustration behind a rotation, when what was
-// actually wanted was HeroCtas.tsx's "Explore Research" hover language
-// (a plain background tint, content never hidden) applied here, with
-// the description and illustration part of the card's normal resting
-// content instead of something a visitor has to trigger to see.
+// Rebuilt a fourth time the same day (site owner's direct correction):
+// the always-visible two-column layout from the previous pass made the
+// card permanently tall — "tingginya malah kembali lagi" (the height
+// went back up again). What was actually wanted was HeroCtas.tsx's
+// "Explore Research" hover language (background tint) AS THE TRIGGER
+// for a reveal, not as a replacement for one: at rest the card shows
+// only the number and team name; hovering (or focusing, or selecting
+// it as the active filter) both tints the background AND expands the
+// card to reveal the tagline/illustration row, with a real height
+// animation rather than the earlier version's rotation. This is closer
+// to the very first version built this session, before the flip
+// detour, but rebuilt on the richer illustrations and paired with the
+// spotlight border and the parallax below, neither of which existed
+// yet back then.
 //
-// Layout: number and team name on top, then a row with the tagline on
-// the left and the illustration on the right ("animasinya sebelah
-// kanan, sebelah kirinya deskripsi") — a real two-column split, not a
-// reveal. hover:bg-white/4 matches ContactButton/Explore Research's own
-// hover exactly, so all three CTAs in this hero+publications block
-// share one hover language.
+// Cursor parallax (site owner: "100x lebih interaktif... tapi jangan
+// terlalu komplex"): the simplest genuinely interactive layer to add
+// without turning this into a different component — the illustration
+// itself now tracks the pointer with a small, damped offset, reusing
+// the exact pointer coordinates already captured for the spotlight
+// border rather than a second listener. Written straight to the
+// element's own transform via a ref, like the spotlight's --mx/--my,
+// so it doesn't re-render on every pixel of movement; a short CSS
+// transition (not Motion) smooths the discrete mousemove samples into
+// a continuous-looking drift. This is real interactivity (it responds
+// to THIS visitor's actual cursor, not a canned loop) rather than a
+// bigger or busier version of the same fixed animation.
 //
-// The illustrations themselves were substantially rebuilt (see each
-// function above) per direct feedback that the previous ones "tampak
-// biasa sekali" — more elements, more specific to each team's subject,
-// choreographed with the same EASE curve. Since there's no more
-// hover-to-reveal moment to hang `playing` on, each illustration now
-// plays once when the card actually scrolls into view (Motion's
-// useInView, `once: true`) rather than on hover — a card a visitor
-// never scrolls to doesn't need to have spent cycles animating either.
-//
-// Spotlight border (kept from the previous pass, "outlinenya mengikuti
-// mouse"): unaffected by removing the flip — see globals.css's
-// .card-spotlight comment for the mask-composite technique and why
-// --mx/--my are written via a ref mutation instead of React state.
+// Spotlight border ("outlinenya mengikuti mouse", kept from the
+// previous pass): see globals.css's .card-spotlight comment for the
+// mask-composite technique.
 function TeamFilterCard({
   team,
   Illustration,
@@ -661,30 +668,43 @@ function TeamFilterCard({
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
-  const cardRef = useRef<HTMLButtonElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(cardRef, { once: true, amount: 0.4 });
-  const playing = inView && !reducedMotion;
+  const parallaxRef = useRef<HTMLDivElement>(null);
+
+  const revealed = active || hovered;
+  const playing = revealed && !reducedMotion;
 
   function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    glowRef.current?.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    glowRef.current?.style.setProperty("--my", `${e.clientY - rect.top}px`);
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    glowRef.current?.style.setProperty("--mx", `${px}px`);
+    glowRef.current?.style.setProperty("--my", `${py}px`);
+
+    if (parallaxRef.current && !reducedMotion) {
+      const nx = px / rect.width - 0.5;
+      const ny = py / rect.height - 0.5;
+      parallaxRef.current.style.transform = `translate3d(${nx * 10}px, ${ny * 8}px, 0)`;
+    }
+  }
+
+  function handleLeave() {
+    setHovered(false);
+    if (parallaxRef.current) parallaxRef.current.style.transform = "translate3d(0,0,0)";
   }
 
   return (
     <button
-      ref={cardRef}
       type="button"
       aria-pressed={active}
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={handleLeave}
       onMouseMove={handlePointerMove}
       onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
+      onBlur={handleLeave}
       className={cn(
-        "relative flex w-full flex-col gap-3 rounded-xl border bg-ink-900 p-4 text-left transition-colors duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
+        "relative flex w-full flex-col gap-1 rounded-xl border bg-ink-900 p-4 text-left transition-colors duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 active:scale-[0.99]",
         active ? "border-ink-000" : "border-white/8",
       )}
     >
@@ -697,12 +717,29 @@ function TeamFilterCard({
         </h3>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-        <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
-        <div aria-hidden="true" className="h-24 w-32 shrink-0 text-ink-100">
-          <Illustration playing={playing} />
-        </div>
-      </div>
+      <AnimatePresence initial={false}>
+        {revealed && (
+          <motion.div
+            key="reveal"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="grid grid-cols-[1fr_auto] items-center gap-3 pt-3">
+              <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
+              <div
+                ref={parallaxRef}
+                aria-hidden="true"
+                className="h-24 w-32 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
+              >
+                <Illustration playing={playing} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div
         ref={glowRef}
