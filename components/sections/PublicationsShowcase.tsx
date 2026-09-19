@@ -37,7 +37,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
@@ -50,217 +50,355 @@ import { cn } from "@/lib/cn";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 // ---- Illustration 1: Sustainable Urban Transportation ----
-// A road network: edges draw themselves in, nodes pop in staggered
-// after, then a small pulse loops along the network while the card
-// stays revealed — a literal diagram of a transport network, not a
-// generic route icon.
+// Rebuilt substantially (site owner's request, 2026-09-19: the original
+// 5-node graph "tampak biasa sekali" / read as too plain). Now a small
+// street grid with static low-opacity building blocks for urban
+// texture, real intersections, and two independent vehicle glyphs
+// (not one dot) running their own routes at different speeds — one the
+// full outer loop, one a shorter spur — each oriented to the direction
+// of travel via `offset-rotate: auto`. Still plain <rect>/<circle>
+// elements for the travelling glyphs, not motion.*, driven by the CSS
+// --animate-travel-path keyframes (globals.css) — Motion doesn't
+// animate offsetDistance (see that file's comment); everything else
+// here that ISN'T on an offset-path still safely uses Motion.
 function TransportIllustration({ playing }: { playing: boolean }) {
-  const nodes: [number, number][] = [
-    [8, 52],
-    [38, 20],
-    [68, 52],
-    [98, 24],
-    [53, 36],
+  const roads = ["M8 28 L132 28", "M8 68 L132 68", "M35 8 L35 82", "M104 8 L104 82"];
+  const intersections: [number, number][] = [
+    [35, 28],
+    [104, 28],
+    [35, 68],
+    [104, 68],
   ];
-  const edges: [number, number][] = [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [1, 4],
-    [4, 2],
+  const buildings: [number, number, number, number][] = [
+    [14, 12, 12, 10],
+    [50, 12, 10, 8],
+    [112, 12, 12, 10],
+    [14, 74, 12, 8],
+    [50, 76, 10, 6],
+    [112, 74, 12, 8],
   ];
-  const path = "M8 52 L38 20 L53 36 L68 52 L98 24";
+  const loopRoute = "M8 28 L132 28 L132 68 L8 68 Z";
+  const spurRoute = "M35 8 L35 82";
 
   return (
-    <svg viewBox="0 0 120 72" fill="none" className="h-full w-full">
-      {edges.map(([a, b], i) => (
-        <motion.line
+    <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
+      {buildings.map(([x, y, w, h], i) => (
+        <motion.rect
           key={i}
-          x1={nodes[a][0]}
-          y1={nodes[a][1]}
-          x2={nodes[b][0]}
-          y2={nodes[b][1]}
+          x={x}
+          y={y}
+          width={w}
+          height={h}
+          rx={1}
+          stroke="currentColor"
+          strokeWidth="0.6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: playing ? 0.18 : 0 }}
+          transition={{ duration: 0.4, delay: 0.04 * i, ease: EASE }}
+        />
+      ))}
+
+      {roads.map((d, i) => (
+        <motion.path
+          key={i}
+          d={d}
           stroke="currentColor"
           strokeWidth="1.2"
           strokeLinecap="round"
           initial={{ pathLength: 0, opacity: 0.3 }}
           animate={playing ? { pathLength: 1, opacity: 0.55 } : { pathLength: 0, opacity: 0 }}
-          transition={{ duration: 0.5, delay: i * 0.08, ease: EASE }}
+          transition={{ duration: 0.5, delay: 0.2 + i * 0.1, ease: EASE }}
         />
       ))}
-      {nodes.map(([x, y], i) => (
+
+      {intersections.map(([x, y], i) => (
         <motion.circle
           key={i}
           cx={x}
           cy={y}
-          r={i === 1 ? 3.2 : 2.4}
+          r={2.4}
           fill="currentColor"
           initial={{ scale: 0, opacity: 0 }}
           animate={playing ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 + i * 0.07, ease: EASE }}
+          transition={{ duration: 0.3, delay: 0.65 + i * 0.06, ease: EASE }}
         />
       ))}
-      {/* Plain CSS animation, not Motion — see the --animate-travel-path
-          comment in globals.css for why. offset-path is the one part
-          that has to stay a per-element inline style (each illustration
-          traces a different path); the 0%->100% sweep itself is shared. */}
-      <circle
-        r="2"
+
+      {/* Vehicle 1: full outer loop. Plain elements, not motion.* — see
+          the file-top note on why the travelling glyphs stay off Motion's
+          animate prop. */}
+      <rect
+        width="4.4"
+        height="2.6"
+        x="-2.2"
+        y="-1.3"
+        rx="0.8"
         fill="currentColor"
         opacity={playing ? undefined : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
-        style={{ offsetPath: `path("${path}")`, animationDelay: "0.9s" }}
+        style={{
+          offsetPath: `path("${loopRoute}")`,
+          offsetRotate: "auto",
+          animationDuration: "3.8s",
+          animationDelay: "0.9s",
+        }}
+      />
+
+      {/* Vehicle 2: the vertical spur, a shorter, quicker route. */}
+      <rect
+        width="3.6"
+        height="2.2"
+        x="-1.8"
+        y="-1.1"
+        rx="0.7"
+        fill="currentColor"
+        opacity={playing ? 0.75 : 0}
+        className={playing ? "motion-safe:animate-travel-path" : undefined}
+        style={{
+          offsetPath: `path("${spurRoute}")`,
+          offsetRotate: "auto",
+          animationDuration: "2.3s",
+          animationDelay: "1.15s",
+        }}
       />
     </svg>
   );
 }
 
 // ---- Illustration 2: Spatial Data Science & AI for Urban Analytics ----
-// Two offset "map layers" (rects with a light grid) fade and slide into
-// alignment — GIS layer stacking — behind a small decision-tree graph
-// (a root splitting into branches, one branch resolving as "chosen")
-// standing in for an algorithm evaluating a split, which is the actual
-// subject (machine learning / decision-tree style methods), not a
-// literal neural-net cliché.
+// Rebuilt: three stacked GIS layers now (not two), each with a visually
+// distinct pattern — points, a road grid, a zoning hatch — so they read
+// as different DATA layers rather than one rect repeated. A scan bar
+// sweeps down across the stack on a slow loop once revealed, standing
+// in for a classification pass. The decision tree deepened to a full
+// root -> branch -> leaf structure with the resolved root-to-leaf path
+// drawn heavier and carrying its own travelling marker, the two
+// unresolved branches left dim — a clearer "the model is evaluating and
+// choosing a path" read than the original's single fork.
 function DataScienceIllustration({ playing }: { playing: boolean }) {
+  const layers = [
+    { x: 6, y: 34, opacity: 0.35, delay: 0.05 },
+    { x: 12, y: 28, opacity: 0.45, delay: 0.15 },
+    { x: 18, y: 22, opacity: 0.6, delay: 0.25 },
+  ];
   const tree = {
-    root: [66, 14] as [number, number],
-    a: [46, 34] as [number, number],
-    b: [90, 34] as [number, number],
-    a1: [34, 54] as [number, number],
-    a2: [56, 54] as [number, number],
+    root: [96, 10] as [number, number],
+    a: [78, 30] as [number, number],
+    b: [116, 30] as [number, number],
+    a1: [64, 52] as [number, number],
+    a2: [88, 52] as [number, number],
   };
+  const resolvedPath = `M${tree.root[0]} ${tree.root[1]} L${tree.a[0]} ${tree.a[1]} L${tree.a1[0]} ${tree.a1[1]}`;
 
   return (
-    <svg viewBox="0 0 120 72" fill="none" className="h-full w-full">
-      {/* map layers */}
-      <motion.g
-        initial={{ opacity: 0, x: -6, y: 6 }}
-        animate={playing ? { opacity: 0.25, x: 0, y: 0 } : { opacity: 0, x: -6, y: 6 }}
-        transition={{ duration: 0.45, ease: EASE }}
-      >
-        <rect x="4" y="26" width="44" height="34" rx="2" stroke="currentColor" strokeWidth="1" />
-        <path d="M4 38h44M4 50h44M18 26v34M32 26v34" stroke="currentColor" strokeWidth="0.6" />
-      </motion.g>
-      <motion.g
-        initial={{ opacity: 0, x: 6, y: -6 }}
-        animate={playing ? { opacity: 0.4, x: 0, y: 0 } : { opacity: 0, x: 6, y: -6 }}
-        transition={{ duration: 0.45, delay: 0.1, ease: EASE }}
-      >
-        <rect x="10" y="20" width="44" height="34" rx="2" stroke="currentColor" strokeWidth="1" />
-        <path d="M10 32h44M10 44h44M24 20v34M38 20v34" stroke="currentColor" strokeWidth="0.6" />
-      </motion.g>
+    <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
+      {/* Three GIS layers, each a distinct pattern so they read as
+          different data, not one rect duplicated. */}
+      {layers.map((layer, i) => (
+        <motion.g
+          key={i}
+          initial={{ opacity: 0, x: -5 + i * 2, y: 5 - i * 2 }}
+          animate={
+            playing
+              ? { opacity: layer.opacity, x: 0, y: 0 }
+              : { opacity: 0, x: -5 + i * 2, y: 5 - i * 2 }
+          }
+          transition={{ duration: 0.45, delay: layer.delay, ease: EASE }}
+        >
+          <rect x={layer.x} y={layer.y} width="40" height="30" rx="2" stroke="currentColor" strokeWidth="1" />
+          {i === 0 && (
+            // points layer
+            <g fill="currentColor">
+              {[0, 1, 2].flatMap((row) =>
+                [0, 1, 2].map((col) => (
+                  <circle
+                    key={`${row}-${col}`}
+                    cx={layer.x + 8 + col * 12}
+                    cy={layer.y + 8 + row * 10}
+                    r="1"
+                  />
+                )),
+              )}
+            </g>
+          )}
+          {i === 1 && (
+            // road grid layer
+            <path
+              d={`M${layer.x} ${layer.y + 10}h40M${layer.x} ${layer.y + 20}h40M${layer.x + 13} ${layer.y}v30M${layer.x + 27} ${layer.y}v30`}
+              stroke="currentColor"
+              strokeWidth="0.6"
+            />
+          )}
+          {i === 2 && (
+            // zoning hatch layer
+            <path
+              d={`M${layer.x} ${layer.y + 30}L${layer.x + 40} ${layer.y}M${layer.x} ${layer.y + 20}L${layer.x + 30} ${layer.y}M${layer.x} ${layer.y + 10}L${layer.x + 20} ${layer.y}`}
+              stroke="currentColor"
+              strokeWidth="0.6"
+            />
+          )}
+        </motion.g>
+      ))}
 
-      {/* decision-tree motif */}
-      <motion.g
-        initial={{ opacity: 0 }}
-        animate={{ opacity: playing ? 1 : 0 }}
-        transition={{ duration: 0.3, delay: 0.25 }}
-      >
-        <motion.line
-          x1={tree.root[0]} y1={tree.root[1]} x2={tree.a[0]} y2={tree.a[1]}
-          stroke="currentColor" strokeWidth="1.2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: playing ? 1 : 0 }}
-          transition={{ duration: 0.3, delay: 0.35, ease: EASE }}
+      {/* Classification scan sweeping the stack, looping while revealed. */}
+      <motion.rect
+        x="4"
+        width="46"
+        height="3"
+        fill="currentColor"
+        initial={{ y: 20, opacity: 0 }}
+        animate={
+          playing
+            ? { y: [20, 56, 20], opacity: [0, 0.3, 0.3, 0] }
+            : { y: 20, opacity: 0 }
+        }
+        transition={{ duration: 3.2, delay: 0.9, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Decision tree: root -> two branches -> resolved leaf. */}
+      <motion.line
+        x1={tree.root[0]} y1={tree.root[1]} x2={tree.b[0]} y2={tree.b[1]}
+        stroke="currentColor" strokeWidth="1" opacity="0.3"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: playing ? 1 : 0 }}
+        transition={{ duration: 0.3, delay: 0.4, ease: EASE }}
+      />
+      <motion.line
+        x1={tree.a[0]} y1={tree.a[1]} x2={tree.a2[0]} y2={tree.a2[1]}
+        stroke="currentColor" strokeWidth="1" opacity="0.3"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: playing ? 1 : 0 }}
+        transition={{ duration: 0.3, delay: 0.55, ease: EASE }}
+      />
+      <motion.path
+        d={resolvedPath}
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: playing ? 1 : 0 }}
+        transition={{ duration: 0.5, delay: 0.4, ease: EASE }}
+      />
+      {[tree.root, tree.a, tree.b, tree.a1, tree.a2].map(([x, y], i) => (
+        <motion.circle
+          key={i}
+          cx={x}
+          cy={y}
+          r={i === 0 ? 2.6 : i === 3 ? 2.4 : 2}
+          fill="currentColor"
+          opacity={i === 2 || i === 4 ? 0.4 : 1}
+          initial={{ scale: 0 }}
+          animate={{ scale: playing ? 1 : 0 }}
+          transition={{ duration: 0.25, delay: 0.45 + i * 0.08, ease: EASE }}
         />
-        <motion.line
-          x1={tree.root[0]} y1={tree.root[1]} x2={tree.b[0]} y2={tree.b[1]}
-          stroke="currentColor" strokeWidth="1.2" opacity="0.35"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: playing ? 1 : 0 }}
-          transition={{ duration: 0.3, delay: 0.35, ease: EASE }}
-        />
-        <motion.line
-          x1={tree.a[0]} y1={tree.a[1]} x2={tree.a1[0]} y2={tree.a1[1]}
-          stroke="currentColor" strokeWidth="1.2"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: playing ? 1 : 0 }}
-          transition={{ duration: 0.3, delay: 0.55, ease: EASE }}
-        />
-        <motion.line
-          x1={tree.a[0]} y1={tree.a[1]} x2={tree.a2[0]} y2={tree.a2[1]}
-          stroke="currentColor" strokeWidth="1.2" opacity="0.35"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: playing ? 1 : 0 }}
-          transition={{ duration: 0.3, delay: 0.55, ease: EASE }}
-        />
-        {[tree.root, tree.a, tree.b, tree.a1, tree.a2].map(([x, y], i) => (
-          <motion.circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={i === 0 ? 2.6 : 2}
-            fill="currentColor"
-            initial={{ scale: 0 }}
-            animate={{ scale: playing ? 1 : 0 }}
-            transition={{ duration: 0.25, delay: 0.3 + i * 0.1, ease: EASE }}
-          />
-        ))}
-      </motion.g>
+      ))}
+      {/* Marker riding the resolved root-to-leaf path. */}
+      <circle
+        r="1.8"
+        fill="currentColor"
+        opacity={playing ? undefined : 0}
+        className={playing ? "motion-safe:animate-travel-path" : undefined}
+        style={{ offsetPath: `path("${resolvedPath}")`, animationDuration: "2s", animationDelay: "1.2s" }}
+      />
     </svg>
   );
 }
 
 // ---- Illustration 3: Decision Support & Climate Change ----
-// A branching decision path (one option resolves as "selected" via a
-// travelling marker) drawn above a slowly oscillating wave line —
-// standing in for climate variability / scenario data — rather than a
-// literal weather icon.
+// Rebuilt: the branching path now genuinely branches three ways (low /
+// mid / high scenario), with the mid path resolved and carrying a
+// travelling marker while the other two stay dim — three real options
+// being weighed, not one fork. Added a small rising bar group
+// (staggered heights, standing in for variable climate data alongside
+// the wave line rather than the wave carrying that idea alone).
 function ClimateIllustration({ playing }: { playing: boolean }) {
-  const path = "M10 26 L46 26 L80 10";
-  const branch = "M46 26 L84 42";
+  const root: [number, number] = [8, 45];
+  const branches: { end: [number, number]; resolved?: boolean }[] = [
+    { end: [72, 16] },
+    { end: [72, 45], resolved: true },
+    { end: [72, 74] },
+  ];
+  const resolvedPath = `M${root[0]} ${root[1]} L72 45`;
+  const bars = [
+    { x: 92, h: 18, delay: 0.5 },
+    { x: 102, h: 30, delay: 0.58 },
+    { x: 112, h: 12, delay: 0.66 },
+    { x: 122, h: 24, delay: 0.74 },
+    { x: 132, h: 20, delay: 0.82 },
+  ];
+  const baseline = 78;
 
   return (
-    <svg viewBox="0 0 120 72" fill="none" className="h-full w-full">
-      <motion.path
-        d={path}
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        initial={{ pathLength: 0, opacity: 0.6 }}
-        animate={{ pathLength: playing ? 1 : 0 }}
-        transition={{ duration: 0.5, ease: EASE }}
-      />
-      <motion.path
-        d={branch}
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        opacity="0.3"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: playing ? 1 : 0 }}
-        transition={{ duration: 0.4, delay: 0.15, ease: EASE }}
-      />
-      {[
-        [10, 26],
-        [46, 26],
-        [80, 10],
-        [84, 42],
-      ].map(([x, y], i) => (
-        <motion.circle
+    <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
+      {branches.map((b, i) => (
+        <motion.line
           key={i}
-          cx={x}
-          cy={y}
-          r={i === 1 ? 2.6 : 2}
-          fill="currentColor"
-          initial={{ scale: 0 }}
-          animate={{ scale: playing ? 1 : 0 }}
-          transition={{ duration: 0.25, delay: 0.25 + i * 0.08, ease: EASE }}
+          x1={root[0]}
+          y1={root[1]}
+          x2={b.end[0]}
+          y2={b.end[1]}
+          stroke="currentColor"
+          strokeWidth={b.resolved ? 1.6 : 1}
+          strokeLinecap="round"
+          opacity={b.resolved ? undefined : 0.3}
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: playing ? 1 : 0 }}
+          transition={{ duration: 0.5, delay: 0.15 + i * 0.1, ease: EASE }}
         />
       ))}
-      {/* Plain CSS animation — see globals.css --animate-travel-path. */}
+      <motion.circle
+        cx={root[0]}
+        cy={root[1]}
+        r="2.8"
+        fill="currentColor"
+        initial={{ scale: 0 }}
+        animate={{ scale: playing ? 1 : 0 }}
+        transition={{ duration: 0.25, delay: 0.1, ease: EASE }}
+      />
+      {branches.map((b, i) => (
+        <motion.circle
+          key={i}
+          cx={b.end[0]}
+          cy={b.end[1]}
+          r={b.resolved ? 2.6 : 1.8}
+          fill="currentColor"
+          opacity={b.resolved ? 1 : 0.35}
+          initial={{ scale: 0 }}
+          animate={{ scale: playing ? 1 : 0 }}
+          transition={{ duration: 0.25, delay: 0.45 + i * 0.08, ease: EASE }}
+        />
+      ))}
+      {/* Marker riding the resolved (mid-scenario) branch. */}
       <circle
         r="2"
         fill="currentColor"
         opacity={playing ? undefined : 0}
         className={playing ? "motion-safe:animate-travel-path" : undefined}
-        style={{ offsetPath: `path("${path}")`, animationDuration: "1.8s", animationDelay: "0.7s" }}
+        style={{ offsetPath: `path("${resolvedPath}")`, animationDuration: "1.8s", animationDelay: "0.9s" }}
       />
 
-      {/* climate wave */}
+      {/* Variable climate data, rising bars. */}
+      {bars.map((bar, i) => (
+        <motion.rect
+          key={i}
+          x={bar.x}
+          width="6"
+          rx="1"
+          fill="currentColor"
+          opacity="0.55"
+          initial={{ y: baseline, height: 0 }}
+          animate={
+            playing
+              ? { y: baseline - bar.h, height: bar.h }
+              : { y: baseline, height: 0 }
+          }
+          transition={{ duration: 0.45, delay: bar.delay, ease: EASE }}
+        />
+      ))}
+
+      {/* Climate wave, slow ambient drift once revealed. */}
       <motion.path
-        d="M4 62 Q 16 54, 28 62 T 52 62 T 76 62 T 100 62 T 116 62"
+        d="M4 84 Q 16 78, 28 84 T 52 84 T 76 84"
         stroke="currentColor"
         strokeWidth="1"
         opacity="0.4"
@@ -481,65 +619,35 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
   );
 }
 
-// Flip card (site owner's request, 2026-09-19, replacing the earlier
-// fade-reveal version): front face is the number and team name only,
-// back face is the illustration and tagline. A standard 3D-flip CSS
-// technique (perspective on the outer element, preserve-3d on the
-// rotating layer, backface-visibility: hidden on each face, the back
-// face pre-rotated 180deg so it lands right-side-up when the layer
-// hits 180) driven by Motion's `rotateY`, which — unlike offsetDistance
-// (see globals.css's --animate-travel-path comment) — Motion animates
-// natively without issue.
+// Rebuilt a third time the same day, replacing the flip entirely (site
+// owner's direct request): "hovernya seperti Explore Research... tetap
+// muncul deskripsi... lengkap dengan animasinya" — the flip hid the
+// description and illustration behind a rotation, when what was
+// actually wanted was HeroCtas.tsx's "Explore Research" hover language
+// (a plain background tint, content never hidden) applied here, with
+// the description and illustration part of the card's normal resting
+// content instead of something a visitor has to trigger to see.
 //
-// Refined a second time the same day: the site owner's exact words were
-// "animasinya masih terlihat AI Slop" (still reads as AI slop) even
-// with the flip itself working. Three concrete craft fixes, not a
-// change of concept (the flip stays; that was an explicit direction
-// this same day):
-// - `perspective` raised from 1000 to 1800: a shallow perspective value
-//   exaggerates the fisheye distortion on the card's edges mid-rotation,
-//   which is exactly the "cheap CSS-tutorial flip-card" tell. A larger
-//   value flattens that distortion, closer to how a real object turning
-//   at a distance would actually look.
-// - `scale` now dips slightly (1 -> 0.94 -> 1) alongside the rotation
-//   instead of rotateY alone — a flat rotation with no other motion
-//   reads as a mechanical hinge; a small lift-and-settle reads as a
-//   card actually being turned. This is the same physical-motion
-//   principle behind the hero canvas's pointer parallax and the travel-
-//   path markers elsewhere in this file, applied here instead of left
-//   as the one un-crafted motion moment in the section.
-// - Faster, at 0.4s: a slow rotation on an element this small (now
-//   roughly half its previous height, see below) reads as sluggish,
-//   which is its own kind of over-animated-for-no-reason tell (core
-//   antislop R-19 — motion must have a purpose, and "make a small card
-//   feel weighty" isn't one).
+// Layout: number and team name on top, then a row with the tagline on
+// the left and the illustration on the right ("animasinya sebelah
+// kanan, sebelah kirinya deskripsi") — a real two-column split, not a
+// reveal. hover:bg-white/4 matches ContactButton/Explore Research's own
+// hover exactly, so all three CTAs in this hero+publications block
+// share one hover language.
 //
-// Height halved (site owner: "tingginya aja yang dikurangi 50%, jadi
-// lebih tipis") — width stays, since the site owner separately
-// confirmed the width was already right. Front-face content re-laid
-// out for the flatter shape (tight stack, not spread top/bottom — there
-// isn't room to spread across ~90px any more) and the back face's
-// illustration shrunk and its tagline clamped to 3 lines so nothing
-// overflows a face this short.
+// The illustrations themselves were substantially rebuilt (see each
+// function above) per direct feedback that the previous ones "tampak
+// biasa sekali" — more elements, more specific to each team's subject,
+// choreographed with the same EASE curve. Since there's no more
+// hover-to-reveal moment to hang `playing` on, each illustration now
+// plays once when the card actually scrolls into view (Motion's
+// useInView, `once: true`) rather than on hover — a card a visitor
+// never scrolls to doesn't need to have spent cycles animating either.
 //
-// Radius: both faces share one value (rounded-xl, 12px) rather than the
-// previous rounded-2xl (16px) — at half the height a 16px radius reads
-// disproportionately large relative to the card's own corners, which is
-// its own small inconsistency; 12px is the value that still reads soft
-// (matching the rest of this section) without looking oversized on a
-// card this flat.
-//
-// Spotlight border (site owner's request, 2026-09-19, "outlinenya
-// mengikuti [mouse], warnanya bisa gradasi"): a soft white radial light
-// that tracks the pointer around the card's outline on hover, defined
-// once in globals.css (.card-spotlight — the mask-composite: exclude
-// trick that makes it paint only the ring, not a filled panel) and
-// positioned here via a ref mutation on mousemove rather than React
-// state, so tracking the pointer doesn't re-render the card (and its
-// flip/illustration motion) on every pixel of movement — the actual
-// mechanism "smoother" means here, not just an easing curve. Sits
-// outside the flipping motion.div, on top of whichever face is
-// currently showing, since the ring itself doesn't need to flip.
+// Spotlight border (kept from the previous pass, "outlinenya mengikuti
+// mouse"): unaffected by removing the flip — see globals.css's
+// .card-spotlight comment for the mask-composite technique and why
+// --mx/--my are written via a ref mutation instead of React state.
 function TeamFilterCard({
   team,
   Illustration,
@@ -553,14 +661,10 @@ function TeamFilterCard({
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
+  const cardRef = useRef<HTMLButtonElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-
-  // Tapping is the whole interaction on touch (no hover to chase), and
-  // the front face already carries real content (number + name), so
-  // there's no empty-card state to guard against here the way the old
-  // fade-reveal version had to.
-  const flipped = active || hovered;
-  const playing = flipped && !reducedMotion;
+  const inView = useInView(cardRef, { once: true, amount: 0.4 });
+  const playing = inView && !reducedMotion;
 
   function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -570,6 +674,7 @@ function TeamFilterCard({
 
   return (
     <button
+      ref={cardRef}
       type="button"
       aria-pressed={active}
       onClick={onSelect}
@@ -578,47 +683,26 @@ function TeamFilterCard({
       onMouseMove={handlePointerMove}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      style={{ perspective: 1800 }}
-      className="relative h-[88px] w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-24"
+      className={cn(
+        "relative flex w-full flex-col gap-3 rounded-xl border bg-ink-900 p-4 text-left transition-colors duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
+        active ? "border-ink-000" : "border-white/8",
+      )}
     >
-      <motion.div
-        className="relative h-full w-full"
-        style={{ transformStyle: "preserve-3d" }}
-        animate={{ rotateY: flipped ? 180 : 0, scale: reducedMotion ? 1 : [1, 0.94, 1] }}
-        transition={{ duration: reducedMotion ? 0 : 0.4, ease: EASE }}
-      >
-        {/* Front */}
-        <div
-          style={{ backfaceVisibility: "hidden" }}
-          className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
-            active ? "border-ink-000" : "border-white/8",
-          )}
-        >
-          <p className="font-mono text-[9px] text-ink-300">
-            {String(team.number).padStart(2, "0")}
-          </p>
-          <h3 className="line-clamp-3 font-display text-xs font-semibold leading-snug text-ink-000">
-            {team.name}
-          </h3>
-        </div>
+      <div>
+        <p className="font-mono text-[10px] text-ink-300">
+          {String(team.number).padStart(2, "0")}
+        </p>
+        <h3 className="mt-1 font-display text-sm font-semibold leading-snug text-ink-000 sm:text-base">
+          {team.name}
+        </h3>
+      </div>
 
-        {/* Back */}
-        <div
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-          className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
-            active ? "border-ink-000" : "border-white/8",
-          )}
-        >
-          <div aria-hidden="true" className="h-6 w-full text-ink-100">
-            <Illustration playing={playing} />
-          </div>
-          <p className="line-clamp-3 font-body text-[10px] leading-snug text-ink-300">
-            {team.tagline}
-          </p>
+      <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+        <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
+        <div aria-hidden="true" className="h-24 w-32 shrink-0 text-ink-100">
+          <Illustration playing={playing} />
         </div>
-      </motion.div>
+      </div>
 
       <div
         ref={glowRef}
