@@ -15,23 +15,27 @@ import { ShaderFlow } from "@/components/shaders/shader-flow";
 // owner's actual mental model is that the hero doesn't end where
 // Hero.tsx's own <section> ends — the publications team-card row and
 // slider below it (components/sections/PublicationsShowcase.tsx) are
-// "still part of the hero" visually, referencing how
-// rbp-portfolio.vercel.app's own flag background fills essentially the
-// whole first screen, not just the headline area. A fixed guessed
-// height on this component (tried at 56rem, then 64rem) can never
-// track that correctly since the combined height of Hero + Publications
-// changes with content and viewport. Fixed instead by making this
-// component `absolute inset-0` and having app/page.tsx render it as a
-// child of one shared `relative` wrapper around BOTH <Hero /> and
+// "still part of the hero" visually. A fixed guessed height on this
+// component (tried at 56rem, then 64rem) can never track that
+// correctly since the combined height of Hero + Publications changes
+// with content and viewport. Fixed instead by making this component
+// `absolute inset-0` and having app/page.tsx render it as a child of
+// one shared `relative` wrapper around BOTH <Hero /> and
 // <PublicationsShowcase />, so it fills exactly that wrapper's real
 // rendered height automatically — no magic number to keep re-guessing.
 //
-// fadeRy pushed further too (1 -> 1.4): with the container now sized to
-// the true combined height instead of an underestimate, the earlier
-// value was still fading out before reaching the bottom of that taller
-// area. 1.4 keeps the flowing texture visible through essentially the
-// whole wrapper, matching the reference's own near-full-screen
-// coverage, fading only in the last stretch rather than partway down.
+// fadeRy: pushed up twice while chasing the height problem above (0.6
+// default -> 1 -> 1.4), which was solving the wrong half of it and
+// overshot badly — a wide, tall glow instead of the reference's actual
+// look. Checked directly against a fresh screenshot of
+// rbp-portfolio.vercel.app (the site owner's own comparison, 2026-09-19,
+// third revision): the reference's glow is a compact, bright patch
+// centred at the top of the screen, fading to solid background well
+// before the midpoint, not a glow that fills the frame. That is what
+// the shader's own default fade shape (fadeRy 0.6, fadeCy 0, unset
+// here) already draws — the container-height fix above was the actual
+// bug; the fade shape itself never needed to change from its default.
+// Reverted to the default rather than re-tuning a new guessed value.
 export function HeroBackdrop() {
   return (
     <div
@@ -39,7 +43,7 @@ export function HeroBackdrop() {
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
       <div className="absolute inset-0 opacity-50 md:opacity-100">
-        <ShaderFlow brightness={3} iterations={10} flowSpeed={[0, 0.1]} fadeRy={1.4} />
+        <ShaderFlow brightness={3} iterations={10} flowSpeed={[0, 0.1]} />
       </div>
     </div>
   );
