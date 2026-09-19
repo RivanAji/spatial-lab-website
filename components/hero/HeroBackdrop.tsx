@@ -31,11 +31,21 @@ import { ShaderFlow } from "@/components/shaders/shader-flow";
 // rbp-portfolio.vercel.app (the site owner's own comparison, 2026-09-19,
 // third revision): the reference's glow is a compact, bright patch
 // centred at the top of the screen, fading to solid background well
-// before the midpoint, not a glow that fills the frame. That is what
-// the shader's own default fade shape (fadeRy 0.6, fadeCy 0, unset
-// here) already draws — the container-height fix above was the actual
-// bug; the fade shape itself never needed to change from its default.
-// Reverted to the default rather than re-tuning a new guessed value.
+// before the midpoint, not a glow that fills the frame. Left at the
+// shader's own default (fadeRy 0.6, unset) — the container-height fix
+// above was the actual bug; the vertical fade shape never needed to
+// change from its default.
+//
+// fadeRx (2026-09-19, fourth revision, same comparison): still read as
+// too wide horizontally at the site owner's own (wide) viewport even
+// after the fix above, because the shader's fade maths scale by the
+// container's aspect ratio (shader-flow.tsx: `dx = (ndc.x-cx)*aspect/
+// rx`) — a wide, short container like this one has a high aspect ratio,
+// which at the default rx (1.4) still reaches the fade boundary past
+// the screen edges rather than before them, so the glow never actually
+// tapers to background horizontally, it just runs off both sides. Set
+// explicitly to 0.65 so it fades out well inside the frame instead of
+// bleeding to the edges, closer to the reference's centred patch.
 export function HeroBackdrop() {
   return (
     <div
@@ -43,7 +53,7 @@ export function HeroBackdrop() {
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
       <div className="absolute inset-0 opacity-50 md:opacity-100">
-        <ShaderFlow brightness={3} iterations={10} flowSpeed={[0, 0.1]} />
+        <ShaderFlow brightness={3} iterations={10} flowSpeed={[0, 0.1]} fadeRx={0.65} />
       </div>
     </div>
   );
