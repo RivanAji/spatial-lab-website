@@ -1,0 +1,133 @@
+/*
+ * Sable-variant styling only, extracted from ThreeUI's threeui.css
+ * (registered source manifest, https://threeui.com/source-code/animated-top-dock.json,
+ * revision 5a736cd3c1f6f19802f61ebb10e1701b9f7aa26e, file sha256
+ * efe44471...). That file is a SHARED stylesheet across ~30 ThreeUI
+ * catalog components (mechanical keyboards, landscape scenes, a
+ * bookshelf study, etc.) — importing it whole for one nav would ship
+ * roughly 25KB of gzipped CSS this page never uses. Every value below
+ * (colours, sizes, radii, transitions, backdrop-filter, box-shadow) is
+ * copied from that verified source unchanged; only the selectors for
+ * the "modern" / "retro" / "glass" variants and unrelated components
+ * were left out, since this project only renders "sable".
+ *
+ * One intentional change: the original sets
+ *   font: 400 10px/1 "ThreeUI Fragment Mono", ui-monospace, monospace;
+ * "ThreeUI Fragment Mono" is a Pro/catalog-site font not published in
+ * the npm package's asset folder (verified: absent from
+ * node_modules/@designcodeio/threeui/lib-dist/assets), so this uses
+ * this site's own --font-mono (IBM Plex Mono, PRD 6.3) instead of
+ * silently falling through to a generic system mono — the site already
+ * has an established mono face for exactly this kind of label text,
+ * and introducing a second one would fragment that system for no
+ * reason.
+ *
+ * Second change: .animated-top-dock__nav's position is `top: 50%` +
+ * `translate(-50%, -50%)` here, not the original's
+ * `top: clamp(24px, 5cqw, 46px)` + `translateX(-50%)`. The original
+ * value floats the capsule near the top of ThreeUI's own full-height
+ * demo stage (a tall, self-contained showcase block with its own
+ * #080808 background, see .animated-top-dock-component in the
+ * source). This project mounts the capsule inside an ordinary ~72px
+ * sticky site header instead, so it's vertically centered in that
+ * bar rather than positioned against a stage height that doesn't
+ * exist here. The capsule's own size, spring, and hover behaviour are
+ * unchanged.
+ */
+
+.animated-top-dock__nav {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+  height: 38px;
+  padding: 4px;
+  overflow: visible;
+  border: 1px solid #292929;
+  border-radius: 11px;
+  background: rgba(14, 14, 14, 0.86);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.48),
+    inset 0 1px rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(18px) saturate(75%);
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+}
+
+.animated-top-dock__item {
+  position: relative;
+  z-index: 6;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  outline: none;
+  color: #858580;
+  background: rgba(21, 21, 20, 0.9);
+  font: 400 11px/1 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  backdrop-filter: blur(14px) saturate(70%);
+  transform-origin: 50% 0;
+  transition:
+    color 0.15s,
+    border-color 0.18s,
+    background 0.18s,
+    box-shadow 0.18s;
+  will-change: width, height, transform;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.animated-top-dock__item[data-dock-near="true"],
+.animated-top-dock__item:focus-visible {
+  z-index: 7;
+  color: #ecece8;
+  border-color: #41413e;
+  background: rgba(27, 27, 26, 0.94);
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.26);
+}
+
+.animated-top-dock__logo {
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  background: #e8e8e3;
+}
+
+.animated-top-dock__logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.animated-top-dock__link {
+  gap: 6px;
+  width: 96px;
+  padding: 0 9px;
+}
+
+/*
+ * The original demo used aria-pressed to mark a locally-toggled "selected
+ * view" (there was nowhere to navigate to — the items were the whole
+ * demo). These are real links to real pages, so the current-page state
+ * uses aria-current="page" instead, which is the correct ARIA semantic
+ * for "this link is where you already are" — aria-pressed is for toggle
+ * buttons, not navigation. Same visual treatment, correct semantics.
+ */
+.animated-top-dock__link[aria-current="page"] {
+  color: #111;
+  border-color: #e8e8e3;
+  background: #e8e8e3;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+}
