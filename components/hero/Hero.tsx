@@ -2,13 +2,22 @@ import { Container } from "@/components/ui/Container";
 import { HeroCanvas } from "./HeroCanvas";
 import { HeroBackdrop } from "./HeroBackdrop";
 import { HeroCtas } from "./HeroCtas";
-import { TeamsTeaser } from "./TeamsTeaser";
 
 // Content is fixed by the brief (section 3.4) and PRD 7.2 — not placeholder
-// copy, the actual launch copy. Headline/subtext/CTA row stays the
-// disciplined three-element stack (PRD 6.6) — the teams teaser added
-// 2026-09-19 is a distinct structural block below that stack, not a
-// fourth text element competing with it.
+// copy, the actual launch copy. Headline/subtext/CTA row is the disciplined
+// three-element stack (PRD 6.6), full stop.
+//
+// Compact pass (2026-09-19, site owner's request): the team-cards teaser
+// that used to sit inside this section ("TeamsTeaser", added earlier the
+// same day) moved out into its own component,
+// components/sections/PublicationsShowcase.tsx, immediately below this one
+// — those cards are now the team filter for a publications slider, not a
+// hero decoration, so they belong to that section's state, not this one's.
+// Removing that block is also most of why the hero is shorter now: this
+// section went back to exactly what PRD 7.2 specified (headline, subtext,
+// CTA row, one visual), with tighter top/bottom padding on top of that so
+// the section below sits closer to the fold instead of requiring a full
+// scroll to reach.
 //
 // Visual container: the ASCII map sits in a square card (rounded-4xl,
 // soft border, inset padding, gentle shadow) matching the reference
@@ -20,7 +29,7 @@ import { TeamsTeaser } from "./TeamsTeaser";
 // document-flow header bar.
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-16 pt-28 md:pb-24 md:pt-32">
+    <section className="relative overflow-hidden pb-10 pt-24 md:pb-14 md:pt-28">
       <HeroBackdrop />
       <Container>
         <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-8">
@@ -57,10 +66,6 @@ export function Hero() {
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-16 md:mt-20">
-          <TeamsTeaser />
         </div>
       </Container>
     </section>

@@ -39,4 +39,13 @@ export type Publication = {
   team: TeamSlug;
   citations?: number;
   doi?: string;
+  // Added 2026-09-19 for the homepage publications slider (site owner's
+  // direct request) — not part of the original PRD 5.3 schema, which
+  // deliberately shipped publications text-only since no real cover
+  // images existed yet (see ResearchArchive.tsx). Optional and honest:
+  // a publication without one renders a plain, undecorated placeholder
+  // slot rather than a stock photo standing in for a real cover. The
+  // site owner will fill these in by hand once real cover images
+  // (paper first pages, journal covers) are ready.
+  coverImage?: string;
 };

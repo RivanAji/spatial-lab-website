@@ -1,39 +1,48 @@
 "use client";
 
 /*
- * Three-card teaser directly under the hero, per the site owner's
- * request (2026-09-19) for a "curve style" card row that reveals a
- * supporting illustration and description on hover rather than showing
- * everything at rest — CollectUI's hover-state reference
- * (collectui.com/designs/hover-state-ui-design-inspiration) was pointed
- * to as the interaction quality bar, not a literal layout to copy (that
- * example is an app-mockup grid; there's nothing in it that maps
- * one-to-one onto three research teams).
+ * Publications showcase, directly under the hero (site owner's request,
+ * 2026-09-19): shrinking the hero (Hero.tsx) freed the space for this to
+ * sit right at the fold instead of requiring a scroll to reach, which was
+ * the actual point of that change, not just a cosmetic resize.
  *
- * Headings updated to each team's full name (lib/content/teams.ts
- * `name`, not the short `displayName` used on the fuller Research Teams
- * section below) per direct request. Illustrations are animated, not
- * static, one per team's actual subject: a road network with travelling
- * nodes, a layered vector map with a branching decision-tree motif, and
- * a branching decision path paired with a climate wave. These are
- * hand-drawn SVGs in the site's own dot/line technical vocabulary (the
- * same grammar as the hero's ASCII map), not generic stock icons — the
- * case this project's own rule for hand-rolled decorative SVGs asks for
- * (PRD 6.6 / anti-slop: acceptable only when the brief explicitly calls
- * for illustration and it stays a simple geometric mark).
+ * Two things merged into one interactive unit here:
  *
- * This is a teaser, not a replacement for the fuller Research Teams
- * section further down the page (components/sections/ResearchTeams.tsx,
- * which shows each team's real coordinator and publication count) — the
- * two serve different jobs: this one is glanceable and sits right at
- * the fold, the section below is the actual browsing/navigation surface
- * with real data.
+ * 1. The team cards that used to live inside Hero.tsx as "TeamsTeaser" —
+ *    moved here wholesale (illustrations included) and repurposed from
+ *    navigation links into filter buttons: clicking "Sustainable Urban
+ *    Transportation" filters the slider below to that team, clicking it
+ *    again (or "All teams") clears the filter. Visiting a team's own page
+ *    is still possible from the fuller Research Teams section further
+ *    down (components/sections/ResearchTeams.tsx, "Explore Team ->"),
+ *    which is unaffected by this change.
+ * 2. A new horizontal, snap-scrolling publication slider (site owner's
+ *    reference: collectui.com/designs/image-slider-ui-design-inspiration,
+ *    the cover-flow and caption-under-image examples) with its own year
+ *    filter row above it.
+ *
+ * Cover images: the underlying publication data (lib/content/publications.
+ * ts) has never carried real cover images — ResearchArchive.tsx shipped
+ * text-only on purpose because no real images existed, and PRD 6.6 bans
+ * stock photography standing in for real output. That's still true here.
+ * `coverImage` is a new optional field (lib/content/types.ts) the site
+ * owner will fill in by hand per publication; until then each card's
+ * image slot renders as a plain, undecorated panel — an honest empty
+ * slot, not a fake cover.
  */
 
-import { motion, useReducedMotion, AnimatePresence } from "motion/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { motion, useReducedMotion, AnimatePresence } from "motion/react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
+import { publications } from "@/lib/content/publications";
+import type { TeamSlug } from "@/lib/content/types";
+import { Container } from "@/components/ui/Container";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -270,40 +279,213 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
 
 const ILLUSTRATIONS = [TransportIllustration, DataScienceIllustration, ClimateIllustration];
 
-export function TeamsTeaser(): ReactNode {
+export function PublicationsShowcase(): ReactNode {
+  const [activeTeam, setActiveTeam] = useState<TeamSlug | "all">("all");
+  const [activeYear, setActiveYear] = useState<string>("all");
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  // Years are computed from every publication, not the filtered subset —
+  // matching ResearchArchive.tsx's own year-filter behaviour, so a year
+  // button never shifts position or disappears just because a team filter
+  // is also active.
+  const years = useMemo(
+    () => Array.from(new Set(publications.map((p) => p.year))).sort((a, b) => b - a),
+    [],
+  );
+
+  const filtered = useMemo(
+    () =>
+      publications
+        .filter((p) => activeTeam === "all" || p.team === activeTeam)
+        .filter((p) => activeYear === "all" || String(p.year) === activeYear)
+        .sort((a, b) => b.year - a.year),
+    [activeTeam, activeYear],
+  );
+
+  function updateScrollButtons() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanScrollPrev(el.scrollLeft > 4);
+    setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }
+
+  useEffect(() => {
+    // Filter changes can shrink the slider's scrollWidth out from under an
+    // old scroll position (e.g. it was scrolled right, then a filter drops
+    // it back to a handful of cards) — re-measure rather than trust stale
+    // button state.
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: 0 });
+    updateScrollButtons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTeam, activeYear]);
+
+  function scrollByPage(direction: 1 | -1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth * 0.9, behavior: "smooth" });
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {teams.map((team, index) => (
-        <TeaserCard key={team.slug} team={team} Illustration={ILLUSTRATIONS[index]} />
-      ))}
-    </div>
+    <section id="publications" className="pb-16 pt-2 md:pb-20 md:pt-4">
+      <Container>
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl font-semibold text-ink-000 md:text-3xl">
+            Publications
+          </h2>
+          <button
+            type="button"
+            onClick={() => setActiveTeam("all")}
+            disabled={activeTeam === "all"}
+            className="font-mono text-xs uppercase tracking-[0.08em] text-ink-300 underline decoration-white/25 underline-offset-4 transition-colors hover:text-ink-000 disabled:pointer-events-none disabled:text-ink-500 disabled:no-underline"
+          >
+            All teams
+          </button>
+        </div>
+        <p className="mt-3 max-w-[52ch] font-body text-sm text-ink-300">
+          Select a research team to filter, or browse everything below.
+        </p>
+
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {teams.map((team, index) => (
+            <TeamFilterCard
+              key={team.slug}
+              team={team}
+              Illustration={ILLUSTRATIONS[index]}
+              active={activeTeam === team.slug}
+              onSelect={() =>
+                setActiveTeam((current) => (current === team.slug ? "all" : team.slug))
+              }
+            />
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            <FilterChip active={activeYear === "all"} onClick={() => setActiveYear("all")}>
+              All years
+            </FilterChip>
+            {years.map((year) => (
+              <FilterChip
+                key={year}
+                active={activeYear === String(year)}
+                onClick={() => setActiveYear(String(year))}
+              >
+                {year}
+              </FilterChip>
+            ))}
+          </div>
+
+          {filtered.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                aria-label="Scroll publications left"
+                disabled={!canScrollPrev}
+                onClick={() => scrollByPage(-1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+              >
+                <CaretLeft size={16} weight="bold" />
+              </button>
+              <button
+                type="button"
+                aria-label="Scroll publications right"
+                disabled={!canScrollNext}
+                onClick={() => scrollByPage(1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+              >
+                <CaretRight size={16} weight="bold" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="mt-8 flex flex-col items-start gap-4 border border-ink-500 p-10">
+            <p className="font-body text-ink-100">
+              No publications match this combination of team and year yet.
+            </p>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setActiveTeam("all");
+                setActiveYear("all");
+              }}
+            >
+              Reset filters
+            </Button>
+          </div>
+        ) : (
+          <div
+            ref={scrollerRef}
+            onScroll={updateScrollButtons}
+            className="mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {filtered.map((pub) => (
+              <PublicationCard key={pub.slug} publication={pub} />
+            ))}
+          </div>
+        )}
+      </Container>
+    </section>
   );
 }
 
-function TeaserCard({
+function PublicationCard({ publication }: { publication: (typeof publications)[number] }) {
+  const team = teams.find((t) => t.slug === publication.team);
+  return (
+    <Link
+      href={`/publications/${publication.slug}`}
+      className="group flex w-72 flex-shrink-0 snap-start flex-col gap-4 sm:w-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+    >
+      {/* Honest empty slot when no coverImage is set — see this file's
+          top comment and lib/content/types.ts. Never a stock photo
+          standing in for a real one. */}
+      <div className="relative aspect-[4/3] overflow-hidden rounded-panel border border-ink-500 bg-ink-800 transition-colors group-hover:border-ink-300">
+        {publication.coverImage && (
+          <Image
+            src={publication.coverImage}
+            alt=""
+            fill
+            sizes="(min-width: 640px) 320px, 288px"
+            className="object-cover"
+          />
+        )}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <p className="font-mono text-xs text-ink-300">
+          {publication.year} · {team?.displayName}
+        </p>
+        <h3 className="font-display text-base font-semibold leading-snug text-ink-000">
+          {publication.title}
+        </h3>
+        <p className="font-body text-sm text-ink-300">{publication.authors}</p>
+      </div>
+    </Link>
+  );
+}
+
+function TeamFilterCard({
   team,
   Illustration,
+  active,
+  onSelect,
 }: {
   team: (typeof teams)[number];
   Illustration: (props: { playing: boolean }) => ReactNode;
+  active: boolean;
+  onSelect: () => void;
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
   // A hover-gated reveal is unreachable on a touch device — there is no
   // hover, so the illustration and tagline would just never appear,
-  // leaving the card's flex-justify-between layout with a permanently
-  // empty middle (caught on a real mobile viewport: the card rendered as
-  // a near-blank rounded box with the number and title pushed to its
-  // bottom edge). On a device without a fine hover pointer, this treats
-  // the card as always "revealed" instead of chasing an interaction that
-  // can't happen there.
-  //
-  // Defaults to false (content revealed) rather than true: the failure
-  // mode of guessing wrong matters more one way than the other — a
-  // desktop visitor might see a brief extra flash of the reveal before
-  // the real matchMedia check settles a frame later, but a touch visitor
-  // defaulting the other way would see the broken empty-card state this
-  // fix exists for, even if only for that first frame.
+  // leaving the card's layout with a permanently empty middle. On a
+  // device without a fine hover pointer, this treats the card as always
+  // "revealed" instead of chasing an interaction that can't happen there.
   const [canHover, setCanHover] = useState(false);
 
   useEffect(() => {
@@ -314,26 +496,26 @@ function TeaserCard({
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const revealed = hovered || !canHover;
-  // The looped travelling-pulse animations inside the illustrations are
-  // skipped outright under reduced motion (PRD 6.6) — everything else in
-  // them (lines/nodes appearing) is a one-shot reveal, not a loop, so it
-  // stays but without the infinite parts.
+  // Selecting a card as the active filter keeps it revealed even after
+  // the pointer leaves — that persistence is the selection feedback,
+  // distinct from the border highlight below.
+  const revealed = active || hovered || !canHover;
   const playing = revealed && !reducedMotion;
 
   return (
-    <Link
-      href={`/research/${team.slug}`}
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      className="group relative flex h-56 flex-col justify-between overflow-hidden rounded-3xl border border-white/8 bg-ink-900 p-6 transition-colors duration-300 hover:border-white/16 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className={cn(
+        "group relative flex h-56 flex-col justify-between overflow-hidden rounded-3xl border bg-ink-900 p-6 text-left transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
+        active ? "border-ink-000" : "border-white/8 hover:border-white/16",
+      )}
     >
-      {/* Illustration: hidden until hover on devices that can hover, not
-          just faded — it isn't decoration sitting under the text at
-          rest, it's the reveal. Always shown on touch (see `revealed`
-          above). */}
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-6 top-6 h-24 text-ink-100"
@@ -369,6 +551,6 @@ function TeaserCard({
           )}
         </AnimatePresence>
       </div>
-    </Link>
+    </button>
   );
 }
