@@ -12,10 +12,13 @@
  *    moved here wholesale (illustrations included) and repurposed from
  *    navigation links into filter buttons: clicking "Sustainable Urban
  *    Transportation" filters the slider below to that team, clicking it
- *    again (or "All teams") clears the filter. Visiting a team's own page
- *    is still possible from the fuller Research Teams section further
- *    down (components/sections/ResearchTeams.tsx, "Explore Team ->"),
- *    which is unaffected by this change.
+ *    again (or "All teams") clears the filter. The separate Research
+ *    Teams section (components/sections/ResearchTeams.tsx) that used to
+ *    be the only place linking to a team's own page was removed the same
+ *    day (site owner's direct request) once this section's cards made it
+ *    redundant — there is currently no homepage link to a team's `/
+ *    research/[slug]` page any more, which is a known follow-on gap, not
+ *    an oversight.
  * 2. A new horizontal, snap-scrolling publication slider (site owner's
  *    reference: collectui.com/designs/image-slider-ui-design-inspiration,
  *    the cover-flow and caption-under-image examples) with its own year
@@ -330,7 +333,13 @@ export function PublicationsShowcase(): ReactNode {
   }
 
   return (
-    <section id="publications" className="pb-16 pt-2 md:pb-20 md:pt-4">
+    // id="research", not "publications": this is the "Explore Research"
+    // hero CTA's scroll target (HeroCtas.tsx, href="#research") since the
+    // Research Teams section that anchor used to point to is gone.
+    // scroll-mt-24 keeps the section from landing directly under the
+    // fixed nav pill (components/layout/Header.tsx), same reasoning that
+    // section used.
+    <section id="research" className="scroll-mt-24 pb-16 pt-2 md:pb-20 md:pt-4">
       <Container>
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <h2 className="font-display text-2xl font-semibold text-ink-000 md:text-3xl">
