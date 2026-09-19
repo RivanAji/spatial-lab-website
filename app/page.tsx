@@ -1,17 +1,24 @@
 import { Hero } from "@/components/hero/Hero";
 import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
-import { ResearchArchive } from "@/components/sections/ResearchArchive";
 import { Hairline } from "@/components/ui/Hairline";
 import { Container } from "@/components/ui/Container";
 
-// Homepage. Four sections at launch: Hero, Publications showcase, Research
-// Archive, Footer (the last lives in the root layout). Publications
-// showcase added 2026-09-19 directly under the hero, no hairline between
-// them, so it reads as one continuous unit with the now-compact hero
-// rather than a separate page section — that's what makes it reachable
-// without a full scroll, which was the point of shrinking the hero in the
-// first place.
+// Homepage. Hero, Publications showcase, Footer (the last lives in the
+// root layout). Publications showcase added 2026-09-19 directly under
+// the hero, no hairline between them, so it reads as one continuous unit
+// with the now-compact hero rather than a separate page section — that's
+// what makes it reachable without a full scroll, which was the point of
+// shrinking the hero in the first place.
+//
+// ResearchArchive.tsx removed the same day it was superseded (2026-09-19,
+// site owner's direct request): its own team/year filters plus a static
+// card grid duplicated exactly what PublicationsShowcase's team-filter
+// cards + gallery already do above, on the same page — two filtered
+// publication lists was redundant, not two different features. The
+// header's "Research" nav link now points at PublicationsShowcase's
+// `#research` directly (components/layout/Header.tsx) instead of the
+// dead `/research` route ResearchArchive briefly stood in for.
 //
 // Hero and Publications share one wrapper (2026-09-19, second pass): the
 // site owner's own words were that the team-card row and the publications
@@ -48,7 +55,6 @@ export default function Home() {
       <Container>
         <Hairline />
       </Container>
-      <ResearchArchive />
     </main>
   );
 }

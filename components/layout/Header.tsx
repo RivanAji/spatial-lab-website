@@ -42,9 +42,26 @@ import logo from "@/public/brand/logo-white.png";
 // from that reference's rendered DOM, not guessed at; the vendored
 // ThreeUI physics engine is gone (uninstalled) since it no longer
 // matches the direction.
-const NAV_ITEMS = [
-  { label: "Research", href: "/research" },
-  { label: "Roadmap", href: "/roadmap" },
+// Research (2026-09-19, site owner's request): this is a one-page site —
+// ResearchArchive.tsx (a separate full-list section) was removed the same
+// day as redundant with PublicationsShowcase's own gallery below the
+// hero, and there never was a real `/research` route behind this link
+// (checked: no app/research directory exists, so it was a dead link).
+// Same-page anchor now, matching HeroCtas.tsx's own "Explore Research"
+// control exactly — both point at the one gallery that actually exists.
+//
+// Roadmap (2026-09-19, site owner's request): marked comingSoon rather
+// than linked — the lab roadmap content is still being worked out by the
+// team, not ready to publish, and `/roadmap` was equally a dead link
+// (PRD 7.9 already deferred this section for the same reason). A
+// disabled nav item that says so is honest; a link to nothing is not
+// (this project's "no dead navigation" rule — see antislop-ui).
+//
+// People and About stay as route links for now even though those routes
+// don't exist yet either — a known gap, not part of this pass's scope.
+const NAV_ITEMS: { label: string; href: string; comingSoon?: boolean }[] = [
+  { label: "Research", href: "#research" },
+  { label: "Roadmap", href: "/roadmap", comingSoon: true },
   { label: "People", href: "/people" },
   { label: "About", href: "/about" },
 ];
@@ -109,23 +126,55 @@ function DesktopNav() {
           />
         )}
         {NAV_ITEMS.map((item) => {
-          const current = pathname === item.href;
+          // Coming-soon item: a disabled <span>, not a Link — it never
+          // joins the data-href query the hover indicator and
+          // updateIndicator() rely on, so the sliding pill simply skips
+          // over it, which reads correctly as "not a destination"
+          // rather than a link that goes nowhere.
+          if (item.comingSoon) {
+            return (
+              <li key={item.href} className="relative">
+                <span
+                  aria-disabled="true"
+                  className="relative z-10 inline-flex cursor-default items-center gap-1.5 rounded-full px-4 py-1.5 font-body text-sm font-medium text-ink-300/50"
+                >
+                  {item.label}
+                  <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-300/60">
+                    Soon
+                  </span>
+                </span>
+              </li>
+            );
+          }
+
+          // Hash-only hrefs are a same-page scroll target (currently
+          // just "Research" -> #research, the PublicationsShowcase
+          // gallery), not a route — a plain <a>, matching HeroCtas.tsx's
+          // own "Explore Research" control, which does the same thing
+          // for the same destination.
+          const isHashLink = item.href.startsWith("#");
+          const current = !isHashLink && pathname === item.href;
+          const sharedProps = {
+            "data-href": item.href,
+            onMouseEnter: () => {
+              setHovered(item.href);
+              updateIndicator(item.href);
+            },
+            className: `relative z-10 inline-flex items-center justify-center rounded-full px-4 py-1.5 font-body text-sm font-medium transition-colors duration-200 ${
+              active === item.href ? "text-ink-000" : "text-ink-300 hover:text-ink-100"
+            }`,
+          };
           return (
             <li key={item.href} className="relative">
-              <Link
-                href={item.href}
-                data-href={item.href}
-                aria-current={current ? "page" : undefined}
-                onMouseEnter={() => {
-                  setHovered(item.href);
-                  updateIndicator(item.href);
-                }}
-                className={`relative z-10 inline-flex items-center justify-center rounded-full px-4 py-1.5 font-body text-sm font-medium transition-colors duration-200 ${
-                  active === item.href ? "text-ink-000" : "text-ink-300 hover:text-ink-100"
-                }`}
-              >
-                {item.label}
-              </Link>
+              {isHashLink ? (
+                <a href={item.href} {...sharedProps}>
+                  {item.label}
+                </a>
+              ) : (
+                <Link href={item.href} aria-current={current ? "page" : undefined} {...sharedProps}>
+                  {item.label}
+                </Link>
+              )}
             </li>
           );
         })}
@@ -212,16 +261,38 @@ export function Header() {
           <nav aria-label="Primary" className="border-t border-white/8 bg-ink-900 py-4">
             <Container>
               <div className="flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="py-3 font-body text-base text-ink-100"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {NAV_ITEMS.map((item) =>
+                  item.comingSoon ? (
+                    <span
+                      key={item.href}
+                      aria-disabled="true"
+                      className="flex items-center gap-2 py-3 font-body text-base text-ink-300/50"
+                    >
+                      {item.label}
+                      <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-300/60">
+                        Soon
+                      </span>
+                    </span>
+                  ) : item.href.startsWith("#") ? (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="py-3 font-body text-base text-ink-100"
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="py-3 font-body text-base text-ink-100"
+                    >
+                      {item.label}
+                    </Link>
+                  ),
+                )}
               </div>
             </Container>
           </nav>
