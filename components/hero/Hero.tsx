@@ -13,11 +13,16 @@ import { HeroCtas } from "./HeroCtas";
 // components/sections/PublicationsShowcase.tsx, immediately below this one
 // — those cards are now the team filter for a publications slider, not a
 // hero decoration, so they belong to that section's state, not this one's.
-// Removing that block is also most of why the hero is shorter now: this
-// section went back to exactly what PRD 7.2 specified (headline, subtext,
-// CTA row, one visual), with tighter top/bottom padding on top of that so
-// the section below sits closer to the fold instead of requiring a full
-// scroll to reach.
+//
+// Shrunk again the same day, second pass: the site owner asked for the
+// headline, subtext and map visual to all read smaller still, so that on
+// first load the hero, the publications team-card row, and some of what's
+// below it are all visible together without a full scroll. Type scale
+// stepped down one notch each (h1, subtext), the map's container shrunk
+// from max-w-105 (420px) to max-w-64/72 (256/288px, it's a square so
+// height follows width automatically — see HeroCanvas.tsx's
+// aspect-square), and top/bottom padding tightened further on top of the
+// first pass's reduction.
 //
 // Visual container: the ASCII map sits in a square card (rounded-4xl,
 // soft border, inset padding, gentle shadow) matching the reference
@@ -29,11 +34,11 @@ import { HeroCtas } from "./HeroCtas";
 // document-flow header bar.
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pb-10 pt-24 md:pb-14 md:pt-28">
+    <section className="relative overflow-hidden pb-6 pt-20 md:pb-8 md:pt-24">
       <HeroBackdrop />
       <Container>
-        <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-8">
-          <div className="flex flex-col gap-7">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-6">
+          <div className="flex flex-col gap-4">
             {/* Title case, not the all-caps treatment used elsewhere in
                 the hero (mono coordinates, nav) — changed 2026-09-19 at
                 the site owner's request, moving away from the uppercase
@@ -42,12 +47,12 @@ export function Hero() {
                 `capitalize` (inconsistent across browsers around
                 punctuation like "&"), so what's in the markup is what
                 renders. */}
-            <h1 className="font-display text-3xl font-semibold leading-[1.1] tracking-tight text-ink-000 sm:text-4xl lg:text-[2.75rem]">
+            <h1 className="font-display text-2xl font-semibold leading-[1.1] tracking-tight text-ink-000 sm:text-3xl lg:text-[2.25rem]">
               Transportation &amp;
               <br />
               Spatial Analysis Laboratory
             </h1>
-            <p className="max-w-[38ch] font-body text-lg leading-relaxed text-ink-300">
+            <p className="max-w-[38ch] font-body text-sm leading-relaxed text-ink-300 sm:text-base">
               Exploring cities through space, mobility, data and intelligent
               systems.
             </p>
@@ -60,7 +65,7 @@ export function Hero() {
               reference's own hero (photo card pinned to the column's
               far edge, not stretched to fill it). */}
           <div className="flex justify-center md:justify-end">
-            <div className="w-full max-w-105 rounded-4xl border border-white/8 bg-ink-900 p-1.5 shadow-sm">
+            <div className="w-full max-w-64 rounded-4xl border border-white/8 bg-ink-900 p-1.5 shadow-sm sm:max-w-72">
               <div className="overflow-hidden rounded-[1.6rem]">
                 <HeroCanvas />
               </div>

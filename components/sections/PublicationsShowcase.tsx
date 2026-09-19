@@ -37,7 +37,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion, AnimatePresence } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
@@ -339,26 +339,17 @@ export function PublicationsShowcase(): ReactNode {
     // scroll-mt-24 keeps the section from landing directly under the
     // fixed nav pill (components/layout/Header.tsx), same reasoning that
     // section used.
-    <section id="research" className="scroll-mt-24 pb-16 pt-2 md:pb-20 md:pt-4">
+    //
+    // No visible heading (site owner's request, 2026-09-19 — removed the
+    // "Publications" h2, the "All teams" text button, and the description
+    // line that used to sit here, to save vertical space). aria-label
+    // keeps the section a named landmark for assistive tech even with no
+    // visible heading; "All teams" as a reset control isn't missing
+    // functionality, since clicking an already-active team card toggles
+    // it off (TeamFilterCard's onSelect below).
+    <section id="research" aria-label="Publications" className="scroll-mt-24 pb-16 pt-2 md:pb-20 md:pt-4">
       <Container>
-        <div className="flex flex-wrap items-baseline justify-between gap-4">
-          <h2 className="font-display text-2xl font-semibold text-ink-000 md:text-3xl">
-            Publications
-          </h2>
-          <button
-            type="button"
-            onClick={() => setActiveTeam("all")}
-            disabled={activeTeam === "all"}
-            className="font-mono text-xs uppercase tracking-[0.08em] text-ink-300 underline decoration-white/25 underline-offset-4 transition-colors hover:text-ink-000 disabled:pointer-events-none disabled:text-ink-500 disabled:no-underline"
-          >
-            All teams
-          </button>
-        </div>
-        <p className="mt-3 max-w-[52ch] font-body text-sm text-ink-300">
-          Select a research team to filter, or browse everything below.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="flex flex-wrap gap-3">
           {teams.map((team, index) => (
             <TeamFilterCard
               key={team.slug}
@@ -372,7 +363,7 @@ export function PublicationsShowcase(): ReactNode {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap gap-2">
             <FilterChip active={activeYear === "all"} onClick={() => setActiveYear("all")}>
               All years
@@ -477,6 +468,21 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
   );
 }
 
+// Flip card (site owner's request, 2026-09-19, replacing the earlier
+// fade-reveal version): front face is the number and team name only,
+// back face is the illustration and tagline. A standard 3D-flip CSS
+// technique (perspective on the outer element, preserve-3d on the
+// rotating layer, backface-visibility: hidden on each face, the back
+// face pre-rotated 180deg so it lands right-side-up when the layer
+// hits 180) driven by Motion's `rotateY`, which — unlike offsetDistance
+// (see globals.css's --animate-travel-path comment) — Motion animates
+// natively without issue.
+//
+// Sized at roughly half the previous card's width, with every font size
+// stepped down to match: the site owner's own budget for this ("kurangi
+// 50% lebarnya... optimalkan dengan memperkecil fontnya") was explicitly
+// about making room for the hero, this row, and what's below it to all
+// read as visible together on first load, not just a cosmetic shrink.
 function TeamFilterCard({
   team,
   Illustration,
@@ -490,26 +496,13 @@ function TeamFilterCard({
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
-  // A hover-gated reveal is unreachable on a touch device — there is no
-  // hover, so the illustration and tagline would just never appear,
-  // leaving the card's layout with a permanently empty middle. On a
-  // device without a fine hover pointer, this treats the card as always
-  // "revealed" instead of chasing an interaction that can't happen there.
-  const [canHover, setCanHover] = useState(false);
 
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    setCanHover(mq.matches);
-    const onChange = () => setCanHover(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  // Selecting a card as the active filter keeps it revealed even after
-  // the pointer leaves — that persistence is the selection feedback,
-  // distinct from the border highlight below.
-  const revealed = active || hovered || !canHover;
-  const playing = revealed && !reducedMotion;
+  // Tapping is the whole interaction on touch (no hover to chase), and
+  // the front face already carries real content (number + name), so
+  // there's no empty-card state to guard against here the way the old
+  // fade-reveal version had to.
+  const flipped = active || hovered;
+  const playing = flipped && !reducedMotion;
 
   return (
     <button
@@ -520,46 +513,45 @@ function TeamFilterCard({
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      className={cn(
-        "group relative flex h-56 flex-col justify-between overflow-hidden rounded-3xl border bg-ink-900 p-6 text-left transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
-        active ? "border-ink-000" : "border-white/8 hover:border-white/16",
-      )}
+      style={{ perspective: 1000 }}
+      className="h-44 w-40 shrink-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-48 sm:w-44"
     >
       <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-6 top-6 h-24 text-ink-100"
-        initial={false}
-        animate={{ opacity: revealed ? 0.9 : 0, y: revealed ? 0 : 8 }}
-        transition={{ duration: 0.4, ease: EASE }}
+        className="relative h-full w-full"
+        style={{ transformStyle: "preserve-3d" }}
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: reducedMotion ? 0 : 0.55, ease: EASE }}
       >
-        <Illustration playing={playing} />
-      </motion.div>
-
-      <div />
-
-      <div className="relative z-10 flex flex-col gap-2">
-        <p className="font-mono text-xs text-ink-300">
-          {String(team.number).padStart(2, "0")}
-        </p>
-        <h3 className="font-display text-lg font-semibold leading-snug text-ink-000">
-          {team.name}
-        </h3>
-
-        <AnimatePresence initial={false}>
-          {revealed && (
-            <motion.p
-              key="tagline"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: EASE }}
-              className="overflow-hidden font-body text-sm leading-relaxed text-ink-300"
-            >
-              {team.tagline}
-            </motion.p>
+        {/* Front */}
+        <div
+          style={{ backfaceVisibility: "hidden" }}
+          className={cn(
+            "absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border bg-ink-900 p-4 transition-colors duration-300",
+            active ? "border-ink-000" : "border-white/8",
           )}
-        </AnimatePresence>
-      </div>
+        >
+          <p className="font-mono text-[10px] text-ink-300">
+            {String(team.number).padStart(2, "0")}
+          </p>
+          <h3 className="font-display text-sm font-semibold leading-snug text-ink-000">
+            {team.name}
+          </h3>
+        </div>
+
+        {/* Back */}
+        <div
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          className={cn(
+            "absolute inset-0 flex flex-col justify-between overflow-hidden rounded-2xl border bg-ink-900 p-4 transition-colors duration-300",
+            active ? "border-ink-000" : "border-white/8",
+          )}
+        >
+          <div aria-hidden="true" className="h-14 w-full text-ink-100">
+            <Illustration playing={playing} />
+          </div>
+          <p className="font-body text-xs leading-snug text-ink-300">{team.tagline}</p>
+        </div>
+      </motion.div>
     </button>
   );
 }
