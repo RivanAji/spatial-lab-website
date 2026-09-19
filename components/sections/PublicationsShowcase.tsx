@@ -37,7 +37,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
@@ -492,13 +492,10 @@ export function PublicationsShowcase(): ReactNode {
             left dead space on the right at any container wider than
             three small cards, breaking the left/right edges every
             other row in this section already lines up to. Grid columns
-            stretch to fill, matching that. */}
-        {/* items-start: a hovered card now grows taller to reveal its
-            content (see TeamFilterCard below) — without this, CSS
-            Grid's default row-stretch would visually stretch the OTHER
-            two cards' borders to match, when only the hovered one
-            should actually grow. */}
-        <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-3">
+            stretch to fill, matching that. Cards are fixed-height (see
+            TeamFilterCard) so the default row-stretch has nothing to
+            visibly do here. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {teams.map((team, index) => (
             <TeamFilterCard
               key={team.slug}
@@ -624,37 +621,29 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
   );
 }
 
-// Rebuilt a fourth time the same day (site owner's direct correction):
-// the always-visible two-column layout from the previous pass made the
-// card permanently tall — "tingginya malah kembali lagi" (the height
-// went back up again). What was actually wanted was HeroCtas.tsx's
-// "Explore Research" hover language (background tint) AS THE TRIGGER
-// for a reveal, not as a replacement for one: at rest the card shows
-// only the number and team name; hovering (or focusing, or selecting
-// it as the active filter) both tints the background AND expands the
-// card to reveal the tagline/illustration row, with a real height
-// animation rather than the earlier version's rotation. This is closer
-// to the very first version built this session, before the flip
-// detour, but rebuilt on the richer illustrations and paired with the
-// spotlight border and the parallax below, neither of which existed
-// yet back then.
+// Rebuilt a fifth time the same day, back to a flip (site owner's
+// direct correction to the previous pass): the height-animated reveal
+// changed the card's own box size on hover, which pushed the year
+// filter row and slider below it up and down as the visitor moved the
+// mouse across the three cards — "jadi pas hover ada flipnya, malah
+// aneh" (having it push things around on hover was the actual "aneh"
+// complaint, not the flip itself). A flip never changes the element's
+// own box, so nothing below it ever moves; only the two faces inside a
+// fixed-size box rotate. Back to the same 3D-flip technique used two
+// passes ago (perspective, preserve-3d, backface-hidden faces, a
+// rotateY + small scale-dip on Motion), just with the back face laid
+// out as the two-column tagline/illustration split from the interim
+// pass instead of that version's stacked layout, and a fixed height
+// (h-40) generous enough for that row to actually fit — the tiny
+// flip's old h-[88px] was sized for a stacked layout, not a side-by-
+// side one.
 //
-// Cursor parallax (site owner: "100x lebih interaktif... tapi jangan
-// terlalu komplex"): the simplest genuinely interactive layer to add
-// without turning this into a different component — the illustration
-// itself now tracks the pointer with a small, damped offset, reusing
-// the exact pointer coordinates already captured for the spotlight
-// border rather than a second listener. Written straight to the
-// element's own transform via a ref, like the spotlight's --mx/--my,
-// so it doesn't re-render on every pixel of movement; a short CSS
-// transition (not Motion) smooths the discrete mousemove samples into
-// a continuous-looking drift. This is real interactivity (it responds
-// to THIS visitor's actual cursor, not a canned loop) rather than a
-// bigger or busier version of the same fixed animation.
-//
-// Spotlight border ("outlinenya mengikuti mouse", kept from the
-// previous pass): see globals.css's .card-spotlight comment for the
-// mask-composite technique.
+// Cursor parallax and the spotlight border (kept, both unaffected by
+// which layout the back face uses): the illustration tracks the
+// pointer with a small damped offset via a ref mutation, and the
+// spotlight ring tracks it around the card's outline — see
+// globals.css's .card-spotlight comment for the mask-composite
+// technique this second one uses.
 function TeamFilterCard({
   team,
   Illustration,
@@ -671,8 +660,8 @@ function TeamFilterCard({
   const glowRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
 
-  const revealed = active || hovered;
-  const playing = revealed && !reducedMotion;
+  const flipped = active || hovered;
+  const playing = flipped && !reducedMotion;
 
   function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -703,43 +692,51 @@ function TeamFilterCard({
       onMouseMove={handlePointerMove}
       onFocus={() => setHovered(true)}
       onBlur={handleLeave}
-      className={cn(
-        "relative flex w-full flex-col gap-1 rounded-xl border bg-ink-900 p-4 text-left transition-colors duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 active:scale-[0.99]",
-        active ? "border-ink-000" : "border-white/8",
-      )}
+      style={{ perspective: 1800 }}
+      className="relative h-40 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
-      <div>
-        <p className="font-mono text-[10px] text-ink-300">
-          {String(team.number).padStart(2, "0")}
-        </p>
-        <h3 className="mt-1 font-display text-sm font-semibold leading-snug text-ink-000 sm:text-base">
-          {team.name}
-        </h3>
-      </div>
+      <motion.div
+        className="relative h-full w-full"
+        style={{ transformStyle: "preserve-3d" }}
+        animate={{ rotateY: flipped ? 180 : 0, scale: reducedMotion ? 1 : [1, 0.97, 1] }}
+        transition={{ duration: reducedMotion ? 0 : 0.45, ease: EASE }}
+      >
+        {/* Front */}
+        <div
+          style={{ backfaceVisibility: "hidden" }}
+          className={cn(
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-4 transition-colors duration-300",
+            active ? "border-ink-000" : "border-white/8",
+          )}
+        >
+          <p className="font-mono text-[10px] text-ink-300">
+            {String(team.number).padStart(2, "0")}
+          </p>
+          <h3 className="font-display text-sm font-semibold leading-snug text-ink-000 sm:text-base">
+            {team.name}
+          </h3>
+        </div>
 
-      <AnimatePresence initial={false}>
-        {revealed && (
-          <motion.div
-            key="reveal"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="overflow-hidden"
-          >
-            <div className="grid grid-cols-[1fr_auto] items-center gap-3 pt-3">
-              <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
-              <div
-                ref={parallaxRef}
-                aria-hidden="true"
-                className="h-24 w-32 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
-              >
-                <Illustration playing={playing} />
-              </div>
+        {/* Back */}
+        <div
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          className={cn(
+            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 p-4 transition-colors duration-300",
+            active ? "border-ink-000" : "border-white/8",
+          )}
+        >
+          <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+            <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
+            <div
+              ref={parallaxRef}
+              aria-hidden="true"
+              className="h-20 w-28 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
+            >
+              <Illustration playing={playing} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
 
       <div
         ref={glowRef}
