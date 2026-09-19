@@ -62,8 +62,11 @@ const LAT_MAX = 21;
 const GRID_COLS = 96;
 const GRID_ROWS = Math.round((GRID_COLS * (LAT_MAX - LAT_MIN)) / (LON_MAX - LON_MIN));
 
-// Surabaya, per the brief (spatial lab_brief.md section 3.2): 07°15'S / 112°45'E.
-const SURABAYA = { lon: 112.75, lat: -7.25 };
+// Surabaya: the lab's real campus coordinates (site owner, 2026-09-19,
+// checked against Google Maps), not the brief's rounded 07°15'S /
+// 112°45'E — that rounding was coarse enough at this grid's resolution
+// to read as a different city (see the raw-cell fix below).
+const SURABAYA = { lon: 112.79412514560501, lat: -7.27955381587467 };
 
 const ASIA_COUNTRIES = new Set([
   "Afghanistan",
@@ -160,11 +163,22 @@ for (let row = 0; row < GRID_ROWS; row++) {
   }
 }
 
+// Cells are classified at their CENTRE (the `+0.5` in the main loop
+// above: lon(col) = LON_MIN + (col+0.5)/GRID_COLS * span), so finding
+// the cell that CONTAINS a point needs the inverse of that same
+// formula — col = (lon-LON_MIN)/span*GRID_COLS - 0.5 — not a bare
+// `round(frac * GRID_COLS)` with no offset. The bare version (what
+// this used to do) is systematically half a cell short of that
+// inverse, which reads as nothing at this grid's resolution (each
+// cell spans ~0.51 deg) until it silently pushes the rounded result
+// one whole cell over — here, one cell south-east, which is exactly
+// what put the locator nearer Banyuwangi than the lab's real campus
+// (site owner caught it by eye, checking against Google Maps).
 const rawSurabayaCol = Math.round(
-  ((SURABAYA.lon - LON_MIN) / (LON_MAX - LON_MIN)) * GRID_COLS,
+  ((SURABAYA.lon - LON_MIN) / (LON_MAX - LON_MIN)) * GRID_COLS - 0.5,
 );
 const rawSurabayaRow = Math.round(
-  ((LAT_MAX - SURABAYA.lat) / (LAT_MAX - LAT_MIN)) * GRID_ROWS,
+  ((LAT_MAX - SURABAYA.lat) / (LAT_MAX - LAT_MIN)) * GRID_ROWS - 0.5,
 );
 
 // At this resolution Java is only 1-2 rows thick, so the raw projected cell
@@ -196,6 +210,22 @@ const { col: surabayaCol, row: surabayaRow } = nearestIndonesiaCell(
   rawSurabayaRow,
 );
 
+// Derived from the same SURABAYA constant the cell above is derived
+// from, not hand-typed — a hand-typed label is exactly what went stale
+// the first time this used the brief's rounded 07°15'/112°45' instead
+// of the real campus coordinates.
+function toDMS(decimalDegrees, positiveSuffix, negativeSuffix) {
+  const suffix = decimalDegrees < 0 ? negativeSuffix : positiveSuffix;
+  const abs = Math.abs(decimalDegrees);
+  const degrees = Math.floor(abs);
+  const minutesFull = (abs - degrees) * 60;
+  const minutes = Math.floor(minutesFull);
+  const seconds = Math.round((minutesFull - minutes) * 60);
+  return `${String(degrees).padStart(2, "0")}°${String(minutes).padStart(2, "0")}'${String(seconds).padStart(2, "0")}"${suffix}`;
+}
+
+const surabayaCoords = `${toDMS(SURABAYA.lat, "N", "S")} / ${toDMS(SURABAYA.lon, "E", "W")}`;
+
 // Debug preview so this is checkable by reading terminal output, not just
 // trusting the numbers — run `node scripts/build-map-grid.mjs` directly.
 if (process.argv.includes("--preview") || true) {
@@ -223,7 +253,7 @@ export const GRID_ROWS = ${GRID_ROWS};
 export const ASIA_GRID: Uint8Array = new Uint8Array([${cells.join(",")}]);
 
 export const SURABAYA_CELL = { col: ${surabayaCol}, row: ${surabayaRow} };
-export const SURABAYA_COORDS = "07°15'S / 112°45'E";
+export const SURABAYA_COORDS = ${JSON.stringify(surabayaCoords)};
 `;
 
 writeFileSync(path.join(root, "data/asia-grid.ts"), output);

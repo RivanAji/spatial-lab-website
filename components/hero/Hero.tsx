@@ -20,14 +20,15 @@ import { GRID_COLS, GRID_ROWS } from "@/data/asia-grid";
 // below it are all visible together without a full scroll. Type scale
 // stepped down one notch each (h1, subtext).
 //
-// Top/bottom padding loosened again, fourth pass: after seeing it
-// rendered, the site owner asked for more breathing room above and
-// below this section specifically — it had ended up reading as
-// cramped against the fixed nav above and the publication cards
-// directly below. pt/pb raised back up (pt-20/pb-6 -> pt-24/pb-10,
-// md pt-24/pb-8 -> pt-28/pb-14); the type-scale and map-size
-// reductions from the pass above stay as they were, this only
-// touches the section's own vertical padding.
+// Top/bottom padding loosened twice, fourth and fifth passes: after
+// seeing it rendered, the site owner asked for more breathing room
+// above and below this section specifically — it had ended up
+// reading as cramped against the fixed nav above and the publication
+// cards directly below, and said so again after the first increase
+// still wasn't enough (pt-20/pb-6 -> pt-24/pb-10 -> pt-28/pb-14, md
+// pt-24/pb-8 -> pt-28/pb-14 -> pt-32/pb-20). The type-scale and
+// map-size reductions from the compact pass above stay as they were,
+// this only touches the section's own vertical padding.
 //
 // Visual container no longer forces a square (2026-09-19, third pass):
 // the map's real aspect ratio (GRID_COLS x GRID_ROWS, currently
@@ -60,7 +61,7 @@ import { GRID_COLS, GRID_ROWS } from "@/data/asia-grid";
 // document-flow header bar.
 export function Hero() {
   return (
-    <section className="pb-10 pt-24 md:pb-14 md:pt-28">
+    <section className="pb-14 pt-28 md:pb-20 md:pt-32">
       <Container>
         <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:items-stretch md:gap-6">
           <div className="flex flex-col gap-4">
