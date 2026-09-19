@@ -349,7 +349,13 @@ export function PublicationsShowcase(): ReactNode {
     // it off (TeamFilterCard's onSelect below).
     <section id="research" aria-label="Publications" className="scroll-mt-24 pb-16 pt-2 md:pb-20 md:pt-4">
       <Container>
-        <div className="flex flex-wrap gap-3">
+        {/* Full container width, not the cards' own natural width
+            (site owner's request, 2026-09-19): a fixed-width flex row
+            left dead space on the right at any container wider than
+            three small cards, breaking the left/right edges every
+            other row in this section already lines up to. Grid columns
+            stretch to fill, matching that. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {teams.map((team, index) => (
             <TeamFilterCard
               key={team.slug}
@@ -522,6 +528,18 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
 // its own small inconsistency; 12px is the value that still reads soft
 // (matching the rest of this section) without looking oversized on a
 // card this flat.
+//
+// Spotlight border (site owner's request, 2026-09-19, "outlinenya
+// mengikuti [mouse], warnanya bisa gradasi"): a soft white radial light
+// that tracks the pointer around the card's outline on hover, defined
+// once in globals.css (.card-spotlight — the mask-composite: exclude
+// trick that makes it paint only the ring, not a filled panel) and
+// positioned here via a ref mutation on mousemove rather than React
+// state, so tracking the pointer doesn't re-render the card (and its
+// flip/illustration motion) on every pixel of movement — the actual
+// mechanism "smoother" means here, not just an easing curve. Sits
+// outside the flipping motion.div, on top of whichever face is
+// currently showing, since the ring itself doesn't need to flip.
 function TeamFilterCard({
   team,
   Illustration,
@@ -535,6 +553,7 @@ function TeamFilterCard({
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
+  const glowRef = useRef<HTMLDivElement>(null);
 
   // Tapping is the whole interaction on touch (no hover to chase), and
   // the front face already carries real content (number + name), so
@@ -543,6 +562,12 @@ function TeamFilterCard({
   const flipped = active || hovered;
   const playing = flipped && !reducedMotion;
 
+  function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    glowRef.current?.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    glowRef.current?.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  }
+
   return (
     <button
       type="button"
@@ -550,10 +575,11 @@ function TeamFilterCard({
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onMouseMove={handlePointerMove}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
       style={{ perspective: 1800 }}
-      className="h-[88px] w-40 shrink-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-24 sm:w-44"
+      className="relative h-[88px] w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000 sm:h-24"
     >
       <motion.div
         className="relative h-full w-full"
@@ -593,6 +619,13 @@ function TeamFilterCard({
           </p>
         </div>
       </motion.div>
+
+      <div
+        ref={glowRef}
+        aria-hidden="true"
+        className="card-spotlight pointer-events-none rounded-xl"
+        style={{ opacity: hovered ? 1 : 0 }}
+      />
     </button>
   );
 }

@@ -155,3 +155,38 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Cursor-following border glow for the team filter cards
+   (components/sections/PublicationsShowcase.tsx) — site owner's
+   request, 2026-09-19, for a "more interesting" hover state than a flat
+   border-colour swap: a soft light that tracks the pointer around the
+   card's own outline. Monochrome only (white radial fading to
+   transparent), matching the site's single-neutral-emphasis rule
+   (PRD 6.2) — this is intentionally not a colour gradient, which would
+   both break that rule and read as the generic AI-glow default.
+   --mx/--my are written directly onto this element's inline style from
+   a mousemove handler (a ref mutation, not React state — state would
+   re-render the whole card tree on every pointer move, which is the
+   actual mechanism a "smoother" hover needs to avoid, not just an
+   easing curve). The padding + dual-background + mask-composite:
+   exclude trick is what makes the gradient paint only the ring (the
+   padding band) rather than a filled panel, so it reads as "the
+   outline is lit", not a glow box behind the card. */
+.card-spotlight {
+  --mx: 50%;
+  --my: 50%;
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: radial-gradient(
+    140px circle at var(--mx) var(--my),
+    rgba(247, 249, 251, 0.9),
+    rgba(247, 249, 251, 0.22) 45%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
