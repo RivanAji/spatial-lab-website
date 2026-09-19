@@ -375,10 +375,22 @@ export function HeroCanvas() {
               instead, so nothing here can drift off the anchor again
               regardless of any sibling's size. */}
           <div ref={locatorRef} className="absolute" style={{ left: "50%", top: "50%" }}>
-            <span
-              className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"
-              style={{ animationDelay: "1.6s" }}
-            />
+            {/* Positioning (the -50%/-50% centring translate) lives on
+                this static wrapper only; the animated ring inside is a
+                plain `inset-0` fill with no translate of its own. Mixing
+                a percentage translate with the pulse's scale() in one
+                animated transform (the previous version) made the
+                browser resolve the translate in the ring's own
+                untransformed local space, then scale around the box's
+                center on top of that — the two didn't cancel out the
+                way a static translate+scale would, so the ring visibly
+                orbited off the dot instead of breathing around it. */}
+            <span className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2">
+              <span
+                className="absolute inset-0 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"
+                style={{ animationDelay: "1.6s" }}
+              />
+            </span>
             <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-000" />
             <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
             <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
