@@ -913,7 +913,7 @@ function TeamFilterCard({
         <div
           style={{ backfaceVisibility: "hidden" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 transition-colors duration-300 hover:bg-white/4 p-3",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
@@ -925,11 +925,16 @@ function TeamFilterCard({
           </h3>
         </div>
 
-        {/* Back */}
+        {/* Back — same hover:bg-white/4 tint as the front (and as
+            ContactButton/"Explore Research" in HeroCtas.tsx), so
+            whichever face is actually facing the visitor while hovered
+            gets the same treatment; backface-visibility: hidden keeps
+            the non-facing side out of hit-testing, so only the visible
+            one ever shows the tint. */}
         <div
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 transition-colors duration-300 hover:bg-white/4 p-3",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
