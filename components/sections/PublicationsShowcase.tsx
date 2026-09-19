@@ -124,9 +124,28 @@ function TransportIllustration({ playing }: { playing: boolean }) {
         />
       ))}
 
-      {/* Vehicle 1: full outer loop. Plain elements, not motion.* — see
-          the file-top note on why the travelling glyphs stay off Motion's
-          animate prop. */}
+      {/* Vehicle 1 and its comet trail: a second, dimmer copy on the same
+          route with a slightly later animation-delay, so at any instant
+          it renders where the lead vehicle was a beat earlier — reads as
+          a fading trail, not a second car. Plain elements, not
+          motion.* — see the file-top note on why the travelling glyphs
+          stay off Motion's animate prop. */}
+      <rect
+        width="3.6"
+        height="2.2"
+        x="-1.8"
+        y="-1.1"
+        rx="0.7"
+        fill="currentColor"
+        opacity={playing ? 0.3 : 0}
+        className={playing ? "motion-safe:animate-travel-path" : undefined}
+        style={{
+          offsetPath: `path("${loopRoute}")`,
+          offsetRotate: "auto",
+          animationDuration: "3.8s",
+          animationDelay: "1.02s",
+        }}
+      />
       <rect
         width="4.4"
         height="2.6"
@@ -144,7 +163,24 @@ function TransportIllustration({ playing }: { playing: boolean }) {
         }}
       />
 
-      {/* Vehicle 2: the vertical spur, a shorter, quicker route. */}
+      {/* Vehicle 2: the vertical spur, a shorter, quicker route, plus its
+          own trail. */}
+      <rect
+        width="3"
+        height="1.8"
+        x="-1.5"
+        y="-0.9"
+        rx="0.6"
+        fill="currentColor"
+        opacity={playing ? 0.28 : 0}
+        className={playing ? "motion-safe:animate-travel-path" : undefined}
+        style={{
+          offsetPath: `path("${spurRoute}")`,
+          offsetRotate: "auto",
+          animationDuration: "2.3s",
+          animationDelay: "1.28s",
+        }}
+      />
       <rect
         width="3.6"
         height="2.2"
@@ -192,6 +228,18 @@ function DataScienceIllustration({ playing }: { playing: boolean }) {
 
   return (
     <svg viewBox="0 0 140 90" fill="none" className="h-full w-full">
+      {/* Monochrome beam gradient for the scan bar below — fading top and
+          bottom edges read as a beam of light, not a flat grey rectangle.
+          Still strictly white/transparent (PRD 6.2's single-neutral-
+          emphasis rule), no colour. */}
+      <defs>
+        <linearGradient id="ds-scan-beam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+          <stop offset="50%" stopColor="currentColor" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
       {/* Three GIS layers, each a distinct pattern so they read as
           different data, not one rect duplicated. */}
       {layers.map((layer, i) => (
@@ -240,17 +288,18 @@ function DataScienceIllustration({ playing }: { playing: boolean }) {
         </motion.g>
       ))}
 
-      {/* Classification scan sweeping the stack, looping while revealed. */}
+      {/* Classification scan sweeping the stack, looping while revealed —
+          drawn with the beam gradient above instead of a flat fill. */}
       <motion.rect
         x="4"
         width="46"
-        height="3"
-        fill="currentColor"
-        initial={{ y: 20, opacity: 0 }}
+        height="5"
+        fill="url(#ds-scan-beam)"
+        initial={{ y: 18, opacity: 0 }}
         animate={
           playing
-            ? { y: [20, 56, 20], opacity: [0, 0.3, 0.3, 0] }
-            : { y: 20, opacity: 0 }
+            ? { y: [18, 58, 18], opacity: [0, 1, 1, 0] }
+            : { y: 18, opacity: 0 }
         }
         transition={{ duration: 3.2, delay: 0.9, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -292,6 +341,25 @@ function DataScienceIllustration({ playing }: { playing: boolean }) {
           transition={{ duration: 0.25, delay: 0.45 + i * 0.08, ease: EASE }}
         />
       ))}
+      {/* Root node pulse, looping while revealed — same idle-pulse
+          language as the hero locator (HeroCanvas.tsx), animating `r`
+          directly rather than a `scale` transform, which sidesteps any
+          SVG transform-origin fuss for a circle that isn't centred on
+          the viewport. Reads as "the model is live", not decoration. */}
+      <motion.circle
+        cx={tree.root[0]}
+        cy={tree.root[1]}
+        stroke="currentColor"
+        strokeWidth="0.8"
+        fill="none"
+        initial={{ r: 2.6, opacity: 0 }}
+        animate={
+          playing
+            ? { r: [2.6, 7], opacity: [0.55, 0] }
+            : { r: 2.6, opacity: 0 }
+        }
+        transition={{ duration: 1.8, repeat: playing ? Infinity : 0, ease: "easeOut", delay: 1.1 }}
+      />
       {/* Marker riding the resolved root-to-leaf path. */}
       <circle
         r="1.8"
@@ -355,6 +423,22 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
         animate={{ scale: playing ? 1 : 0 }}
         transition={{ duration: 0.25, delay: 0.1, ease: EASE }}
       />
+      {/* Root pulse, looping while revealed — same technique and
+          justification as DataScienceIllustration's root pulse above:
+          "a decision is live here", animating `r` directly rather than
+          a scale transform. */}
+      <motion.circle
+        cx={root[0]}
+        cy={root[1]}
+        stroke="currentColor"
+        strokeWidth="0.8"
+        fill="none"
+        initial={{ r: 2.8, opacity: 0 }}
+        animate={
+          playing ? { r: [2.8, 7.5], opacity: [0.5, 0] } : { r: 2.8, opacity: 0 }
+        }
+        transition={{ duration: 1.8, repeat: playing ? Infinity : 0, ease: "easeOut", delay: 0.6 }}
+      />
       {branches.map((b, i) => (
         <motion.circle
           key={i}
@@ -377,7 +461,11 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
         style={{ offsetPath: `path("${resolvedPath}")`, animationDuration: "1.8s", animationDelay: "0.9s" }}
       />
 
-      {/* Variable climate data, rising bars. */}
+      {/* Variable climate data, rising bars — each then breathes gently
+          in opacity once risen (own per-property transition, so only
+          opacity repeats; height/y animate to their target once and
+          hold, they'd look broken resetting to zero and re-rising on
+          every loop). */}
       {bars.map((bar, i) => (
         <motion.rect
           key={i}
@@ -385,14 +473,19 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
           width="6"
           rx="1"
           fill="currentColor"
-          opacity="0.55"
-          initial={{ y: baseline, height: 0 }}
+          initial={{ y: baseline, height: 0, opacity: 0.55 }}
           animate={
             playing
-              ? { y: baseline - bar.h, height: bar.h }
-              : { y: baseline, height: 0 }
+              ? { y: baseline - bar.h, height: bar.h, opacity: [0.4, 0.7, 0.4] }
+              : { y: baseline, height: 0, opacity: 0.55 }
           }
-          transition={{ duration: 0.45, delay: bar.delay, ease: EASE }}
+          transition={{
+            y: { duration: 0.45, delay: bar.delay, ease: EASE },
+            height: { duration: 0.45, delay: bar.delay, ease: EASE },
+            opacity: playing
+              ? { duration: 1.6 + i * 0.15, delay: bar.delay + 0.45, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.3 },
+          }}
         />
       ))}
 
@@ -693,7 +786,7 @@ function TeamFilterCard({
       onFocus={() => setHovered(true)}
       onBlur={handleLeave}
       style={{ perspective: 1800 }}
-      className="relative h-40 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className="relative h-28 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       <motion.div
         className="relative h-full w-full"
@@ -705,7 +798,7 @@ function TeamFilterCard({
         <div
           style={{ backfaceVisibility: "hidden" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-4 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
@@ -721,16 +814,18 @@ function TeamFilterCard({
         <div
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           className={cn(
-            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 p-4 transition-colors duration-300",
+            "absolute inset-0 flex flex-col justify-center overflow-hidden rounded-xl border bg-ink-900 p-3 transition-colors duration-300",
             active ? "border-ink-000" : "border-white/8",
           )}
         >
-          <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-            <p className="font-body text-xs leading-relaxed text-ink-300">{team.tagline}</p>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+            <p className="line-clamp-3 font-body text-[11px] leading-snug text-ink-300">
+              {team.tagline}
+            </p>
             <div
               ref={parallaxRef}
               aria-hidden="true"
-              className="h-20 w-28 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
+              className="h-16 w-24 shrink-0 text-ink-100 transition-transform duration-200 ease-out"
             >
               <Illustration playing={playing} />
             </div>
