@@ -33,17 +33,23 @@ function ratio(a, b) {
 }
 
 // [foreground, background, minimum ratio, where it's used]
+//
+// Monochrome pivot (2026-09-19): every blue-* pair below is retired —
+// nothing in the UI renders those tokens any more (app/globals.css keeps
+// the values defined for reference, not active use). Emphasis that used
+// to be blue-400/blue-300 is now ink-000 on the same grounds already
+// checked above, so no new pairs were needed for that change. The two
+// new pairs are the monochrome CTA fills (white background, dark text —
+// the inverse of the ink-000-on-ink-900 pair above, same ratio either
+// direction since contrast is symmetric, checked explicitly anyway so
+// the claim stays a checked one and not an assumption).
 const checks = [
   ["ink-100", "ink-900", 4.5, "body text on page ground"],
   ["ink-300", "ink-900", 4.5, "muted text on page ground"],
-  ["ink-000", "ink-900", 4.5, "display text on page ground"],
+  ["ink-000", "ink-900", 4.5, "display text on page ground, and the site's one emphasis colour"],
   ["ink-100", "ink-700", 4.5, "body text on card surface"],
   ["ink-300", "ink-700", 4.5, "muted text on card surface"],
-  ["ink-000", "blue-600", 4.5, "primary CTA text on brand royal fill"],
-  ["ink-000", "blue-800", 4.5, "panel text on brand navy fill"],
-  ["blue-400", "ink-900", 4.5, "links / active filter label, body size"],
-  ["blue-300", "ink-900", 4.5, "hover / focus state, body size"],
-  ["blue-600", "ink-900", 3.0, "large text and UI-only use (locator, borders)"],
+  ["ink-900", "ink-000", 4.5, "primary CTA text (Contact button, Button.tsx primary) on white fill"],
 ];
 
 let failed = false;

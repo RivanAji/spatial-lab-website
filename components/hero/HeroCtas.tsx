@@ -32,7 +32,7 @@ export function HeroCtas(): ReactNode {
         <motion.div layout transition={{ layout: { duration: 0.55, ease: EASE } }}>
           <a
             href="#research"
-            className="focus-ring group inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/8 bg-ink-900 px-5 py-2.5 font-body text-sm font-medium text-ink-100 shadow-sm transition-colors hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
+            className="group inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/8 bg-ink-900 px-5 py-2.5 font-body text-sm font-medium text-ink-100 shadow-sm transition-colors hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
           >
             Explore Research
             <ArrowDown

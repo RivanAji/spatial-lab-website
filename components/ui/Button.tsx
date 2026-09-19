@@ -8,14 +8,18 @@ const base =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control " +
   "px-7 py-3.5 font-body text-[15px] font-semibold transition-[transform,filter] " +
   "duration-150 active:translate-y-px active:scale-[0.98] " +
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300";
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000";
 
 const variants: Record<Variant, string> = {
-  // ink-000 on blue-600 measures 5.87:1 (PRD 6.2) — near-black text on this
-  // blue fails at body size (3.22:1), so this is deliberately near-white.
-  primary: "bg-blue-600 text-ink-000 hover:brightness-110",
+  // Monochrome pivot (2026-09-19) — was bg-blue-600/text-ink-000. White
+  // fill, near-black text: the same bg-foreground/text-background
+  // pairing the reference (github.com/DavidHDev/rbp-portfolio) uses for
+  // its own primary button, and the highest-contrast pairing available
+  // on this palette (ink-000/ink-900 measures 18.87:1, PRD 6.2's own
+  // check for that exact pair).
+  primary: "bg-ink-000 text-ink-900 hover:brightness-90",
   secondary:
-    "border border-ink-500 text-ink-100 hover:border-blue-400 hover:text-ink-000",
+    "border border-ink-500 text-ink-100 hover:border-ink-000 hover:text-ink-000",
 };
 
 type CommonProps = {

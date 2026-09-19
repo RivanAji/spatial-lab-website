@@ -3,13 +3,16 @@
 /*
  * Design tokens — PRD section 6 (Design System).
  *
- * Brand anchors #273669 (navy) and #445EA5 (royal) are sampled exactly from
- * the lab logo and are reserved for fills, borders and large text. Neither
- * survives as small text on the near-black ground (1.72:1 and 3.22:1), so
- * --blue-400 / --blue-300 are a derived ramp at the same hue that carries
- * body-size interactive text at 4.62:1 and 6.97:1. See PRD 6.2 for the
- * measured contrast table — do not "simplify" this ramp back to the two
- * brand values, that is the bug this ramp exists to avoid.
+ * Monochrome pivot (2026-09-19): the site owner moved the whole site to
+ * strict black and white, matching the reference's own stated palette
+ * (github.com/DavidHDev/rbp-portfolio README: "The palette is strict
+ * black and white. No accent or semantic color hues are used."). The
+ * --color-blue-* ramp below is kept defined but is no longer used by
+ * any component — every former blue-* usage (CTAs, links, the hero
+ * locator, focus rings, filter active states) now uses the ink-* scale
+ * instead, emphasis carried by brightness/weight rather than colour.
+ * Left in rather than deleted in case a specific accent moment is
+ * wanted again later; nothing currently renders it.
  */
 @theme {
   /* These resolve through the --sans-font / --mono-font / --serif-font
@@ -52,6 +55,20 @@
      motivated motion: storytelling for the lab's own location. Gated by
      motion-safe: in HeroCanvas.tsx, so prefers-reduced-motion drops it. */
   --animate-locator-pulse: locator-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+
+  /* Travelling-marker loop for the TeamsTeaser illustrations
+     (components/hero/TeamsTeaser.tsx) — a dot moving along an SVG path
+     via offset-distance. This has to be a plain CSS animation, not a
+     Motion `animate` prop: Motion doesn't recognise offsetDistance as
+     an animatable value (tried first — it silently produced
+     `transform: scale(0)` instead of moving anything, caught by
+     inspecting the actual computed style during a real hover, not
+     assumed to work from the code alone). offset-path itself stays a
+     static inline style per element (each illustration's path shape is
+     different); only the 0%->100% sweep along whatever path is set is
+     shared here. motion-safe: only — reduced motion gets the static
+     nodes/lines each illustration already draws in once, no looping. */
+  --animate-travel-path: travel-path 2.4s linear infinite;
 }
 
 @keyframes locator-pulse {
@@ -62,6 +79,25 @@
   70%,
   100% {
     transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes travel-path {
+  0%,
+  8% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  16% {
+    opacity: 1;
+  }
+  84% {
+    opacity: 1;
+  }
+  92%,
+  100% {
+    offset-distance: 100%;
     opacity: 0;
   }
 }
@@ -90,8 +126,8 @@ body {
 }
 
 ::selection {
-  background: var(--color-blue-600);
-  color: var(--color-ink-000);
+  background: var(--color-ink-000);
+  color: var(--color-ink-900);
 }
 
 /* The "Explore Research" hero CTA scrolls to #research (HeroCtas.tsx)
@@ -105,7 +141,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-blue-300);
+  outline: 2px solid var(--color-ink-000);
   outline-offset: 2px;
 }
 

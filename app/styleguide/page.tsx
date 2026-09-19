@@ -11,11 +11,17 @@ const swatches: Array<{ name: string; hex: string; note: string }> = [
   { name: "ink-500", hex: "#2A313B", note: "hairline" },
   { name: "ink-300", hex: "#8A929C", note: "muted text, 6.33:1 on ink-900" },
   { name: "ink-100", hex: "#E8EBEF", note: "body text, 16.66:1 on ink-900" },
-  { name: "ink-000", hex: "#F7F9FB", note: "display text, 18.87:1 on ink-900" },
-  { name: "blue-800", hex: "#273669", note: "brand navy, exact. Fills only" },
-  { name: "blue-600", hex: "#445EA5", note: "brand royal, exact. Fills, large text, borders" },
-  { name: "blue-400", hex: "#5B78BE", note: "interactive text, 4.62:1 on ink-900" },
-  { name: "blue-300", hex: "#7E97DC", note: "hover / focus, 6.97:1 on ink-900" },
+  { name: "ink-000", hex: "#F7F9FB", note: "display text, 18.87:1 on ink-900 — now also the accent" },
+];
+
+// The former blue-* ramp (brand navy/royal + a derived interactive pair)
+// is kept defined in globals.css but unused since the monochrome pivot
+// (2026-09-19) — listed here for reference, not as active tokens.
+const retiredSwatches: Array<{ name: string; hex: string; note: string }> = [
+  { name: "blue-800", hex: "#273669", note: "brand navy, exact — unused" },
+  { name: "blue-600", hex: "#445EA5", note: "brand royal, exact — unused" },
+  { name: "blue-400", hex: "#5B78BE", note: "derived interactive text — unused" },
+  { name: "blue-300", hex: "#7E97DC", note: "derived hover / focus — unused" },
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -34,7 +40,7 @@ export default function StyleguidePage() {
     <main className="min-h-[100dvh] pb-24">
       <Container>
         <div className="py-16">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-blue-400">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-300">
             PRD section 6, internal review
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold text-ink-000">
@@ -64,6 +70,18 @@ export default function StyleguidePage() {
           <p className="mt-4 text-sm text-ink-300">
             Full contrast table checked automatically: <code className="font-mono text-ink-100">npm run check:contrast</code>
           </p>
+          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {retiredSwatches.map((s) => (
+              <div key={s.name} className="rounded-panel border border-ink-600 opacity-50">
+                <div className="h-20 rounded-t-panel" style={{ backgroundColor: s.hex }} aria-hidden="true" />
+                <div className="p-3">
+                  <p className="font-mono text-xs text-ink-100">{s.name}</p>
+                  <p className="font-mono text-xs text-ink-300">{s.hex}</p>
+                  <p className="mt-1 text-xs text-ink-300">{s.note}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </Section>
 
         <Hairline />
@@ -71,20 +89,26 @@ export default function StyleguidePage() {
         <Section title="Typography (PRD 6.3)">
           <div className="flex flex-col gap-6">
             <div>
-              <p className="mb-2 font-mono text-xs text-ink-300">Display / Space Grotesk 600</p>
+              <p className="mb-2 font-mono text-xs text-ink-300">Sans / Geist 600 (font-display, font-body)</p>
               <p className="font-display text-5xl font-semibold leading-[1.05] text-ink-000">
                 Spatial Analysis &amp; Transportation
               </p>
             </div>
             <div>
-              <p className="mb-2 font-mono text-xs text-ink-300">Body / Public Sans 400</p>
+              <p className="mb-2 font-mono text-xs text-ink-300">Sans / Geist 400 (font-body)</p>
               <p className="max-w-[40ch] font-body text-lg leading-relaxed text-ink-100">
                 Exploring cities through space, mobility, data and intelligent systems.
               </p>
             </div>
             <div>
-              <p className="mb-2 font-mono text-xs text-ink-300">Mono / IBM Plex Mono 500</p>
-              <p className="font-mono text-sm tracking-wide text-blue-400">
+              <p className="mb-2 font-mono text-xs text-ink-300">Serif / Fraunces 500 (font-serif) — selective use only, see Research Archive</p>
+              <p className="font-serif text-4xl font-medium leading-[1.05] text-ink-000">
+                Research archive
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 font-mono text-xs text-ink-300">Mono / Geist Mono 500</p>
+              <p className="font-mono text-sm tracking-wide text-ink-100">
                 07°15&apos;S / 112°45&apos;E, SURABAYA, 2026
               </p>
             </div>

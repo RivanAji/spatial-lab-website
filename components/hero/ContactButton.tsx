@@ -66,7 +66,10 @@ export function ContactButton(): ReactNode {
       }
       transition={{ layout: { duration: 0.55, ease: EASE } }}
       style={{ borderRadius: 12 }}
-      className="focus-ring relative inline-flex h-11 cursor-pointer items-center justify-center bg-blue-600 px-5 font-body text-sm font-medium text-ink-000 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
+      // Monochrome pivot (2026-09-19), matching the reference's own
+      // bg-foreground/text-background primary button exactly now
+      // instead of the brand blue this used until this point.
+      className="relative inline-flex h-11 cursor-pointer items-center justify-center bg-ink-000 px-5 font-body text-sm font-medium text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       <motion.span layout="position" className="relative inline-flex items-center">
         <AnimatePresence initial={false} mode="popLayout">

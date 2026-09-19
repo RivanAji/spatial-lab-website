@@ -120,10 +120,10 @@ function ArchiveCard({ publication }: { publication: (typeof publications)[numbe
   return (
     <Link
       href={`/publications/${publication.slug}`}
-      className="group flex flex-col justify-between border border-ink-500 bg-ink-700 p-6 transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
+      className="group flex flex-col justify-between border border-ink-500 bg-ink-700 p-6 transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       <div>
-        <p className="font-mono text-xs text-blue-400">{publication.year}</p>
+        <p className="font-mono text-xs text-ink-100">{publication.year}</p>
         <h3 className="mt-3 font-display text-lg font-semibold leading-snug text-ink-000 transition-colors group-hover:text-ink-000">
           {publication.title}
         </h3>

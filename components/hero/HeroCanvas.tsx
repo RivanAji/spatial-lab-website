@@ -262,15 +262,15 @@ export function HeroCanvas() {
           >
             <div className="relative -translate-x-1/2 -translate-y-1/2">
               <span
-                className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-400 motion-safe:animate-locator-pulse"
+                className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"
                 style={{ animationDelay: "1.6s" }}
               />
-              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-300" />
-              <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-blue-400/60" />
-              <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-blue-400/60" />
+              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-ink-000" />
+              <span className="absolute left-1/2 top-1/2 h-4 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
+              <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
             </div>
             <div className="mt-3 whitespace-nowrap text-center">
-              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-blue-300">
+              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-000">
                 Surabaya
               </p>
               <p className="font-mono text-[10px] tracking-wide text-ink-300">

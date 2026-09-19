@@ -6,7 +6,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { List, X } from "@phosphor-icons/react";
 import { Container } from "@/components/ui/Container";
-import logo from "@/public/brand/logo.png";
+import logo from "@/public/brand/logo-white.png";
+
+// Monochrome pivot (2026-09-19): the lab mark now renders in white
+// (de-matted from the same source PNG used earlier, this time filled
+// solid white instead of the two brand blues — see
+// public/brand/logo-white.png) rather than the brand blue used until
+// this point. The site's accent colour is dropped site-wide in favour
+// of strict black and white, matching the reference's own stated
+// palette (github.com/DavidHDev/rbp-portfolio README: "The palette is
+// strict black and white. No accent or semantic color hues are used.")
+// — this project had been drifting toward that anyway through this
+// whole redesign; this is the site owner making it explicit.
+//
+// The ITS mark beside it is the university's own official logo, fetched
+// directly from its.ac.id's own site header (not a third-party source)
+// and recoloured the same way: the source SVG uses exactly one fill
+// colour (#187DC2), so swapping it for white is a faithful, lossless
+// recolour of the same shapes, not a redraw.
 
 // Replaces the earlier ThreeUI AnimatedTopDock per the site owner's
 // direction (2026-09-19): "keep the dock concept, drop the boxed-item
@@ -119,13 +136,22 @@ export function Header() {
           reference has no logo (personal-name site), but this project
           still needs one visible; a separate mark beside a centred
           pill is a common enough pairing that it doesn't fight the
-          minimal language. */}
+          minimal language. The ITS mark sits beside the lab's own,
+          separated by a hairline rather than merged into one image, so
+          each stays a distinct, real logo rather than a combined lockup
+          this project has no authority to invent. */}
       <Link
         href="/"
         aria-label="Spatial Analysis & Transportation Laboratory, home"
-        className="fixed left-6 top-5 z-50 hidden md:block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300"
+        className="fixed left-6 top-5 z-50 hidden items-center gap-3 md:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
       >
         <Image src={logo} alt="" priority height={32} className="h-8 w-auto" />
+        <span aria-hidden="true" className="h-6 w-px bg-white/15" />
+        <img
+          src="/brand/its-logo-white.svg"
+          alt="Institut Teknologi Sepuluh Nopember"
+          className="h-6 w-auto opacity-90"
+        />
       </Link>
 
       <DesktopNav />
@@ -137,11 +163,16 @@ export function Header() {
       <div className="border-b border-white/8 bg-ink-900 md:hidden">
         <Container>
           <div className="flex h-16 items-center justify-between">
+            {/* ITS mark is desktop-only (above) — mobile already sits
+                right at its gutter limit with just this one mark plus
+                the hamburger (a second logo was exactly the kind of
+                "technically fits, no margin left" bug found and fixed
+                earlier in this header). */}
             <Link
               href="/"
               onClick={() => setOpen(false)}
               aria-label="Spatial Analysis & Transportation Laboratory, home"
-              className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-300"
+              className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
             >
               <Image src={logo} alt="" priority height={36} className="h-9 w-auto" />
             </Link>

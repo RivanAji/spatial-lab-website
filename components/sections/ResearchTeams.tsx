@@ -96,7 +96,7 @@ function TeamPanel({
           </div>
           <Link
             href={`/research/${team.slug}`}
-            className="font-body text-sm font-semibold text-blue-400 transition-colors hover:text-blue-300"
+            className="font-body text-sm font-semibold text-ink-000 underline decoration-white/25 underline-offset-4 transition-colors hover:decoration-ink-000"
           >
             Explore Team →
           </Link>
