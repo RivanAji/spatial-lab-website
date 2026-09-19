@@ -28,8 +28,17 @@ const root = path.resolve(__dirname, "..");
 // square card would letterbox into a thin horizontal band with empty
 // space top and bottom, so both the resolution and the crop change here,
 // not just the CSS container.
-const GRID_COLS = 64;
-const GRID_ROWS = 64;
+// Resolution bumped 64 -> 96 (2026-09-19, site owner caught it): at 64x64
+// each cell is roughly 0.77deg lon x 0.5deg lat, coarse enough that
+// Java's own eastern reach past Surabaya rasterised as a fragment that
+// looked detached from the rest of the archipelago (checked directly by
+// dumping the raw grid to a terminal preview, not assumed) — close
+// enough in screen space to read as "near Bali/Nusa Tenggara" even
+// though the underlying coordinate was correct the whole time. At 96x96
+// the same point sits inside a single, clearly connected landmass
+// (verified the same way, against the same source polygon).
+const GRID_COLS = 96;
+const GRID_ROWS = 96;
 
 // Crop chosen for composition, not geographic completeness: tightened to
 // mainland Southeast Asia through the Philippines and all of Indonesia,

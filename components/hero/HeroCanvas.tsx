@@ -4,13 +4,38 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ASIA_GRID, GRID_COLS, GRID_ROWS, SURABAYA_CELL, SURABAYA_COORDS } from "@/data/asia-grid";
 
 // Approved motion for the hero only (PRD 6.5): resolve from noise, idle
-// pulse, slow scan line, subtle pointer parallax. Nothing here runs when
-// `prefers-reduced-motion` is set, or while the hero is scrolled out of
-// view, or while the tab is hidden.
+// pulse, slow scan line, subtle pointer parallax. Plus, added 2026-09-19
+// (site owner's request): click to replay the resolve. Nothing here runs
+// when `prefers-reduced-motion` is set, or while the hero is scrolled out
+// of view, or while the tab is hidden.
 
 const NOISE_CHARS = [".", "·", ":"] as const;
 const ASIA_CHARS = [".", ":", "+"] as const;
 const INDONESIA_CHARS = ["+", "*", "#"] as const;
+
+// Click-to-replay particle text (2026-09-19, site owner's request): real
+// short phrases the map dissolves into and resolves out of, not invented
+// marketing copy — every one of these is a literal copy of a team name or
+// a `focus` keyword from lib/content/teams.ts (PRD 3.2's real, confirmed
+// team structure). Hardcoded here rather than imported from that module
+// on purpose: the hero's content has stayed deliberately fixed and
+// decoupled from the CMS-editable team data all session (PRD 7.2 — "not
+// placeholder copy, the actual launch copy"), and these are decorative
+// texture, not a live data binding that needs to track edits to teams.ts.
+const PARTICLE_PHRASES = [
+  "SUSTAINABLE URBAN TRANSPORTATION",
+  "SPATIAL DATA SCIENCE AND AI",
+  "DECISION SUPPORT AND CLIMATE CHANGE",
+  "POLICY",
+  "TRANSIT-ORIENTED DEVELOPMENT",
+  "MACHINE LEARNING",
+  "BIG DATA",
+  "SPATIAL DATA INFRASTRUCTURE",
+  "CLIMATE RESILIENCE",
+  "SCENARIO BUILDING",
+  "POLICY AND DECISION EVALUATION",
+  "TRANSPORT, SPATIAL AND ECONOMIC INTEGRATION",
+] as const;
 
 type CellDraw = {
   x: number; // column
@@ -60,6 +85,27 @@ function buildCells(): CellDraw[] {
   return out;
 }
 
+type Particle = {
+  text: string;
+  xFrac: number; // 0-1, position within the canvas
+  yFrac: number;
+};
+
+// Scattered across the whole panel, not tied to the character grid — the
+// grid is fixed-size cells that can't fit a multi-word phrase, so these
+// draw as their own, larger-type pass at arbitrary positions, like the
+// reference (contentarchitecture.dev) scatters its own text fragments.
+// A fresh scatter (new positions, same phrase pool) every time it's
+// built, so a replay doesn't look identical to the one before it.
+function buildParticles(): Particle[] {
+  const shuffled = [...PARTICLE_PHRASES].sort(() => Math.random() - 0.5);
+  return shuffled.map((text) => ({
+    text,
+    xFrac: 0.08 + Math.random() * 0.84,
+    yFrac: 0.08 + Math.random() * 0.84,
+  }));
+}
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
@@ -77,12 +123,14 @@ export function HeroCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
   const cellsRef = useRef<CellDraw[] | undefined>(undefined);
+  const particlesRef = useRef<Particle[] | undefined>(undefined);
   const reduced = usePrefersReducedMotion();
 
   // Stable across re-renders, but each cell's noise character/threshold is
   // randomised per mount — this is decorative texture, not content, so it
   // doesn't need to be deterministic or survive re-mounts.
   if (!cellsRef.current) cellsRef.current = buildCells();
+  if (!particlesRef.current) particlesRef.current = buildParticles();
   const resolveSeed = useMemo(
     () => cellsRef.current!.map(() => Math.random()),
     [],
@@ -100,9 +148,13 @@ export function HeroCanvas() {
     let offsetX = 0;
     let offsetY = 0;
     let dpr = 1;
+    let panelWidth = 0;
+    let panelHeight = 0;
 
     function resize() {
       const rect = wrap!.getBoundingClientRect();
+      panelWidth = rect.width;
+      panelHeight = rect.height;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas!.width = Math.round(rect.width * dpr);
       canvas!.height = Math.round(rect.height * dpr);
@@ -157,6 +209,27 @@ export function HeroCanvas() {
           : `rgba(232, 235, 239, ${alpha * 0.85})`;
         ctx!.fillText(char, px, py);
       }
+
+      // Particle phrases: visible while the map is still noise, gone
+      // well before it finishes resolving (fades out over the first 70%
+      // of the resolve, not the whole thing) — they read as the data the
+      // map is resolving OUT of, not a caption sitting on top of the
+      // finished map.
+      if (progress < 1) {
+        const particleProgress = Math.min(progress / 0.7, 1);
+        const alpha = (1 - particleProgress) * 0.5;
+        if (alpha > 0.01) {
+          ctx!.save();
+          ctx!.textAlign = "left";
+          ctx!.textBaseline = "alphabetic";
+          ctx!.font = `${Math.max(cellSize * 2.4, 10)}px var(--font-mono, monospace)`;
+          ctx!.fillStyle = `rgba(232, 235, 239, ${alpha})`;
+          for (const particle of particlesRef.current!) {
+            ctx!.fillText(particle.text, particle.xFrac * panelWidth, particle.yFrac * panelHeight);
+          }
+          ctx!.restore();
+        }
+      }
       ctx!.restore();
     }
 
@@ -175,12 +248,14 @@ export function HeroCanvas() {
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
 
+    let start = 0;
+    const RESOLVE_MS = 1600;
+    let idleStart = 0;
+    let onClick: (() => void) | null = null;
+
     if (reduced) {
       draw(1, null);
     } else {
-      let start = 0;
-      const RESOLVE_MS = 1600;
-      let idleStart = 0;
       let lastFrame = 0;
 
       function tick(t: number) {
@@ -205,6 +280,24 @@ export function HeroCanvas() {
         draw(1, scanRow);
       }
       raf = requestAnimationFrame(tick);
+
+      // Click to replay (site owner's request): re-runs the exact same
+      // resolve-from-noise choreography the map already does once on
+      // load, just re-triggered on demand, with a freshly scattered set
+      // of particle phrases (buildParticles again) so a second click
+      // doesn't look identical to the first. Deliberately does NOT
+      // rebuild `cellsRef` — that array's length has to stay in lock-
+      // step with `resolveSeed` (computed once, in the same order, by
+      // the component body), and buildCells()'s ambient-noise threshold
+      // makes its own array length vary run to run; regenerating one
+      // without the other would desync the two and read stale/wrong
+      // resolve timing per cell.
+      onClick = () => {
+        particlesRef.current = buildParticles();
+        start = 0;
+        idleStart = 0;
+      };
+      wrap.addEventListener("click", onClick);
     }
 
     // Pointer parallax on the whole composition, not the canvas alone
@@ -240,6 +333,7 @@ export function HeroCanvas() {
       io.disconnect();
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (onMove) wrap.removeEventListener("pointermove", onMove);
+      if (onClick) wrap.removeEventListener("click", onClick);
     };
   }, [reduced, resolveSeed]);
 
@@ -247,10 +341,18 @@ export function HeroCanvas() {
   const locatorTopPct = ((SURABAYA_CELL.row + 0.5) / GRID_ROWS) * 100;
 
   return (
-    <div
-      role="img"
-      aria-label="Stylised map of Asia rendered as a character grid, with Indonesia highlighted and Surabaya marked as the laboratory's location, at 07 degrees 15 minutes south, 112 degrees 45 minutes east."
-      className="relative aspect-square w-full select-none"
+    // A real <button>, not a styled <div role="img"> (PRD 6.4 / this
+    // project's own "real interactive elements only" rule) — clicking it
+    // replays the resolve animation. The descriptive text that used to
+    // be the div's aria-label is the button's accessible name instead,
+    // extended to say what activating it does. The "Surabaya" caption
+    // was removed from the visible layer (site owner's request) but
+    // stays in this accessible name and in the coordinate label still
+    // on screen.
+    <button
+      type="button"
+      aria-label="Stylised map of Asia rendered as a character grid, with Indonesia highlighted and Surabaya marked as the laboratory's location, at 07 degrees 15 minutes south, 112 degrees 45 minutes east. Activate to replay the resolve animation."
+      className="relative aspect-square w-full cursor-pointer select-none appearance-none border-0 bg-transparent p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
     >
       <div ref={wrapRef} className="absolute inset-0" aria-hidden="true">
         <div ref={parallaxRef} className="absolute inset-0">
@@ -270,9 +372,6 @@ export function HeroCanvas() {
               <span className="absolute left-1/2 top-1/2 h-px w-4 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
             </div>
             <div className="mt-3 whitespace-nowrap text-center">
-              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-ink-000">
-                Surabaya
-              </p>
               <p className="font-mono text-[10px] tracking-wide text-ink-300">
                 {SURABAYA_COORDS}
               </p>
@@ -280,6 +379,6 @@ export function HeroCanvas() {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
