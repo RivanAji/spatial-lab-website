@@ -77,15 +77,25 @@ async function fetchOrcidWorks(orcidId: string): Promise<Candidate[]> {
   for (const group of data.group ?? []) {
     const summary = group["work-summary"]?.[0];
     if (!summary) continue;
-    const title: string | undefined = summary.title?.title?.value;
+    // .trim(): real ORCID records in this project's own data came back
+    // with a stray leading space on both a title and a DOI (the DOI one
+    // silently produced a broken link, "https://doi.org/ 10.1016/...",
+    // since a URL's own whitespace doesn't get trimmed for you) — not
+    // this script's bug, ORCID members' self-entered data is exactly as
+    // clean as what they typed.
+    const title: string | undefined = summary.title?.title?.value?.trim();
     if (!title) continue;
-    const year = summary["publication-date"]?.year?.value
-      ? Number(summary["publication-date"].year.value)
-      : null;
+    // `|| null`, not just the presence check above: at least one real
+    // ORCID record in this project's own data had publication-date.year.
+    // value set to the literal string "0" (truthy, so it passed the
+    // check above) rather than being absent — Number("0") is 0, and
+    // year 0 isn't a real publication year worth showing as one.
+    const yearValue = summary["publication-date"]?.year?.value;
+    const year = yearValue ? Number(yearValue) || null : null;
     const doiEntry = (summary["external-ids"]?.["external-id"] ?? []).find(
       (id: { "external-id-type"?: string }) => id["external-id-type"] === "doi",
     );
-    const doi: string | null = doiEntry?.["external-id-value"] ?? null;
+    const doi: string | null = doiEntry?.["external-id-value"]?.trim() || null;
     out.push({
       title,
       year,

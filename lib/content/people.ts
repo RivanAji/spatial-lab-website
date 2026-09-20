@@ -20,9 +20,9 @@ export const people: Person[] = [
     scholarId: "BYOW-fMAAAAJ",
     profileUrl: "https://scholar.its.ac.id/en/persons/siti-nurlaela/",
     // Seen on her Scopus author page (scopus.com/authid/detail.uri?
-    // authorId=57430713400), 2026-09-20 — the only member with a
-    // confirmed ORCID iD so far; see the orcidId field's own comment in
-    // lib/content/types.ts.
+    // authorId=57430713400), 2026-09-20; see the orcidId field's own
+    // comment in lib/content/types.ts. The rest of this file's orcidId
+    // values came directly from the site owner the same day.
     orcidId: "0000-0002-7562-6548",
   },
   {
@@ -38,6 +38,7 @@ export const people: Person[] = [
     coordinatorOf: "decision-support-climate",
     scholarId: "NoF6s4gAAAAJ",
     profileUrl: "https://scholar.its.ac.id/en/persons/cahyono-susetyo/",
+    orcidId: "0000-0003-0553-9761",
   },
   {
     slug: "ketut-dewi-martha-erli-handayeni",
@@ -99,6 +100,7 @@ export const people: Person[] = [
     ],
     teams: ["sustainable-urban-transportation", "spatial-data-science-ai"],
     profileUrl: "https://scholar.its.ac.id/en/persons/anoraga-jatayu/",
+    orcidId: "0000-0002-5825-3823",
   },
   {
     slug: "rivan-aji-wahyu-dyan-syafitri",
@@ -112,6 +114,7 @@ export const people: Person[] = [
     ],
     teams: ["spatial-data-science-ai"],
     profileUrl: "https://scholar.its.ac.id/en/persons/rivan-aji-wahyu-dyan-syafitri/",
+    orcidId: "0009-0006-3825-1560",
   },
   {
     slug: "caesario-arif-wibowo",
@@ -123,6 +126,7 @@ export const people: Person[] = [
     expertise: [],
     teams: ["sustainable-urban-transportation"],
     profileUrl: "https://scholar.google.com/citations?user=Ri83cGgAAAAJ&hl=en",
+    orcidId: "0009-0004-5080-2068",
   },
 ];
 
