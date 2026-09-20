@@ -69,9 +69,8 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
 
   return (
     <div className="min-h-dvh bg-ink-900">
-      {/* Logos only — a real fixed header, mirroring Header.tsx exactly
-          (same px-6, same h-20/h-16, same logo sizes) so both land in the
-          same position as Home. */}
+      {/* Mobile: logo bar, then the title stacked below it — both in
+          normal flow, nothing fixed. */}
       <header className="border-b border-white/8 bg-ink-900 md:hidden">
         <div className="flex h-16 items-center px-6">
           <Link
@@ -82,7 +81,16 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
             <Image src={logo} alt="" priority height={36} className="h-9 w-auto" />
           </Link>
         </div>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-6 pb-5 pt-4">
+          <span className="font-display text-sm font-bold tracking-tight text-ink-000">TSAL</span>
+          <h1 className="font-display text-sm font-semibold text-ink-000">{team.name}</h1>
+          <span className="h-px w-6 bg-ink-600" aria-hidden="true" />
+          <p className="font-body text-xs font-normal text-ink-300">{joinFocus(team.focus)}</p>
+        </div>
       </header>
+
+      {/* Desktop: the fixed bar itself carries only the logos, same as
+          Home's own header — nothing in it moves on scroll. */}
       <div className="fixed inset-x-0 top-0 z-50 hidden h-20 items-center justify-between px-6 md:flex">
         <Link
           href="/"
@@ -98,22 +106,29 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
         />
       </div>
 
-      {/* The title, not the header — plain in-flow content (site owner:
-          "jangan buat statis, dinamis aja... ikut ke scroll"), so it
-          scrolls away with the page instead of staying pinned. Padding
-          matches Home's own Container (px-6 md:px-10 lg:px-20, max-w
-          1400px), not the logo bar's tighter edge-to-edge px-6 — the
-          site owner: "sesuaikan dengan home pagenya padding kanan dan
-          kiri untuk judul ini". pt-28 on md+ clears the 80px fixed
-          header with room to breathe (site owner: "posisinya kurang
-          tinggi"). */}
-      <div className="mx-auto w-full max-w-[1400px] px-6 pb-5 pt-5 md:px-10 md:pb-6 md:pt-28 lg:px-20">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-display text-sm font-bold tracking-tight text-ink-000">TSAL</span>
-          <h1 className="font-display text-sm font-semibold text-ink-000">{team.name}</h1>
-          <span className="h-px w-6 bg-ink-600" aria-hidden="true" />
-          <p className="font-body text-xs font-normal text-ink-300">{joinFocus(team.focus)}</p>
+      {/* The title is regular body content, not the header — it only
+          reads as one merged bar with the fixed logos above because the
+          two elements above it contribute no layout height at md+ (one
+          is md:hidden, the other position:fixed), so this is the first
+          flowed element and lands at y:0 on its own, matching the fixed
+          bar's own h-20. An invisible logo-sized spacer reserves the
+          width the real (fixed) logo already occupies, so this text
+          starts right after it instead of under it; scrolling moves
+          this title away normally, leaving only the fixed logos in
+          place, since it was never actually fixed. */}
+      <div className="hidden md:flex md:h-20 md:items-center md:justify-between md:px-6">
+        <div className="flex min-w-0 items-baseline gap-x-4">
+          <span className="invisible shrink-0" aria-hidden="true">
+            <Image src={logo} alt="" priority height={32} className="h-8 w-auto" />
+          </span>
+          <div className="flex min-w-0 items-baseline gap-x-3">
+            <span className="shrink-0 font-display text-sm font-bold tracking-tight text-ink-000">TSAL</span>
+            <h1 className="shrink-0 font-display text-sm font-semibold text-ink-000">{team.name}</h1>
+            <span className="h-px w-6 shrink-0 bg-ink-600" aria-hidden="true" />
+            <p className="truncate font-body text-xs font-normal text-ink-300">{joinFocus(team.focus)}</p>
+          </div>
         </div>
+        <span className="invisible h-8 w-10 shrink-0" aria-hidden="true" />
       </div>
 
       <TeamTimeline work={work} papers={papers} people={members} />
