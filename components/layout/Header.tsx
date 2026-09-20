@@ -64,13 +64,18 @@ import logo from "@/public/brand/logo-white.png";
 // `/people` route to a same-page anchor — components/sections/Team.tsx
 // now renders the section itself.
 //
-// About stays a route link for now even though that route doesn't
-// exist yet either — a known gap, not part of this pass's scope.
+// Project (2026-09-20, site owner's request): replaces "About"
+// outright — not a relabel of the same link, a different destination.
+// components/sections/Project.tsx is a real section (heading + space),
+// sitting directly below PublicationsShowcase's gallery in document
+// order in app/page.tsx, with its actual content still to come. Nav
+// order now matches scroll order top to bottom: Research, Project,
+// Roadmap, Team.
 const NAV_ITEMS: { label: string; href: string }[] = [
   { label: "Research", href: "#research" },
+  { label: "Project", href: "#project" },
   { label: "Roadmap", href: "#roadmap" },
   { label: "Team", href: "#team" },
-  { label: "About", href: "/about" },
 ];
 
 function DesktopNav() {

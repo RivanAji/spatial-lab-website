@@ -40,11 +40,19 @@ export function Footer() {
 
       <Container className="relative flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
         <div>
+          {/* TSAL sized down 2026-09-20 (site owner: "footernya malah
+              terlihat terlalu besar" — a site-wide font-size audit
+              flagged this as the clearest offender): text-4xl/5xl
+              (36/48px) put a footer brand mark ahead of every actual
+              page heading (Roadmap/Team's own h2 tops out at 36px) —
+              a footer shouldn't outrank real content. Now sits clearly
+              below that scale, and the explainer beside it scaled down
+              with it to hold the same rough proportion. */}
           <div className="flex items-start gap-3">
-            <span className="font-display text-4xl font-bold tracking-tight text-ink-000 md:text-5xl">
+            <span className="font-display text-2xl font-bold tracking-tight text-ink-000 md:text-3xl">
               TSAL
             </span>
-            <p className="font-body text-base leading-snug text-ink-300 md:text-lg">
+            <p className="-mt-1 font-body text-sm leading-snug text-ink-300 md:text-base">
               Transportation and
               <br />
               Spatial Analysis Lab

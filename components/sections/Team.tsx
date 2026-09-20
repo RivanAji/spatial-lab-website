@@ -51,8 +51,15 @@ export function Team() {
           Team
         </h2>
 
+        {/* Head's name was text-base sm:text-lg while every member
+            below was a flat text-base — a size bump with no
+            equivalent on the list it's meant to read alongside (site
+            owner's font-consistency pass, 2026-09-20). Flat text-base
+            on both now; the head still reads as distinct through
+            layout (alone in its own column) and the role beside it,
+            not through being a different font size. */}
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
-          <p className="font-body text-base text-ink-000 sm:text-lg">
+          <p className="font-body text-base text-ink-000">
             <PersonName person={head} />
             <span className="ml-2 font-body text-sm italic text-ink-300">{head.role}</span>
           </p>

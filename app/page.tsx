@@ -1,6 +1,7 @@
 import { Hero } from "@/components/hero/Hero";
 import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
+import { Project } from "@/components/sections/Project";
 import { Roadmap } from "@/components/sections/Roadmap";
 import { Team } from "@/components/sections/Team";
 
@@ -64,6 +65,12 @@ import { Team } from "@/components/sections/Team";
 // (components/layout/Header.tsx), the same same-page-anchor pattern
 // Research and Roadmap already use, instead of the dead `/people`
 // route it used to carry.
+//
+// Project (2026-09-20, site owner's request): replaces "About" in the
+// nav outright, and sits directly below PublicationsShowcase's gallery
+// — heading and spacing only for now, real content still to come
+// (components/sections/Project.tsx). Nav order now matches document
+// order top to bottom: Research, Project, Roadmap, Team.
 export default function Home() {
   return (
     <main>
@@ -72,6 +79,7 @@ export default function Home() {
         <Hero />
         <PublicationsShowcase />
       </div>
+      <Project />
       <Roadmap />
       <Team />
     </main>
