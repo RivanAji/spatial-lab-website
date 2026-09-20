@@ -43,7 +43,13 @@ type Candidate = {
   year: number | null;
   doi: string | null;
   link: string | null;
-  source: "orcid" | "crossref";
+  // "artifact": a one-off manual merge (2026-09-20) of a scraped table
+  // the site owner asked for separately (ITS Scholar + Google Scholar,
+  // by hand, not through this script) — folded into this same pending
+  // file so this script's own dedup (below) never re-flags any of it.
+  // This script itself never writes that source value; only "orcid" and
+  // "crossref" are things it can find on its own.
+  source: "orcid" | "crossref" | "artifact";
   matchedPerson: string; // Person.slug
   foundAt: string; // ISO date this script first saw it
 };
