@@ -6,18 +6,22 @@ import { FooterMapBackdrop } from "./FooterMapBackdrop";
 //
 // 1. Left side is now a proper wordmark lockup instead of the full name
 //    as the headline: "TSAL" itself is the large text, with the full
-//    name as a small parenthetical explainer beside it (split onto two
-//    lines after "and", the site owner's own wording verbatim —
-//    "Transportation and Spatial Analysis Lab", not the "&"/"Laboratory"
-//    phrasing used elsewhere on the page; this is a deliberately
-//    different, shorter footer treatment, not an inconsistency to fix).
-//    The department affiliation line sits below in a lighter tone.
+//    name as an explainer beside it (no parentheses — the site owner's
+//    follow-up dropped those — sized closer to TSAL's own scale
+//    instead of a tiny disconnected caption, so the pairing reads as
+//    one deliberate lockup rather than a label bolted onto a
+//    logotype). The department affiliation line sits below in a
+//    lighter tone, with its own explicit line break rather than
+//    whatever width happens to wrap it.
 // 2. Right side gained a country + postal-code line and swapped the
 //    department's general address (pwk@its.ac.id) for the lab's own
 //    (pwkitslabkom@gmail.com) — the site owner's own contact details,
 //    not a guess. Copyright moved from a page-wide line under both
 //    columns into the bottom of this column specifically, with its own
-//    spacing above.
+//    spacing above. Every multi-word line on this side breaks at an
+//    explicit, chosen point (site owner: "atur kapan harus enter agar
+//    rapi") instead of an arbitrary browser wrap, which reads
+//    especially ragged on right-aligned text.
 // 3. The flat "TSAL" watermark text is gone, replaced by
 //    FooterMapBackdrop — the same ASCII character-grid map technique
 //    as the hero, filling the section behind the content instead of
@@ -33,10 +37,10 @@ export function Footer() {
             <span className="font-display text-4xl font-bold tracking-tight text-ink-000 md:text-5xl">
               TSAL
             </span>
-            <p className="mt-1.5 max-w-[9.5rem] font-body text-xs leading-snug text-ink-300">
-              (Transportation and
+            <p className="font-body text-base leading-snug text-ink-300 md:text-lg">
+              Transportation and
               <br />
-              Spatial Analysis Lab)
+              Spatial Analysis Lab
             </p>
           </div>
           {/* text-ink-300 at full opacity, not a lighter/60 variant:
@@ -46,12 +50,18 @@ export function Footer() {
               to the bright ink-000 "TSAL" above it without needing to
               go below a passing contrast ratio to get there. */}
           <p className="mt-3 font-body text-sm text-ink-300">
-            Urban and Regional Planning Department - ITS
+            Urban and Regional Planning
+            <br />
+            Department - ITS
           </p>
         </div>
 
         <div className="flex flex-col gap-1 font-body text-sm text-ink-300 md:items-end md:text-right">
-          <p>Jalan Raya ITS, Kampus ITS Sukolilo, Surabaya, Jawa Timur, Indonesia</p>
+          <p>
+            Jalan Raya ITS, Kampus ITS Sukolilo,
+            <br />
+            Surabaya, Jawa Timur, Indonesia
+          </p>
           <p>60111</p>
 
           <div className="mt-4">

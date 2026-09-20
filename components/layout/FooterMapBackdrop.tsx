@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ASIA_GRID, GRID_COLS, GRID_ROWS } from "@/data/asia-grid";
+import { ASIA_GRID, GRID_COLS, GRID_ROWS, SURABAYA_CELL } from "@/data/asia-grid";
 
 // Footer background (2026-09-20, site owner's request): "tambahkan
 // backgroundnya dengan animasi peta... peta jaringan yang lengkap
@@ -56,15 +56,22 @@ function buildCells(): CellDraw[] {
           x: col,
           y: row,
           char: ASIA_CHARS[Math.floor(Math.random() * ASIA_CHARS.length)],
-          baseAlpha: 0.1 + Math.random() * 0.05,
+          baseAlpha: 0.07 + Math.random() * 0.04,
           isIndonesia: false,
         });
       } else {
+        // Narrower gap to the ocean/Asia rates than HeroCanvas uses
+        // (was 0.22-0.3, roughly 3x Asia's rate) — a background texture
+        // reads as tidy grain when its brightest and dimmest regions
+        // are close together; that big a jump between landmass and
+        // ocean is what made the visible slice look like a lumpy
+        // cluster rather than an even pattern, on top of the crop
+        // itself not being anchored anywhere meaningful (fixed above).
         out.push({
           x: col,
           y: row,
           char: INDONESIA_CHARS[Math.floor(Math.random() * INDONESIA_CHARS.length)],
-          baseAlpha: 0.22 + Math.random() * 0.08,
+          baseAlpha: 0.13 + Math.random() * 0.05,
           isIndonesia: true,
         });
       }
@@ -118,7 +125,20 @@ export function FooterMapBackdrop() {
       const cellH = rect.height / GRID_ROWS;
       cellSize = Math.max(cellW, cellH);
       offsetX = (rect.width - cellSize * GRID_COLS) / 2;
-      offsetY = (rect.height - cellSize * GRID_ROWS) / 2;
+
+      // A footer this short against a grid this tall (63 rows) only
+      // ever shows a thin horizontal slice of it — geometric centring
+      // put that slice wherever the grid's raw midpoint happened to
+      // fall, which isn't Indonesia (the crop's own vertical middle
+      // sits north of it, closer to mainland Asia), so the visible
+      // band read as an arbitrary, lopsided cluster rather than a
+      // recognisable map. Anchoring on Surabaya's own row instead
+      // guarantees the one place this site is actually about sits in
+      // the visible band, every time. Clamped to the grid's real
+      // extent so it never tries to show space past row 0 or row 63.
+      const idealOffsetY = rect.height / 2 - (SURABAYA_CELL.row + 0.5) * cellSize;
+      const minOffsetY = rect.height - cellSize * GRID_ROWS;
+      offsetY = Math.min(0, Math.max(minOffsetY, idealOffsetY));
     }
 
     resize();
