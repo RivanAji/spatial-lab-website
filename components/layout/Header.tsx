@@ -59,12 +59,17 @@ import logo from "@/public/brand/logo-white.png";
 // Roadmap.tsx renders the section itself, an intentionally empty
 // canvas labelled "Soon").
 //
-// People and About stay as route links for now even though those routes
-// don't exist yet either — a known gap, not part of this pass's scope.
+// Team (2026-09-20, site owner's request): relabelled from "People" to
+// "Team" and, like Research/Roadmap above, switched from the dead
+// `/people` route to a same-page anchor — components/sections/Team.tsx
+// now renders the section itself.
+//
+// About stays a route link for now even though that route doesn't
+// exist yet either — a known gap, not part of this pass's scope.
 const NAV_ITEMS: { label: string; href: string }[] = [
   { label: "Research", href: "#research" },
   { label: "Roadmap", href: "#roadmap" },
-  { label: "People", href: "/people" },
+  { label: "Team", href: "#team" },
   { label: "About", href: "/about" },
 ];
 

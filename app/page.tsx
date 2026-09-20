@@ -2,6 +2,7 @@ import { Hero } from "@/components/hero/Hero";
 import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
 import { Roadmap } from "@/components/sections/Roadmap";
+import { Team } from "@/components/sections/Team";
 
 // Homepage. Hero, Publications showcase, Footer (the last lives in the
 // root layout). Publications showcase added 2026-09-19 directly under
@@ -53,7 +54,16 @@ import { Roadmap } from "@/components/sections/Roadmap";
 // site owner's follow-up: "garisnya mengganggu... cukup space padding
 // dan margin aja") — the two sections' own vertical padding (Publications-
 // Showcase's pb-16/pb-20, Roadmap's pt-16/pt-20) already reads as a
-// clear break without a drawn line on top of it.
+// clear break without a drawn line on top of it. Team.tsx follows the
+// same no-hairline convention, for the same reason.
+//
+// Team (2026-09-20, site owner's request): a plain-text roster below
+// Roadmap — the lab head alone on the left, the rest of the team in a
+// numbered list on the right. The header's "People" nav link is
+// "Team" now and points at this section's `#team` directly
+// (components/layout/Header.tsx), the same same-page-anchor pattern
+// Research and Roadmap already use, instead of the dead `/people`
+// route it used to carry.
 export default function Home() {
   return (
     <main>
@@ -63,6 +73,7 @@ export default function Home() {
         <PublicationsShowcase />
       </div>
       <Roadmap />
+      <Team />
     </main>
   );
 }
