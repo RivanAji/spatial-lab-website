@@ -19,6 +19,11 @@ export const people: Person[] = [
     coordinatorOf: "sustainable-urban-transportation",
     scholarId: "BYOW-fMAAAAJ",
     profileUrl: "https://scholar.its.ac.id/en/persons/siti-nurlaela/",
+    // Seen on her Scopus author page (scopus.com/authid/detail.uri?
+    // authorId=57430713400), 2026-09-20 — the only member with a
+    // confirmed ORCID iD so far; see the orcidId field's own comment in
+    // lib/content/types.ts.
+    orcidId: "0000-0002-7562-6548",
   },
   {
     slug: "cahyono-susetyo",

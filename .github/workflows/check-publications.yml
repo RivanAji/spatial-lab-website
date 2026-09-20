@@ -1,0 +1,52 @@
+name: Check for new team publications
+
+# Weekly, plus a manual trigger from the Actions tab (site owner's
+# request, 2026-09-20: "bisakah website ini nanti otomatis menarik jurnal
+# ketika ada publikasi baru atas nama nama tim tersebut?"). Queries ORCID
+# / Crossref (scripts/check-new-publications.ts) and, if it finds
+# anything not already in lib/content/publications.ts or the pending
+# file, opens a PR with the pending file's diff — it never writes
+# straight to publications.ts. See that script's own header comment for
+# why: turning a candidate into a real, correctly-teamed entry is a
+# human review step, not something this workflow decides on its own.
+on:
+  schedule:
+    - cron: "0 3 * * 1" # every Monday, 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Check for new publications
+        run: node --experimental-strip-types scripts/check-new-publications.ts
+
+      - name: Open PR if new candidates were found
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Add new publication candidates for review"
+          title: "New publication candidates found"
+          body: |
+            This is an automated check (`.github/workflows/check-publications.yml`)
+            against ORCID / Crossref for each team member — see
+            `lib/content/publications.pending.json` for what it found.
+
+            Nothing here is live on the site yet. Review each candidate and,
+            for the real ones, write a proper entry in
+            `lib/content/publications.ts` (title, correct `team`, a slug,
+            venue if known) — this PR only adds them to the pending file.
+          branch: auto/new-publication-candidates
+          add-paths: lib/content/publications.pending.json
+          labels: publications

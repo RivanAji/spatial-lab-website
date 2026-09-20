@@ -7,6 +7,14 @@
       "esnext"
     ],
     "allowJs": true,
+    // scripts/check-new-publications.ts imports its content-file
+    // dependencies with an explicit .ts extension (2026-09-20) — Node's
+    // own ESM loader requires that extension to run the file directly
+    // (node --experimental-strip-types), so this flag just lets tsc
+    // accept the same import specifiers Node needs, rather than the
+    // script using one import style for the type-checker and another
+    // for the runtime.
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,

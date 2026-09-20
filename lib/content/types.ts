@@ -25,6 +25,13 @@ export type Person = {
   // above: that field is a bare Google Scholar user ID for building a
   // scholar.google.com URL, and most of these links aren't that.
   profileUrl?: string;
+  // Added 2026-09-20 for scripts/check-new-publications.mjs: a member's
+  // ORCID iD (16-digit, dash-separated) lets that script query ORCID's
+  // public works API directly instead of falling back to a noisier
+  // Crossref name search. Only set when confirmed from a real source
+  // (e.g. seen on the member's own Scopus/ITS Scholar profile) — never
+  // guessed, since a wrong ORCID iD would pull a stranger's publications.
+  orcidId?: string;
 };
 
 export type Team = {
@@ -51,6 +58,13 @@ export type Project = {
   // rather than a placeholder value standing in for a real one (PRD
   // 6.6) — Project.tsx's year filter only lists years that exist.
   year?: number;
+  // Added 2026-09-20 (site owner's request): "hilangkan nomor didepan
+  // tahun pada menu project, cukup tahun dan juga nama pengembang" —
+  // replaces the card's old plain index number with who actually built
+  // it. A plain string, not slugs into lib/content/people.ts: several
+  // projects list two or three names together (e.g. the MRT study), and
+  // this only needs to render, not link anywhere yet.
+  developer?: string;
   coverImage?: string; // same honest-empty-slot convention as
   // Publication.coverImage above — omitted renders a plain placeholder,
   // never a stock photo standing in for real project work.

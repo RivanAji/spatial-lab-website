@@ -51,6 +51,15 @@
 // not "click me". Cover images are the same honest-empty-slot
 // convention PublicationCard already uses — most of these ten don't
 // have one yet, and that's fine.
+//
+// Fourth request, same day: "hilangkan nomor didepan tahun pada menu
+// project, cukup tahun dan juga nama pengembang" — the plain index
+// number (01, 02...) that used to sit next to the year is gone; a new
+// `developer` field (lib/content/types.ts, lib/content/projects.ts)
+// takes its place, naming who on the team actually built or ran each
+// project. An eleventh project ("AI Larasati") arrived in the same
+// message with no year or description yet — left unset rather than
+// guessed, same as the two studies that already had no year.
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
@@ -156,8 +165,8 @@ export function Project() {
             }}
             className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {filtered.map((project, index) => (
-              <ProjectCard key={project.slug} project={project} index={index} />
+            {filtered.map((project) => (
+              <ProjectCard key={project.slug} project={project} />
             ))}
           </div>
         )}
@@ -166,7 +175,7 @@ export function Project() {
   );
 }
 
-function ProjectCard({ project, index }: { project: ProjectItem; index: number }) {
+function ProjectCard({ project }: { project: ProjectItem }) {
   return (
     <div
       className="group w-56 flex-shrink-0 snap-start rounded-4xl border border-white/8 bg-ink-900 p-1.5 transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.6),0_8px_16px_-8px_rgba(0,0,0,0.4)] sm:w-64"
@@ -190,11 +199,20 @@ function ProjectCard({ project, index }: { project: ProjectItem; index: number }
         )}
       </div>
       <div className="flex flex-col gap-1 px-1.5 pb-1 pt-3">
-        <div className="flex items-baseline gap-2">
-          <span className="font-mono text-[10px] text-ink-300">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          {project.year && <span className="font-mono text-[10px] text-ink-300">{project.year}</span>}
+        {/* Year + developer, replacing the old plain index number
+            (site owner, 2026-09-20: "hilangkan nomor didepan tahun
+            pada menu project, cukup tahun dan juga nama pengembang")
+            — same year/meta pairing PublicationCard already uses
+            below its own image (PublicationsShowcase.tsx). */}
+        <div className="flex items-baseline gap-1.5">
+          {project.year && (
+            <span className="shrink-0 font-mono text-[10px] text-ink-300">{project.year}</span>
+          )}
+          {project.developer && (
+            <span className="line-clamp-1 font-body text-[10px] text-ink-300">
+              {project.developer}
+            </span>
+          )}
         </div>
         <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-000">
           {project.name}

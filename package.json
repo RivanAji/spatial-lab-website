@@ -8,7 +8,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "build:map": "node scripts/build-map-grid.mjs",
-    "check:contrast": "node scripts/check-contrast.mjs"
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check:new-publications": "node --experimental-strip-types scripts/check-new-publications.ts"
   },
   "type": "module",
   "engines": {
