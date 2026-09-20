@@ -1339,7 +1339,14 @@ function TeamFilterCard({
         transition={{ duration: reducedMotion ? 0 : 0.25, ease: EASE }}
       >
         <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <p className="line-clamp-3 font-body text-[11px] leading-snug text-ink-300">
+          {/* text-[11px] -> text-xs (site owner, 2026-09-20: the
+              flipped-card tagline "terlalu kecil... pastikan
+              ukurannya konsisten dengan font kecil yang lain") —
+              matches the small-text tier the footer/Team passes the
+              same day settled on (address, contact, department line,
+              Team's own role text are all text-xs now), instead of
+              this being the one small label left on its own size. */}
+          <p className="line-clamp-3 font-body text-xs leading-snug text-ink-300">
             {team.tagline}
           </p>
           <div

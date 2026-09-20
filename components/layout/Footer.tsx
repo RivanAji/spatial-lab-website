@@ -40,18 +40,16 @@ export function Footer() {
 
       <Container className="relative flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
         <div>
-          {/* TSAL sized down TWICE now (site owner's font-size audits,
-              2026-09-20): text-4xl/5xl -> text-2xl/3xl in the first
-              pass, still flagged as "terlalu besar... konsisten dengan
-              ukuran teks team" in the second — Team.tsx's own text
-              dropped to text-sm in that same pass, so this needed to
-              come down again to stay in the same neighbourhood rather
-              than the gap re-opening. text-lg/xl now; TSAL itself
-              wasn't called out in the THIRD pass below (everything
-              beside and under it was), so it's the one piece of this
-              block still at its second-pass size. */}
+          {/* TSAL's own size history, 2026-09-20: text-4xl/5xl ->
+              text-2xl/3xl (first pass, "terlalu besar") -> text-lg/xl
+              (second pass, "konsisten dengan ukuran teks team", after
+              Team.tsx's own text dropped to text-sm) -> text-xl/2xl
+              now (fourth pass: "perbesar 2pt font TSAL nya" — the only
+              increase in this whole run of otherwise-shrinking
+              passes, so it's a deliberate small bump back up, not a
+              reversal of the size-down work around it). */}
           <div className="flex items-start gap-3">
-            <span className="font-display text-lg font-bold tracking-tight text-ink-000 md:text-xl">
+            <span className="font-display text-xl font-bold tracking-tight text-ink-000 md:text-2xl">
               TSAL
             </span>
             {/* Third size-down pass (site owner, same day: "...masih
@@ -59,7 +57,7 @@ export function Footer() {
                 department/address/email/phone below it) — text-xs/sm
                 (12/14px) -> a flat text-[11px], dropping the md bump
                 too. Realignment against TSAL follows below. */}
-            <p className="-mt-0.5 font-body text-[11px] leading-snug text-ink-300">
+            <p className="font-body text-[11px] leading-snug text-ink-300">
               Transportation and
               <br />
               Spatial Analysis Lab
