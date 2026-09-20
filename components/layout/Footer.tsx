@@ -46,13 +46,20 @@ export function Footer() {
               ukuran teks team" in the second — Team.tsx's own text
               dropped to text-sm in that same pass, so this needed to
               come down again to stay in the same neighbourhood rather
-              than the gap re-opening. text-lg/xl now; the explainer
-              beside it scaled down with it, same as the first pass. */}
+              than the gap re-opening. text-lg/xl now; TSAL itself
+              wasn't called out in the THIRD pass below (everything
+              beside and under it was), so it's the one piece of this
+              block still at its second-pass size. */}
           <div className="flex items-start gap-3">
             <span className="font-display text-lg font-bold tracking-tight text-ink-000 md:text-xl">
               TSAL
             </span>
-            <p className="-mt-1 font-body text-xs leading-snug text-ink-300 md:text-sm">
+            {/* Third size-down pass (site owner, same day: "...masih
+                terlalu besar, coba kecilin" naming this line plus the
+                department/address/email/phone below it) — text-xs/sm
+                (12/14px) -> a flat text-[11px], dropping the md bump
+                too. Realignment against TSAL follows below. */}
+            <p className="-mt-0.5 font-body text-[11px] leading-snug text-ink-300">
               Transportation and
               <br />
               Spatial Analysis Lab
@@ -63,17 +70,18 @@ export function Footer() {
               ~2.9:1, well under WCAG AA's 4.5:1 for body text) —
               ink-300 on its own already reads as the muted line next
               to the bright ink-000 "TSAL" above it without needing to
-              go below a passing contrast ratio to get there. Already
-              text-sm, matching Team.tsx's own body text — no change
-              needed here in the second size-audit pass. */}
-          <p className="mt-3 font-body text-sm text-ink-300">
+              go below a passing contrast ratio to get there. Sized
+              down with the rest of this third pass, text-sm -> text-xs. */}
+          <p className="mt-3 font-body text-xs text-ink-300">
             Urban and Regional Planning
             <br />
             Department - ITS
           </p>
         </div>
 
-        <div className="flex flex-col gap-1 font-body text-sm text-ink-300 md:items-end md:text-right">
+        {/* Address/email/phone: text-sm -> text-xs, same third-pass
+            request as the explainer and department line above. */}
+        <div className="flex flex-col gap-1 font-body text-xs text-ink-300 md:items-end md:text-right">
           <p>
             Jalan Raya ITS, Kampus ITS Sukolilo,
             <br />
