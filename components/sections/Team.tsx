@@ -13,7 +13,7 @@ function PersonName({ person }: { person: (typeof members)[number] }) {
       href={person.profileUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className="inline-block py-2 -my-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       {person.name}
     </a>

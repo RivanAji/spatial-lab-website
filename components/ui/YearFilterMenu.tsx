@@ -60,7 +60,7 @@ export function YearFilterMenu({
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-2.5 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
+          "flex items-center gap-1.5 rounded-full border py-2.5 pl-3 pr-2.5 font-mono md:py-1.5 text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
           open || activeYear !== "all"
             ? "border-ink-000 text-ink-000"
             : "border-ink-500 text-ink-300 hover:border-ink-300 hover:text-ink-100",
@@ -94,7 +94,7 @@ export function YearFilterMenu({
               aria-selected={activeYear === "all"}
               onClick={() => select("all")}
               className={cn(
-                "w-full rounded-xl px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
+                "w-full rounded-xl px-3 py-2.5 text-left font-mono md:py-1.5 text-[10px] uppercase tracking-[0.06em] transition-colors",
                 activeYear === "all"
                   ? "bg-white/10 text-ink-000"
                   : "text-ink-300 hover:bg-white/5 hover:text-ink-100",
@@ -111,7 +111,7 @@ export function YearFilterMenu({
                   aria-selected={activeYear === String(year)}
                   onClick={() => select(String(year))}
                   className={cn(
-                    "rounded-lg px-2 py-1.5 text-center font-mono text-[10px] transition-colors",
+                    "rounded-lg px-2 py-2.5 text-center font-mono md:py-1.5 text-[10px] transition-colors",
                     activeYear === String(year)
                       ? "bg-white/10 text-ink-000"
                       : "text-ink-300 hover:bg-white/5 hover:text-ink-100",

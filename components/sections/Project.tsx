@@ -73,7 +73,7 @@ export function Project() {
                 aria-label="Scroll projects left"
                 disabled={!canScrollPrev}
                 onClick={() => scrollByPage(-1)}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-500 md:h-8 md:w-8 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
               >
                 <CaretLeft size={13} weight="bold" />
               </button>
@@ -82,7 +82,7 @@ export function Project() {
                 aria-label="Scroll projects right"
                 disabled={!canScrollNext}
                 onClick={() => scrollByPage(1)}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-500 md:h-8 md:w-8 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
               >
                 <CaretRight size={13} weight="bold" />
               </button>

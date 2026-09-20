@@ -36,13 +36,13 @@ export function Footer() {
             <p>
               <a
                 href="mailto:pwkitslabkom@gmail.com"
-                className="transition-colors hover:text-ink-000"
+                className="inline-block py-2 -my-2 transition-colors hover:text-ink-000"
               >
                 pwkitslabkom@gmail.com
               </a>
             </p>
             <p>
-              <a href="tel:+62315922425" className="transition-colors hover:text-ink-000">
+              <a href="tel:+62315922425" className="inline-block py-2 -my-2 transition-colors hover:text-ink-000">
                 (031) 5922425
               </a>
             </p>
