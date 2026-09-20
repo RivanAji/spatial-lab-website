@@ -50,18 +50,20 @@ import logo from "@/public/brand/logo-white.png";
 // Same-page anchor now, matching HeroCtas.tsx's own "Explore Research"
 // control exactly — both point at the one gallery that actually exists.
 //
-// Roadmap (2026-09-19, site owner's request): marked comingSoon rather
-// than linked — the lab roadmap content is still being worked out by the
-// team, not ready to publish, and `/roadmap` was equally a dead link
-// (PRD 7.9 already deferred this section for the same reason). A
-// disabled nav item that says so is honest; a link to nothing is not
-// (this project's "no dead navigation" rule — see antislop-ui).
+// Roadmap (2026-09-20, site owner's correction): first tried as a
+// disabled comingSoon nav item, since the roadmap content itself isn't
+// ready — but the site owner's actual ask was a real section, placed
+// on the page below the publications gallery, that's honest about not
+// having content yet rather than a nav item that goes nowhere. Same
+// same-page-anchor treatment as Research now (components/sections/
+// Roadmap.tsx renders the section itself, an intentionally empty
+// canvas labelled "Soon").
 //
 // People and About stay as route links for now even though those routes
 // don't exist yet either — a known gap, not part of this pass's scope.
-const NAV_ITEMS: { label: string; href: string; comingSoon?: boolean }[] = [
+const NAV_ITEMS: { label: string; href: string }[] = [
   { label: "Research", href: "#research" },
-  { label: "Roadmap", href: "/roadmap", comingSoon: true },
+  { label: "Roadmap", href: "#roadmap" },
   { label: "People", href: "/people" },
   { label: "About", href: "/about" },
 ];
@@ -126,32 +128,10 @@ function DesktopNav() {
           />
         )}
         {NAV_ITEMS.map((item) => {
-          // Coming-soon item: a disabled <span>, not a Link — it never
-          // joins the data-href query the hover indicator and
-          // updateIndicator() rely on, so the sliding pill simply skips
-          // over it, which reads correctly as "not a destination"
-          // rather than a link that goes nowhere.
-          if (item.comingSoon) {
-            return (
-              <li key={item.href} className="relative">
-                <span
-                  aria-disabled="true"
-                  className="relative z-10 inline-flex cursor-default items-center gap-1.5 rounded-full px-4 py-1.5 font-body text-sm font-medium text-ink-300/50"
-                >
-                  {item.label}
-                  <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-300/60">
-                    Soon
-                  </span>
-                </span>
-              </li>
-            );
-          }
-
-          // Hash-only hrefs are a same-page scroll target (currently
-          // just "Research" -> #research, the PublicationsShowcase
-          // gallery), not a route — a plain <a>, matching HeroCtas.tsx's
-          // own "Explore Research" control, which does the same thing
-          // for the same destination.
+          // Hash-only hrefs are a same-page scroll target (Research ->
+          // #research, Roadmap -> #roadmap), not a route — a plain
+          // <a>, matching HeroCtas.tsx's own "Explore Research" control,
+          // which does the same thing for the same kind of destination.
           const isHashLink = item.href.startsWith("#");
           const current = !isHashLink && pathname === item.href;
           const sharedProps = {
@@ -262,18 +242,7 @@ export function Header() {
             <Container>
               <div className="flex flex-col gap-1">
                 {NAV_ITEMS.map((item) =>
-                  item.comingSoon ? (
-                    <span
-                      key={item.href}
-                      aria-disabled="true"
-                      className="flex items-center gap-2 py-3 font-body text-base text-ink-300/50"
-                    >
-                      {item.label}
-                      <span className="rounded-full border border-white/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.08em] text-ink-300/60">
-                        Soon
-                      </span>
-                    </span>
-                  ) : item.href.startsWith("#") ? (
+                  item.href.startsWith("#") ? (
                     <a
                       key={item.href}
                       href={item.href}

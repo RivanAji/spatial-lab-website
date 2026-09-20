@@ -1,6 +1,7 @@
 import { Hero } from "@/components/hero/Hero";
 import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
+import { Roadmap } from "@/components/sections/Roadmap";
 import { Hairline } from "@/components/ui/Hairline";
 import { Container } from "@/components/ui/Container";
 
@@ -41,9 +42,14 @@ import { Container } from "@/components/ui/Container";
 // Publications showcase section since that's what a visitor following
 // that link actually wants to land on now.
 //
-// Lab Roadmap is deferred to Phase 9 (PRD 7.9) — the old ITS roadmap is
-// out of scope and there's no real replacement content yet, so the
-// section doesn't ship rather than shipping with invented milestones.
+// Lab Roadmap (2026-09-20, site owner's correction): PRD 7.9 had this
+// deferred entirely — old ITS roadmap out of scope, no real replacement
+// content yet, so the reasoning was "don't ship rather than ship
+// invented milestones". The site owner's actual ask was to ship the
+// section itself, reachable from the nav, with an honest empty canvas
+// in place of real content (components/sections/Roadmap.tsx) — "don't
+// ship" and "ship an honest placeholder" both satisfy PRD 6.6's ban on
+// invented content; this is the site owner choosing the second one.
 export default function Home() {
   return (
     <main>
@@ -55,6 +61,7 @@ export default function Home() {
       <Container>
         <Hairline />
       </Container>
+      <Roadmap />
     </main>
   );
 }
