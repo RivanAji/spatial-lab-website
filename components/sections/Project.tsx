@@ -88,8 +88,17 @@ export function Project() {
     [],
   );
 
+  // Sorted newest-first (site owner, 2026-09-20: "buat urut berdasarkan
+  // tahun yang kiri itu tahun terbaru") — projects.ts itself is in no
+  // particular year order (LanduseSim, the oldest, happened to be
+  // listed first). Undated projects (no year confirmed yet) sort last
+  // rather than first, since there's no basis to assume they're the
+  // newest.
   const filtered = useMemo(
-    () => projects.filter((p) => activeYear === "all" || String(p.year) === activeYear),
+    () =>
+      projects
+        .filter((p) => activeYear === "all" || String(p.year) === activeYear)
+        .sort((a, b) => (b.year ?? -Infinity) - (a.year ?? -Infinity)),
     [activeYear],
   );
 

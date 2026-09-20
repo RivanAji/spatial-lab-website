@@ -34,7 +34,7 @@
  * slot, not a fake cover.
  */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
@@ -635,30 +635,34 @@ export function PublicationsShowcase(): ReactNode {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const reducedMotion = useReducedMotion();
-  // Added 2026-09-20 (site owner: "di bagian research card, hapus yang
-  // duplikat, karena ada 2 yang duplikat itu") — the loop below used to
-  // render `filtered` twice unconditionally whenever motion wasn't
-  // reduced, regardless of whether there was enough content to actually
-  // need a wrap-around copy. A team/year filter that narrows the list
-  // down to a couple of publications doesn't overflow the frame, so the
-  // auto-drift effect's own hasOverflow check already correctly never
-  // moved it — but the doubled DOM was still there, sitting still,
-  // reading exactly like two identical cards side by side. `canLoop`
-  // gates the doubling itself on an actual overflow measurement (below),
-  // not just on whether motion is allowed.
-  const [canLoop, setCanLoop] = useState(false);
-
   // Auto-scroll marquee (2026-09-19, site owner's request): the gallery
-  // now drifts continuously right-to-left on its own, and pauses the
-  // instant a pointer or keyboard focus reaches it — but never stops
-  // being a real scroll container, so wheel/trackpad/touch scrolling
-  // and the prev/next buttons keep working exactly as before whether
-  // it's paused or not. `loop` gates the whole thing off under
-  // prefers-reduced-motion, matching every other looping animation in
-  // this project (HeroCanvas's idle scan, the team cards' travel-path
-  // markers): under reduced motion this is a perfectly ordinary
-  // scrollable row that never moves on its own, full stop.
-  const loop = !reducedMotion;
+  // drifts on its own, and pauses the instant a pointer or keyboard
+  // focus reaches it — but never stops being a real scroll container,
+  // so wheel/trackpad/touch scrolling and the prev/next buttons keep
+  // working exactly as before whether it's paused or not. `autoDrift`
+  // gates the whole thing off under prefers-reduced-motion, matching
+  // every other looping animation in this project (HeroCanvas's idle
+  // scan, the team cards' travel-path markers): under reduced motion
+  // this is a perfectly ordinary scrollable row that never moves on its
+  // own, full stop.
+  //
+  // Bounces at each end instead of wrapping (2026-09-20, site owner,
+  // twice: first "hapus yang duplikat, karena ada 2 yang duplikat itu"
+  // for a narrow filtered list that still rendered a second, motionless
+  // copy — fixed once by only doubling past a real overflow — then,
+  // pointing at the default "all years" view mid-scroll, "bagian ini
+  // pas di scroll masih kebaca 2x". The seamless-wrap technique this
+  // used (rendering `filtered` twice and subtracting half the
+  // scrollWidth once past it) fundamentally can't avoid that: the whole
+  // point was to keep a second, identical copy in the DOM so the wrap
+  // has somewhere to land, and any manual scroll far enough — not just
+  // the auto-drift — would eventually scroll into that second copy and
+  // read as the same cards again. Bouncing back and forth between the
+  // real start and end instead means there is only ever one copy of
+  // each publication in the DOM; the trade is losing the illusion of a
+  // single infinite direction, which the site owner's own reports say
+  // wasn't reading as "infinite" so much as "duplicated" anyway.
+  const autoDrift = !reducedMotion;
   const interactingRef = useRef(false);
   const pauseUntilRef = useRef(0);
 
@@ -683,17 +687,8 @@ export function PublicationsShowcase(): ReactNode {
   function updateScrollButtons() {
     const el = scrollerRef.current;
     if (!el) return;
-    const hasOverflow = el.scrollWidth > el.clientWidth + 4;
-    if (loop) {
-      // Looping means there's no real "start" or "end" to disable
-      // against — both directions always have more to scroll to, as
-      // long as there's anything to scroll at all.
-      setCanScrollPrev(hasOverflow);
-      setCanScrollNext(hasOverflow);
-    } else {
-      setCanScrollPrev(el.scrollLeft > 4);
-      setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
-    }
+    setCanScrollPrev(el.scrollLeft > 4);
+    setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }
 
   // Coverflow depth (site owner's reference: collectui.com's cover-flow
@@ -747,24 +742,6 @@ export function PublicationsShowcase(): ReactNode {
     }
   }
 
-  // Two-step, both useLayoutEffect (not useEffect) so neither is ever
-  // visible as a flash of wrongly-doubled content before the browser
-  // paints: reset canLoop to false the instant the filter changes (so
-  // the very next render is a single, undoubled copy), then measure
-  // that single copy's real overflow and only then decide whether a
-  // second copy is actually needed. See canLoop's own declaration
-  // above for the bug this fixes.
-  useLayoutEffect(() => {
-    setCanLoop(false);
-  }, [activeTeam, activeYear]);
-
-  useLayoutEffect(() => {
-    if (canLoop) return;
-    const el = scrollerRef.current;
-    if (!el) return;
-    if (el.scrollWidth > el.clientWidth + 4) setCanLoop(true);
-  }, [filtered, canLoop]);
-
   useEffect(() => {
     // Filter changes can shrink the slider's scrollWidth out from under an
     // old scroll position (e.g. it was scrolled right, then a filter drops
@@ -778,7 +755,7 @@ export function PublicationsShowcase(): ReactNode {
     // position the instant this effect runs — one rAF later, they have.
     requestAnimationFrame(updateCoverflow);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTeam, activeYear, canLoop]);
+  }, [activeTeam, activeYear]);
 
   // Re-run on resize too (a wider/narrower frame moves the centre point
   // and every card's distance from it, independent of any scrolling).
@@ -794,22 +771,17 @@ export function PublicationsShowcase(): ReactNode {
   // The continuous drift itself. Runs its own rAF loop rather than a CSS
   // animation because the content is a real, natively-scrollable list
   // (wheel/touch/keyboard all need to keep working on it), and because
-  // the loop point (see below) depends on a measured DOM width that
+  // the bounce points (see below) depend on a measured DOM width that
   // changes with the active filter.
   //
-  // Looping technique: filtered is rendered TWICE back-to-back (see the
-  // JSX below) whenever `loop` is on, so the track is exactly two
-  // identical copies of the same content. Once scrollLeft passes the
-  // first copy's width (scrollWidth / 2, since both copies are pixel-
-  // identical), subtracting that same width lands on the visually
-  // identical point in the second copy — a seamless wrap with no jump,
-  // rather than snapping back to 0 (which would visibly skip past
-  // whatever's scrolled out of view). This only touches scrollLeft
-  // during the auto-increment itself, never fighting a manual scroll,
-  // touch drag, or the prev/next buttons' own smooth-scroll animation —
-  // see the pause handling below for how those stay uninterrupted.
+  // Bounce, not loop (see autoDrift's own comment above for why this
+  // replaced the earlier wrap-around-via-duplicate-content technique):
+  // `direction` flips between 1 and -1 whenever `pos` reaches either
+  // end of the real (single-copy) scrollable range, so the row drifts
+  // to the last card, reverses, drifts back to the first, and repeats —
+  // ordinary back-and-forth motion over content that only exists once.
   useEffect(() => {
-    if (!loop) return;
+    if (!autoDrift) return;
     const el = scrollerRef.current;
     if (!el) return;
 
@@ -828,14 +800,15 @@ export function PublicationsShowcase(): ReactNode {
     // from it, keeps that remainder alive across frames the way a
     // canvas or WebGL animation loop would.
     let pos = el.scrollLeft;
+    let direction: 1 | -1 = 1;
 
     function tick(now: number) {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(now - last, 100); // clamp a backgrounded-tab gap
       last = now;
 
-      const hasOverflow = el!.scrollWidth > el!.clientWidth + 4;
-      if (!hasOverflow) return;
+      const max = el!.scrollWidth - el!.clientWidth;
+      if (max <= 4) return; // nothing to drift across
 
       const paused = interactingRef.current || now < pauseUntilRef.current;
       if (paused) {
@@ -847,16 +820,21 @@ export function PublicationsShowcase(): ReactNode {
         return;
       }
 
-      pos += (SPEED_PX_PER_SEC * dt) / 1000;
-      const half = el!.scrollWidth / 2;
-      if (pos >= half) pos -= half;
+      pos += (direction * SPEED_PX_PER_SEC * dt) / 1000;
+      if (pos >= max) {
+        pos = max;
+        direction = -1;
+      } else if (pos <= 0) {
+        pos = 0;
+        direction = 1;
+      }
       el!.scrollLeft = pos;
       updateCoverflow();
     }
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [loop, filtered.length]);
+  }, [autoDrift, filtered.length]);
 
   function scrollByPage(direction: 1 | -1) {
     const el = scrollerRef.current;
@@ -1022,23 +1000,9 @@ export function PublicationsShowcase(): ReactNode {
               }}
               className="flex items-center gap-5 overflow-x-auto py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              {/* Rendered twice only once canLoop confirms the single
-                  copy actually overflows the frame (see canLoop's own
-                  comment above) — the second copy is purely a visual
-                  continuation for the wrap-around, not real additional
-                  content, so it's hidden from assistive tech and pulled
-                  out of tab order (PublicationCard's hiddenDuplicate
-                  prop) rather than doubling every publication's link in
-                  the page's a11y tree. */}
-              {(loop && canLoop ? [0, 1] : [0]).flatMap((copy) =>
-                filtered.map((pub) => (
-                  <PublicationCard
-                    key={`${pub.slug}-${copy}`}
-                    publication={pub}
-                    hiddenDuplicate={copy === 1}
-                  />
-                )),
-              )}
+              {filtered.map((pub) => (
+                <PublicationCard key={pub.slug} publication={pub} />
+              ))}
             </div>
           </div>
         )}
@@ -1076,25 +1040,16 @@ export function PublicationsShowcase(): ReactNode {
 // PublicationsShowcase's marquee) regardless of exactly how many cards
 // fit at once, which was always true here, six-exactly was never load-
 // bearing.
-function PublicationCard({
-  publication,
-  hiddenDuplicate = false,
-}: {
-  publication: (typeof publications)[number];
-  hiddenDuplicate?: boolean;
-}) {
+function PublicationCard({ publication }: { publication: (typeof publications)[number] }) {
   return (
     <Link
       href={`/publications/${publication.slug}`}
-      aria-hidden={hiddenDuplicate || undefined}
-      tabIndex={hiddenDuplicate ? -1 : undefined}
       // The coverflow scale/opacity in PublicationsShowcase writes
       // directly to this element's style every scroll tick (see
       // updateCoverflow) — a ref array would work too, but a data
       // attribute lets that function find "every card currently in the
-      // DOM" with one querySelectorAll, including the duplicated loop
-      // copy, without PublicationCard having to forward a ref prop
-      // through two render paths for the same component.
+      // DOM" with one querySelectorAll, without PublicationCard having
+      // to forward a ref prop.
       data-coverflow-card=""
       className="group flex w-36 flex-shrink-0 flex-col gap-2 [will-change:transform,opacity] sm:w-40 lg:w-[190px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
