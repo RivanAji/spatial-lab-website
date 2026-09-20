@@ -1035,14 +1035,16 @@ export function PublicationsShowcase(): ReactNode {
 // the card's total height reduction: there's no separate title block
 // above it any more, and the meta line below is a single small row.
 //
-// Width is fixed, not responsive-fluid, and specifically tuned so six
-// cards are visible without scrolling on a typical laptop viewport: at
-// a 1280px-wide screen (a common laptop logical width — 13" MacBook Air
-// class and up), this section's Container leaves 1120px of content
-// width; 170px cards + 5 * 20px gaps (gap-5) = 1120px exactly. Below
-// `lg` the row still scrolls (see PublicationsShowcase's marquee), it
-// just shows fewer than six at once, which is expected on a phone or
-// tablet, not a bug.
+// Width is fixed, not responsive-fluid. It no longer hits the "six
+// cards exactly fill a 1280px laptop viewport" width this had before
+// (site owner, 2026-09-20: "cardnya bisa agak dilebarin sedikit ga?
+// biar bentuknya persegi, biar tidak terlalu persegi panjang" — widened
+// so the card reads as roughly square instead of a narrow column, same
+// request that changed the image below from aspect-[3/2] to
+// aspect-square). Below `lg` the row still scrolls (see
+// PublicationsShowcase's marquee) regardless of exactly how many cards
+// fit at once, which was always true here, six-exactly was never load-
+// bearing.
 function PublicationCard({
   publication,
   hiddenDuplicate = false,
@@ -1063,26 +1065,34 @@ function PublicationCard({
       // copy, without PublicationCard having to forward a ref prop
       // through two render paths for the same component.
       data-coverflow-card=""
-      className="group flex w-32 flex-shrink-0 flex-col gap-2 [will-change:transform,opacity] sm:w-36 lg:w-[170px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className="group flex w-36 flex-shrink-0 flex-col gap-2 [will-change:transform,opacity] sm:w-40 lg:w-[190px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
-      {/* Honest empty slot when no coverImage is set — see this file's
+      {/* Double-bezel frame (rounded-4xl outer, concentric
+          rounded-[1.6rem] inner), the same recipe as Hero's map card,
+          this section's own gallery frame, and Project.tsx's cards —
+          site owner, 2026-09-20: "cornernya coba disesuaikan dengan
+          grand design website", replacing this card's old standalone
+          rounded-panel (4px) corner that didn't relate to any of those.
+          Honest empty slot when no coverImage is set — see this file's
           top comment and lib/content/types.ts. Never a stock photo
           standing in for a real one (the three dummy exceptions are
           flagged at their source in lib/content/publications.ts). */}
-      <div className="relative aspect-[3/2] overflow-hidden rounded-panel border border-ink-500 bg-ink-800 transition-colors group-hover:border-ink-300">
-        {publication.coverImage && (
-          <Image
-            src={publication.coverImage}
-            alt=""
-            fill
-            sizes="170px"
-            className="object-cover"
-          />
-        )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-900 via-ink-900/75 to-transparent px-2 pb-1.5 pt-5 backdrop-blur-[1.5px]">
-          <h3 className="line-clamp-1 font-display text-[11px] font-semibold leading-snug text-ink-000">
-            {publication.title}
-          </h3>
+      <div className="rounded-4xl border border-white/8 bg-ink-900 p-1.5 transition-colors group-hover:border-white/20">
+        <div className="relative aspect-square overflow-hidden rounded-[1.4rem] bg-ink-800">
+          {publication.coverImage && (
+            <Image
+              src={publication.coverImage}
+              alt=""
+              fill
+              sizes="190px"
+              className="object-cover"
+            />
+          )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink-900 via-ink-900/75 to-transparent px-2 pb-1.5 pt-5 backdrop-blur-[1.5px]">
+            <h3 className="line-clamp-1 font-display text-[11px] font-semibold leading-snug text-ink-000">
+              {publication.title}
+            </h3>
+          </div>
         </div>
       </div>
 

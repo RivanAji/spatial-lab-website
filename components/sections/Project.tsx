@@ -163,7 +163,16 @@ export function Project() {
               WebkitMaskImage:
                 "linear-gradient(to right, transparent, black 3%, black 97%, transparent)",
             }}
-            className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            // pt-2/pb-8, not the plain pb-2 this had: `overflow-x-auto`
+            // with no explicit overflow-y forces overflow-y to compute
+            // as `auto` too (CSS's own overflow rule), which was
+            // clipping the hover lift (-translate-y-1) and its shadow
+            // against this container's own edges — site owner, 2026-
+            // 09-20: "itu bagian card project kalo pas hover atasnya
+            // ketutupan/kepotong". This padding gives both room instead
+            // of removing the overflow rule the horizontal scroll
+            // itself depends on.
+            className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto pt-2 pb-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {filtered.map((project) => (
               <ProjectCard key={project.slug} project={project} />
