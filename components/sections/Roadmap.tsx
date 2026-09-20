@@ -14,11 +14,21 @@ import { Container } from "@/components/ui/Container";
 // gallery (rounded-4xl border border-white/8 bg-ink-900) — the empty
 // canvas reads as "this section is real, just not filled in yet"
 // rather than a different, unfinished-looking component.
+//
+// Heading font (2026-09-20, site owner's correction): first pass used
+// font-serif (Fraunces), reusing the one selective-serif treatment
+// ResearchArchive.tsx used to carry for its own "Research archive"
+// heading — but that section is gone, so Fraunces had become an
+// orphaned one-off nowhere else on the page (checked: the only other
+// font-serif usage left in the codebase is the styleguide's own demo
+// swatch). font-display now, matching the Hero H1 and the footer
+// brand name's treatment exactly, so this is the same type system as
+// every other heading on the page, not a second one.
 export function Roadmap() {
   return (
     <section id="roadmap" aria-label="Lab roadmap" className="scroll-mt-24 py-16 md:py-20">
       <Container>
-        <h2 className="font-serif text-3xl font-medium text-ink-000 md:text-4xl">
+        <h2 className="font-display text-3xl font-semibold tracking-tight text-ink-000 md:text-4xl">
           Lab roadmap
         </h2>
         <div className="mt-8 flex min-h-[280px] items-center justify-center rounded-4xl border border-white/8 bg-ink-900 md:min-h-[360px]">
