@@ -11,6 +11,9 @@
     "check:contrast": "node scripts/check-contrast.mjs"
   },
   "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "gsap": "^3.15.0",
