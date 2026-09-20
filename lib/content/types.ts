@@ -38,6 +38,19 @@ export type Team = {
   memberSlugs: string[]; // excludes the coordinator
 };
 
+export type Project = {
+  slug: string;
+  name: string;
+  // No description/link fields yet — the site owner's own words when
+  // this section was added (2026-09-20): "kontennya menyusul". Adding
+  // them here (rather than adding a whole new type later) is what
+  // lets Project.tsx render whatever's filled in without a reshape.
+  description?: string;
+  coverImage?: string; // same honest-empty-slot convention as
+  // Publication.coverImage above — omitted renders a plain placeholder,
+  // never a stock photo standing in for real project work.
+};
+
 export type Publication = {
   slug: string;
   title: string;
