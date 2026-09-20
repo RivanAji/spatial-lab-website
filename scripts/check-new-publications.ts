@@ -40,7 +40,9 @@ const PENDING_PATH = new URL("../lib/content/publications.pending.json", import.
 
 type Candidate = {
   title: string;
+  authors: string | null;
   year: number | null;
+  venue: string | null;
   doi: string | null;
   link: string | null;
   // "artifact": a one-off manual merge (2026-09-20) of a scraped table
@@ -53,6 +55,25 @@ type Candidate = {
   matchedPerson: string; // Person.slug
   foundAt: string; // ISO date this script first saw it
 };
+
+// Matches this project's existing publications.ts author-string style —
+// e.g. "Firmansyah, F., Susetyo, C., Pratomoatmojo, N.A., Kurniawati,
+// U.F., Yusuf, M." — every real entry in that file is a plain comma
+// list, no ampersand before the last name (checked against the file
+// directly rather than assumed).
+function formatAuthors(authors: { given?: string; family?: string }[]): string | null {
+  const names = authors
+    .filter((a) => a.family)
+    .map((a) => {
+      const initials = (a.given ?? "")
+        .split(/[\s-]+/)
+        .filter(Boolean)
+        .map((n) => `${n[0]!.toUpperCase()}.`)
+        .join("");
+      return initials ? `${a.family}, ${initials}` : a.family!;
+    });
+  return names.length > 0 ? names.join(", ") : null;
+}
 
 function normalizeTitle(title: string): string {
   return title
@@ -102,9 +123,15 @@ async function fetchOrcidWorks(orcidId: string): Promise<Candidate[]> {
       (id: { "external-id-type"?: string }) => id["external-id-type"] === "doi",
     );
     const doi: string | null = doiEntry?.["external-id-value"]?.trim() || null;
+    // ORCID's bulk /works endpoint doesn't include a contributor list
+    // (that needs a per-work detail fetch) — left null here and filled
+    // in afterward by enrichByDoi, which asks Crossref for the same DOI
+    // instead of one extra ORCID request per work.
     out.push({
       title,
+      authors: null,
       year,
+      venue: summary["journal-title"]?.value?.trim() || null,
       doi,
       link: doi ? `https://doi.org/${doi}` : (summary.url?.value ?? null),
       source: "orcid",
@@ -179,7 +206,9 @@ async function fetchCrossrefWorks(personName: string): Promise<Candidate[]> {
     const doi: string | null = item.DOI ?? null;
     out.push({
       title,
+      authors: formatAuthors(authors),
       year,
+      venue: item["container-title"]?.[0]?.trim() || null,
       doi,
       link: doi ? `https://doi.org/${doi}` : (item.URL ?? null),
       source: "crossref",
@@ -188,6 +217,32 @@ async function fetchCrossrefWorks(personName: string): Promise<Candidate[]> {
     });
   }
   return out;
+}
+
+// ORCID's bulk endpoint doesn't include authors (see fetchOrcidWorks's
+// own comment) — for any candidate that still has none but does have a
+// DOI, ask Crossref for that exact DOI's record instead. Crossref
+// indexes almost everything these journals/conference series (IOP Conf.
+// Series, Procedia, etc.) publish, so this covers the ORCID-sourced gap
+// without a second ORCID request per work.
+async function enrichMissingAuthors(candidates: Candidate[]): Promise<void> {
+  for (const c of candidates) {
+    if (c.authors || !c.doi) continue;
+    try {
+      const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(c.doi)}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const item = data.message;
+      c.authors = formatAuthors(item?.author ?? []);
+      if (!c.venue) c.venue = item?.["container-title"]?.[0]?.trim() || null;
+    } catch {
+      // Best-effort only — a candidate that fails enrichment still gets
+      // saved with whatever it already had, not dropped.
+    }
+    await new Promise((r) => setTimeout(r, 200));
+  }
 }
 
 async function main() {
@@ -224,6 +279,8 @@ async function main() {
     console.log("No new publication candidates found.");
     return;
   }
+
+  await enrichMissingAuthors(fresh);
 
   const merged = [...pending, ...fresh].sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
   await writeFile(PENDING_PATH, `${JSON.stringify(merged, null, 2)}\n`, "utf8");
