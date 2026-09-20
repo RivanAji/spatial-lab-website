@@ -6,7 +6,10 @@ import { people } from "@/lib/content/people";
 // sent (name + a small italic grey role, same line) — but the actual
 // STRUCTURE below is the site owner's own written spec, not a copy of
 // that screenshot's single-column list: the lab head sits alone in a
-// left column, the rest of the team in a numbered list on the right.
+// left column, the rest of the team in a list on the right (no
+// numbering — a follow-up request; plain names read tighter without
+// it, which is also why the row gap and heading-to-content gap below
+// are both smaller than the first pass).
 //
 // Sourced from lib/content/people.ts, not retyped — that file is
 // already the verified real roster (PRD 3.1/3.2), so pulling from it
@@ -23,22 +26,19 @@ export function Team() {
           Team
         </h2>
 
-        <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-[1fr_2fr] md:gap-16">
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
           <p className="font-body text-base text-ink-000 sm:text-lg">
             {head.name}
             <span className="ml-2 font-body text-sm italic text-ink-300">{head.role}</span>
           </p>
 
-          <ol className="flex flex-col gap-3">
-            {members.map((person, index) => (
-              <li key={person.slug} className="flex items-baseline gap-3">
-                <span className="font-mono text-xs text-ink-300">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="font-body text-base text-ink-100">{person.name}</span>
+          <ul className="flex flex-col gap-1.5">
+            {members.map((person) => (
+              <li key={person.slug} className="font-body text-base text-ink-100">
+                {person.name}
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       </Container>
     </section>
