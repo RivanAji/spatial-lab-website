@@ -149,7 +149,7 @@ export function PublicationsShowcase(): ReactNode {
   return (
     <section id="research" aria-label="Publications" className="scroll-mt-24 pb-8 pt-2 md:pb-10 md:pt-4">
       <Container>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {teams.map((team, index) => (
             <TeamFilterCard key={team.slug} team={team} Scene={TEAM_SCENES[index]} />
           ))}
@@ -359,7 +359,7 @@ function TeamFilterCard({
     >
       {/* Text column. The scene sits to its right at every width, so the
           two never overlap and nothing has to reflow on hover. */}
-      <div className="absolute inset-y-0 left-0 right-[7rem] sm:right-[5.5rem] md:right-[7rem] lg:right-[8rem]">
+      <div className="absolute inset-y-0 left-0 right-[7rem] md:right-[6rem] lg:right-[8rem]">
         <motion.div
           className="absolute inset-0 flex flex-col justify-center gap-1 p-3"
           initial={false}
@@ -389,7 +389,7 @@ function TeamFilterCard({
       <div
         ref={parallaxRef}
         aria-hidden="true"
-        className="absolute inset-y-0 right-0 w-[7rem] p-1.5 text-ink-100 transition-transform duration-300 ease-out sm:w-[5.5rem] md:w-[7rem] lg:w-[8rem]"
+        className="absolute inset-y-0 right-0 w-[7rem] p-1.5 text-ink-100 transition-transform duration-300 ease-out md:w-[6rem] lg:w-[8rem]"
       >
         <Scene shown={sceneShown} animated={!reducedMotion} />
       </div>
