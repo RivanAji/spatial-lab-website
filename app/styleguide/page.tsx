@@ -22,10 +22,11 @@ const swatches: Array<{ name: string; hex: string; note: string }> = [
 // homepage scheme, which is why this stays its own muted-opacity
 // section below rather than folding into the swatches above.
 const retiredSwatches: Array<{ name: string; hex: string; note: string }> = [
-  { name: "blue-800", hex: "#273669", note: "brand navy, exact — team page active tab fill" },
+  { name: "blue-900", hex: "#141C35", note: "darkest brand tint — team page WORK/PAPERS rail fill (bg-blue-900/30)" },
+  { name: "blue-800", hex: "#273669", note: "brand navy, exact — unused" },
   { name: "blue-600", hex: "#445EA5", note: "brand royal, exact — unused" },
-  { name: "blue-400", hex: "#5B78BE", note: "derived interactive text — team page tab border" },
-  { name: "blue-300", hex: "#7E97DC", note: "derived hover / focus — team page year labels" },
+  { name: "blue-400", hex: "#5B78BE", note: "derived interactive text — unused" },
+  { name: "blue-300", hex: "#7E97DC", note: "derived hover / focus — team page rail label text" },
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

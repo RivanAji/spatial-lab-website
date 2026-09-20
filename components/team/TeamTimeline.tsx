@@ -1,44 +1,47 @@
 "use client";
 
-// Added 2026-09-20 for app/research/[team]/page.tsx — the two-row
-// filter plus year-grouped card timeline the site owner described,
-// reading roughly like https://senseabledb.mit.edu's own dark,
-// single-accent mood (see that page's own top comment for how this
-// diverges from that reference's actual interaction). "Work" and
-// "Papers" are two separately-sourced lists passed in from the server
-// component (lib/content/projects.ts's projectsForTeam and
-// lib/content/publications.ts's publicationsByTeam) rather than one
-// shared shape — this component only normalises them for display.
-import { useMemo, useState } from "react";
+// Rebuilt 2026-09-20, second pass, once the site owner sent a much
+// clearer screenshot of the reference (https://senseabledb.mit.edu):
+// "saya mau tampilannya menyamping seperti ini, ubah layoutnya" — MIT's
+// own page is several permanently-visible horizontal rows (WORK, WRITE,
+// PEOPLE...), each with a rotated label in a coloured left rail, each
+// independently scrollable. "Work" and "Papers" are this site's two
+// rows, in that order, both visible at once — not a tab switch any
+// more (the first pass's mistake, from a vaguer description of the
+// same reference). Cards inside each row are grouped by year, not
+// month ("kalo kita pertahun aja gausah perbulan"), and are themselves
+// three stacked sections per the site owner's own breakdown: a topic
+// image, a title/year/venue text block, and the contributing team
+// member(s)' photo(s).
+import { useMemo } from "react";
 import Image from "next/image";
 import type { Person } from "@/lib/content/types";
 import { PersonAvatar } from "./PersonAvatar";
-import { cn } from "@/lib/cn";
 
 export type TimelineEntry = {
   slug: string;
   title: string;
-  subtitle: string;
   year: number | null;
+  venue: string | null;
   coverImage?: string;
   href?: string;
   peopleSlugs: string[];
 };
 
-type Tab = "work" | "papers";
-
-function groupByYear(entries: TimelineEntry[]): [string, TimelineEntry[]][] {
+function groupByYear(entries: TimelineEntry[]): { year: string; items: TimelineEntry[] }[] {
   const groups = new Map<string, TimelineEntry[]>();
   for (const entry of entries) {
     const key = entry.year != null ? String(entry.year) : "Undated";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(entry);
   }
-  return Array.from(groups.entries()).sort(([a], [b]) => {
-    if (a === "Undated") return 1;
-    if (b === "Undated") return -1;
-    return Number(b) - Number(a);
-  });
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => {
+      if (a === "Undated") return 1;
+      if (b === "Undated") return -1;
+      return Number(b) - Number(a);
+    })
+    .map(([year, items]) => ({ year, items }));
 }
 
 export function TeamTimeline({
@@ -50,71 +53,71 @@ export function TeamTimeline({
   papers: TimelineEntry[];
   people: Person[];
 }) {
-  const [tab, setTab] = useState<Tab>(papers.length > 0 ? "papers" : "work");
   const peopleBySlug = useMemo(() => new Map(people.map((p) => [p.slug, p])), [people]);
 
-  const entries = tab === "work" ? work : papers;
+  return (
+    <div className="mt-8 flex flex-col md:mt-10">
+      <TimelineRow label="Work" entries={work} peopleBySlug={peopleBySlug} />
+      <TimelineRow label="Papers" entries={papers} peopleBySlug={peopleBySlug} />
+    </div>
+  );
+}
+
+function TimelineRow({
+  label,
+  entries,
+  peopleBySlug,
+}: {
+  label: string;
+  entries: TimelineEntry[];
+  peopleBySlug: Map<string, Person>;
+}) {
   const groups = useMemo(() => groupByYear(entries), [entries]);
 
   return (
-    <div className="mt-12 flex flex-col gap-8 md:mt-16 md:flex-row md:items-start md:gap-10">
-      {/* Left filter (site owner: "warna biru untuk filter baris di
-          sebelah kiri, biru ITS yang cocok/match untuk warna hitam
-          backgroundnya") — the site's own blue-* tokens (app/globals.
-          css), kept defined but unused since the monochrome pivot,
-          reused here as the one deliberate accent this page carries. */}
-      <div className="flex gap-2 md:w-40 md:shrink-0 md:flex-col md:gap-3">
-        {(
-          [
-            ["work", "Work", work.length],
-            ["papers", "Papers", papers.length],
-          ] as const
-        ).map(([key, label, count]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            disabled={count === 0}
-            aria-pressed={tab === key}
-            className={cn(
-              "flex flex-1 items-center justify-between gap-2 rounded-3xl border px-5 py-3.5 text-left font-display text-sm font-semibold tracking-tight transition-colors duration-200 md:flex-none",
-              tab === key
-                ? "border-blue-400 bg-blue-800/60 text-ink-000"
-                : "border-white/8 bg-ink-800/60 text-ink-300 hover:border-white/20 hover:text-ink-100",
-              count === 0 && "cursor-not-allowed opacity-40 hover:border-white/8 hover:text-ink-300",
-            )}
-          >
-            {label}
-            <span className="font-mono text-[10px] text-ink-300">{String(count).padStart(2, "0")}</span>
-          </button>
-        ))}
+    <div className="flex border-t border-white/8 first:border-t-0">
+      {/* Rotated row label in its own rail (site owner: "Work dan Paper
+          tulisannya menyamping, rotate 90 degree biar spacenya
+          optimal") — the site's ITS-blue accent tokens (see
+          TeamTimeline's own earlier use, and check-contrast.mjs),
+          reused as the one deliberate colour on this page, same as
+          before. */}
+      <div className="flex w-10 shrink-0 items-center justify-center border-r border-white/8 bg-blue-900/30 py-6 md:w-12">
+        <span
+          className="font-display text-xs font-bold tracking-[0.2em] text-blue-300"
+          style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+        >
+          {label.toUpperCase()}
+        </span>
       </div>
 
-      {/* Timeline: year-grouped cards, not month-grouped (site owner:
-          "kalo kita pertahun aja gausah perbulan"). */}
-      <div className="min-w-0 flex-1">
-        {entries.length === 0 ? (
-          <p className="rounded-3xl border border-white/8 bg-ink-800/40 p-10 text-center font-body text-sm text-ink-300">
-            Nothing here yet.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-10">
-            {groups.map(([year, items]) => (
-              <div key={year}>
-                <div className="flex items-baseline gap-3">
-                  <span className="font-mono text-sm text-blue-300">{year}</span>
-                  <span className="h-px flex-1 bg-white/8" aria-hidden="true" />
-                </div>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map((entry) => (
-                    <TimelineCard key={entry.slug} entry={entry} peopleBySlug={peopleBySlug} />
-                  ))}
-                </div>
+      {entries.length === 0 ? (
+        <p className="flex-1 self-center px-6 py-10 font-body text-sm text-ink-300">
+          Nothing here yet.
+        </p>
+      ) : (
+        <div
+          style={{
+            maskImage: "linear-gradient(to right, transparent, black 2%, black 97%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 2%, black 97%, transparent)",
+          }}
+          className="flex flex-1 items-stretch gap-6 overflow-x-auto px-5 py-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {groups.map((group) => (
+            <div key={group.year} className="flex shrink-0 items-center gap-3">
+              <span className="flex h-full items-center border-l border-white/8 pl-3 font-mono text-[11px] text-ink-500">
+                {group.year}
+              </span>
+              <div className="flex items-stretch gap-3">
+                {group.items.map((entry) => (
+                  <TimelineCard key={entry.slug} entry={entry} peopleBySlug={peopleBySlug} />
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -127,20 +130,17 @@ function TimelineCard({
   peopleBySlug: Map<string, Person>;
 }) {
   const entryPeople = entry.peopleSlugs.map((slug) => peopleBySlug.get(slug)).filter((p): p is Person => !!p);
+  const meta = [entry.year, entry.venue].filter(Boolean).join(" · ");
 
-  // The avatar row sits OUTSIDE the title/image link below, not inside
-  // it — PersonAvatar is its own <a> (to that person's profile), and an
-  // <a> can't nest inside another <a> (invalid HTML; caught as a real
-  // hydration error when this card had a DOI link wrapping everything,
-  // avatar included). Both live inside this same outer card, they just
-  // don't share one clickable element.
-  //
-  // Rounded-4xl double-bezel, the same recipe as this site's other cards
-  // (Hero's map card, the Research gallery frame, Project.tsx) —
-  // deliberately not this page's own reference's sharp, un-rounded grid
-  // (see this file's top comment).
+  // Smaller, matching the homepage's own card width (Project.tsx,
+  // PublicationCard) — site owner: "bagian cardnya menyamping agak
+  // kecilin aja, kyk yang dihalaman home". Three sections, per the site
+  // owner's own breakdown: 1) the topic image, 2) title/year/venue,
+  // 3) contributor photo(s) — bigger than PublicationCard's own avatar
+  // convention on this page specifically (PersonAvatar's own "lg" size,
+  // see that component's comment).
   return (
-    <div className="group rounded-4xl border border-white/8 bg-ink-900 p-1.5 transition-colors hover:border-white/20">
+    <div className="group flex w-44 flex-shrink-0 flex-col rounded-4xl border border-white/8 bg-ink-900 p-1.5 transition-colors hover:border-white/20">
       {entry.href ? (
         <a
           href={entry.href}
@@ -148,18 +148,26 @@ function TimelineCard({
           rel="noopener noreferrer"
           className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
         >
-          <TimelineCardBody entry={entry} />
+          <CardImage entry={entry} />
         </a>
       ) : (
         // No real destination yet (a project with no detail page, or a
         // paper with no DOI on file) — plain, non-interactive, per this
         // project's "no dead navigation" rule (PRD 6.6).
-        <TimelineCardBody entry={entry} />
+        <CardImage entry={entry} />
       )}
+
+      <div className="flex flex-col gap-1 px-2 pb-1 pt-3">
+        <h3 className="line-clamp-2 font-display text-xs font-semibold leading-snug text-ink-000">
+          {entry.title}
+        </h3>
+        {meta && <p className="line-clamp-1 font-body text-[11px] text-ink-300">{meta}</p>}
+      </div>
+
       {entryPeople.length > 0 && (
-        <div className="flex -space-x-2 px-3 pb-3">
+        <div className="flex -space-x-3 px-2 pb-2 pt-2">
           {entryPeople.map((person) => (
-            <PersonAvatar key={person.slug} person={person} size="sm" />
+            <PersonAvatar key={person.slug} person={person} size="lg" />
           ))}
         </div>
       )}
@@ -167,22 +175,12 @@ function TimelineCard({
   );
 }
 
-function TimelineCardBody({ entry }: { entry: TimelineEntry }) {
+function CardImage({ entry }: { entry: TimelineEntry }) {
   return (
-    <>
-      <div className="relative aspect-square overflow-hidden rounded-[1.6rem] bg-ink-800">
-        {entry.coverImage && (
-          <Image src={entry.coverImage} alt="" fill sizes="360px" className="object-cover" />
-        )}
-      </div>
-      <div className="flex flex-col gap-2 p-3 pb-2">
-        <h3 className="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-000">
-          {entry.title}
-        </h3>
-        {entry.subtitle && (
-          <p className="line-clamp-1 font-body text-xs text-ink-300">{entry.subtitle}</p>
-        )}
-      </div>
-    </>
+    <div className="relative aspect-square overflow-hidden rounded-[1.4rem] bg-ink-800">
+      {entry.coverImage && (
+        <Image src={entry.coverImage} alt="" fill sizes="176px" className="object-cover" />
+      )}
+    </div>
   );
 }

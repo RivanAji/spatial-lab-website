@@ -12,17 +12,16 @@ import logo from "@/public/brand/logo-white.png";
 // Added 2026-09-20 (site owner's request): a real detail page per
 // research team, reached by clicking that team's card in the homepage
 // gallery (PublicationsShowcase.tsx's TeamFilterCard, which used to
-// filter the gallery on click and now navigates here instead). Visual
-// direction was a specific reference — https://senseabledb.mit.edu —
-// though that site turned out to be a bespoke physics-driven scatter
-// timeline with month-level placement, not the row/filter/card layout
-// the site owner actually described in words; this builds what they
-// wrote (a left Work/Papers switch, year-grouped cards), borrowing the
-// reference's dark-plus-one-accent-colour mood rather than its exact
-// interaction mechanic. Corners are deliberately rounder than that
-// reference's own sharp grid ("buat kelengkungan / round nya agak
-// lengkung yak, jadi ga terlalu kaku") — this site's own established
-// rounded-4xl double-bezel language, not MIT's.
+// filter the gallery on click and now navigates here instead).
+//
+// Rebuilt the same day, second pass, after the site owner sent a much
+// clearer screenshot of the reference (https://senseabledb.mit.edu):
+// "saya mau tampilannya menyamping seperti ini, ubah layoutnya" — a
+// wide horizontal timeline with a rotated, colour-accented row label on
+// the left (WORK / PAPERS here, matching MIT's WORK / WRITE / PEOPLE...
+// sidebar), and a thin, small-type info bar up top instead of the
+// large centred title block the first pass had. See TeamTimeline.tsx
+// for the timeline itself.
 export function generateStaticParams() {
   return teams.map((team) => ({ team: team.slug }));
 }
@@ -66,8 +65,8 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
   const papers: TimelineEntry[] = publicationsByTeam(team.slug).map((pub) => ({
     slug: pub.slug,
     title: pub.title,
-    subtitle: [pub.venue, String(pub.year)].filter(Boolean).join(" · "),
     year: pub.year,
+    venue: pub.venue || null,
     coverImage: pub.coverImage,
     href: pub.doi ? `https://doi.org/${pub.doi}` : undefined,
     peopleSlugs: memberSlugsIn(pub.authors, members),
@@ -76,8 +75,8 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
   const work: TimelineEntry[] = projectsForTeam(memberNames).map((project) => ({
     slug: project.slug,
     title: project.name,
-    subtitle: project.description ?? project.developer ?? "",
     year: project.year ?? null,
+    venue: project.description ?? project.developer ?? null,
     coverImage: project.coverImage,
     href: undefined, // no project detail page yet — PRD 6.6's "no dead navigation"
     peopleSlugs: memberSlugsIn(project.developer ?? "", members),
@@ -85,11 +84,25 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
 
   return (
     <div className="min-h-dvh bg-ink-900">
-      {/* Minimal page header — just the two marks, no primary nav (site
-          owner: "background nya tetep hitam, logo lab (home) di kiri
-          dan logo ITS dikanan"), unlike Header.tsx's full nav pill,
-          whose links are same-page anchors that only make sense on "/". */}
-      <header className="flex items-center justify-between px-6 py-6 md:px-10">
+      {/* Same fixed-header recipe as Header.tsx (site owner: "usahakan
+          logo labkom dan juga logo ITSnya berada di posisi yang sama
+          dengan halaman Home") — h-20, the same px-6, the same logo
+          heights — just without the centre nav pill, whose links are
+          same-page hash anchors that only resolve on "/". Mobile mirrors
+          Header.tsx's own mobile bar too: in-flow (not fixed), lab mark
+          only, no ITS mark — that one is desktop-only there as well. */}
+      <header className="border-b border-white/8 bg-ink-900 md:hidden">
+        <div className="flex h-16 items-center px-6">
+          <Link
+            href="/"
+            aria-label="Spatial Analysis & Transportation Laboratory, home"
+            className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-000"
+          >
+            <Image src={logo} alt="" priority height={36} className="h-9 w-auto" />
+          </Link>
+        </div>
+      </header>
+      <div className="fixed inset-x-0 top-0 z-50 hidden h-20 items-center justify-between px-6 md:flex">
         <Link
           href="/"
           aria-label="Spatial Analysis & Transportation Laboratory, home"
@@ -102,30 +115,25 @@ export default async function TeamPage({ params }: { params: Promise<{ team: str
           alt="Institut Teknologi Sepuluh Nopember"
           className="h-8 w-auto opacity-90"
         />
-      </header>
-
-      <div className="px-6 pb-16 pt-6 md:px-10 md:pb-24">
-        {/* Title row — "TSAL" stays on the left (site owner: "Tittlenya
-            tetep TSAL"), the team's own name takes the right, matching
-            Footer.tsx's own TSAL styling rather than inventing a new one. */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-          <span className="font-display text-xl font-bold tracking-tight text-ink-000 md:text-2xl">
-            TSAL
-          </span>
-          <h1 className="font-display text-xl font-semibold tracking-tight text-ink-000 sm:text-right md:text-2xl">
-            {team.name}
-          </h1>
-        </div>
-
-        {/* Centred focus description (site owner: "keterangan dibagian
-            tengah page nya"), from lib/content/teams.ts's own `focus`
-            array rather than retyped here. */}
-        <p className="mx-auto mt-10 max-w-2xl text-center font-body text-sm text-ink-300 md:mt-16 md:text-base">
-          {joinFocus(team.focus)}
-        </p>
-
-        <TeamTimeline work={work} papers={papers} people={members} />
       </div>
+
+      {/* Thin info bar (site owner: "bagian atasnya kecil aja fontnya
+          seperti MIT... TSAL dipinggirnya tulisan [team name] kecil
+          saja, di bagian tengahnya lebih ke abu abu dan light/normal
+          [tagline] biar ga terlalu banyak makan tempat") — one small,
+          wrapping line instead of the large centred title block the
+          first pass had, echoing how little vertical space MIT's own
+          reference gives this same information. */}
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-6 pt-6 md:px-10 md:pt-24">
+        <span className="font-display text-sm font-bold tracking-tight text-ink-000">TSAL</span>
+        <h1 className="font-display text-sm font-semibold text-ink-000">{team.name}</h1>
+        <span className="text-ink-600" aria-hidden="true">
+          —
+        </span>
+        <p className="font-body text-xs font-normal text-ink-300">{joinFocus(team.focus)}</p>
+      </div>
+
+      <TeamTimeline work={work} papers={papers} people={members} />
     </div>
   );
 }

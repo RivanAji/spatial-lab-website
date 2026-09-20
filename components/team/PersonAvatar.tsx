@@ -22,8 +22,18 @@ import { cn } from "@/lib/cn";
 const SIZES = {
   sm: "h-8 w-8 text-[10px]",
   md: "h-11 w-11 text-xs",
+  // Roughly double `sm` (site owner, 2026-09-20, on the team timeline
+  // cards specifically: "fotonya tetep lingkaran tapi agar besar
+  // dikit... mungkin 2x lipat lebih besar dari ukuran yang sekarang" —
+  // the "sekarang" being the sm size those cards used before).
   lg: "h-16 w-16 text-base",
 } as const;
+
+const IMAGE_SIZES: Record<keyof typeof SIZES, string> = {
+  sm: "32px",
+  md: "44px",
+  lg: "64px",
+};
 
 function initials(name: string): string {
   const parts = name.split(/\s+/).filter(Boolean);
@@ -41,7 +51,22 @@ function Circle({ person, size }: { person: Person; size: keyof typeof SIZES }) 
       )}
     >
       {person.photo ? (
-        <Image src={person.photo} alt="" fill sizes="64px" className="object-cover" />
+        // object-top, not the object-cover default centre crop: a
+        // circular crop of a portrait photo centred by height cuts
+        // straight through the face on anything taller than a tight
+        // headshot (site owner, specifically about this: "posisinya
+        // muka/wajanya terlihat jangan sampai ter crop") — biasing
+        // toward the top keeps the face in frame for the standing
+        // portrait this site actually has, and is still a reasonable
+        // default for any future close headshot (top-biased and
+        // centred agree when the face already fills the top).
+        <Image
+          src={person.photo}
+          alt=""
+          fill
+          sizes={IMAGE_SIZES[size]}
+          className="object-cover object-top"
+        />
       ) : (
         initials(person.name)
       )}

@@ -47,6 +47,12 @@ function ratio(a, b) {
 // backgroundnya"), reusing these same exact ITS-brand values rather
 // than inventing new ones (styleguide/page.tsx already documented
 // blue-800/blue-600 as "exact" brand navy/royal).
+//
+// Rebuilt same day, second pass (TeamTimeline.tsx): the rotated WORK/
+// PAPERS row label is blue-300 text in a bg-blue-900/30 rail — checked
+// against solid ink-900 below, which is a safe floor since blue-900/30
+// over ink-900 is strictly lighter than ink-900 alone (blue-900 is a
+// lighter value), so the real contrast only exceeds this number.
 const checks = [
   ["ink-100", "ink-900", 4.5, "body text on page ground"],
   ["ink-300", "ink-900", 4.5, "muted text on page ground"],
@@ -54,8 +60,7 @@ const checks = [
   ["ink-100", "ink-700", 4.5, "body text on card surface"],
   ["ink-300", "ink-700", 4.5, "muted text on card surface"],
   ["ink-900", "ink-000", 4.5, "primary CTA text (Contact button, Button.tsx primary) on white fill"],
-  ["blue-300", "ink-900", 4.5, "team page year labels (TeamTimeline.tsx)"],
-  ["ink-000", "blue-800", 4.5, "team page active Work/Papers tab label (solid floor for the actual bg-blue-800/60)"],
+  ["blue-300", "ink-900", 4.5, "team page WORK/PAPERS rail label (TeamTimeline.tsx, floor for bg-blue-900/30)"],
 ];
 
 let failed = false;
