@@ -34,7 +34,7 @@
  * slot, not a fake cover.
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
@@ -635,6 +635,18 @@ export function PublicationsShowcase(): ReactNode {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const reducedMotion = useReducedMotion();
+  // Added 2026-09-20 (site owner: "di bagian research card, hapus yang
+  // duplikat, karena ada 2 yang duplikat itu") — the loop below used to
+  // render `filtered` twice unconditionally whenever motion wasn't
+  // reduced, regardless of whether there was enough content to actually
+  // need a wrap-around copy. A team/year filter that narrows the list
+  // down to a couple of publications doesn't overflow the frame, so the
+  // auto-drift effect's own hasOverflow check already correctly never
+  // moved it — but the doubled DOM was still there, sitting still,
+  // reading exactly like two identical cards side by side. `canLoop`
+  // gates the doubling itself on an actual overflow measurement (below),
+  // not just on whether motion is allowed.
+  const [canLoop, setCanLoop] = useState(false);
 
   // Auto-scroll marquee (2026-09-19, site owner's request): the gallery
   // now drifts continuously right-to-left on its own, and pauses the
@@ -735,6 +747,24 @@ export function PublicationsShowcase(): ReactNode {
     }
   }
 
+  // Two-step, both useLayoutEffect (not useEffect) so neither is ever
+  // visible as a flash of wrongly-doubled content before the browser
+  // paints: reset canLoop to false the instant the filter changes (so
+  // the very next render is a single, undoubled copy), then measure
+  // that single copy's real overflow and only then decide whether a
+  // second copy is actually needed. See canLoop's own declaration
+  // above for the bug this fixes.
+  useLayoutEffect(() => {
+    setCanLoop(false);
+  }, [activeTeam, activeYear]);
+
+  useLayoutEffect(() => {
+    if (canLoop) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    if (el.scrollWidth > el.clientWidth + 4) setCanLoop(true);
+  }, [filtered, canLoop]);
+
   useEffect(() => {
     // Filter changes can shrink the slider's scrollWidth out from under an
     // old scroll position (e.g. it was scrolled right, then a filter drops
@@ -748,7 +778,7 @@ export function PublicationsShowcase(): ReactNode {
     // position the instant this effect runs — one rAF later, they have.
     requestAnimationFrame(updateCoverflow);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTeam, activeYear]);
+  }, [activeTeam, activeYear, canLoop]);
 
   // Re-run on resize too (a wider/narrower frame moves the centre point
   // and every card's distance from it, independent of any scrolling).
@@ -992,14 +1022,15 @@ export function PublicationsShowcase(): ReactNode {
               }}
               className="flex items-center gap-5 overflow-x-auto py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              {/* Rendered twice when looping (see the auto-drift effect
-                  above) — the second copy is purely a visual continuation
-                  for the wrap-around, not real additional content, so it's
-                  hidden from assistive tech and pulled out of tab order
-                  (PublicationCard's hiddenDuplicate prop) rather than
-                  doubling every publication's link in the page's a11y
-                  tree. */}
-              {(loop ? [0, 1] : [0]).flatMap((copy) =>
+              {/* Rendered twice only once canLoop confirms the single
+                  copy actually overflows the frame (see canLoop's own
+                  comment above) — the second copy is purely a visual
+                  continuation for the wrap-around, not real additional
+                  content, so it's hidden from assistive tech and pulled
+                  out of tab order (PublicationCard's hiddenDuplicate
+                  prop) rather than doubling every publication's link in
+                  the page's a11y tree. */}
+              {(loop && canLoop ? [0, 1] : [0]).flatMap((copy) =>
                 filtered.map((pub) => (
                   <PublicationCard
                     key={`${pub.slug}-${copy}`}
