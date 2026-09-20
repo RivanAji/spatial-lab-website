@@ -11,12 +11,7 @@ const base =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000";
 
 const variants: Record<Variant, string> = {
-  // Monochrome pivot (2026-09-19) — was bg-blue-600/text-ink-000. White
-  // fill, near-black text: the same bg-foreground/text-background
-  // pairing the reference (github.com/DavidHDev/rbp-portfolio) uses for
-  // its own primary button, and the highest-contrast pairing available
-  // on this palette (ink-000/ink-900 measures 18.87:1, PRD 6.2's own
-  // check for that exact pair).
+  // White fill with near-black text is the highest-contrast pairing in this monochrome palette.
   primary: "bg-ink-000 text-ink-900 hover:brightness-90",
   secondary:
     "border border-ink-500 text-ink-100 hover:border-ink-000 hover:text-ink-000",
@@ -40,10 +35,7 @@ type ButtonAsButton = CommonProps &
 
 type ButtonProps = ButtonAsLink | ButtonAsButton;
 
-/**
- * Real interactive elements only (craft.md, PRD 6.4): an `<a>` when `href`
- * is given, a real `<button>` otherwise. Never a styled `<div>`.
- */
+/** Renders a real link when href is present and a real button otherwise. */
 export function Button({ variant = "primary", className, children, ...props }: ButtonProps) {
   const classes = cn(base, variants[variant], className);
 

@@ -1,33 +1,8 @@
 @import "tailwindcss";
 
-/*
- * Design tokens — PRD section 6 (Design System).
- *
- * Monochrome pivot (2026-09-19): the site owner moved the whole site to
- * strict black and white, matching the reference's own stated palette
- * (github.com/DavidHDev/rbp-portfolio README: "The palette is strict
- * black and white. No accent or semantic color hues are used."). The
- * --color-blue-* ramp below is kept defined but is no longer used by
- * any component — every former blue-* usage (CTAs, links, the hero
- * locator, focus rings, filter active states) now uses the ink-* scale
- * instead, emphasis carried by brightness/weight rather than colour.
- * Left in rather than deleted in case a specific accent moment is
- * wanted again later; nothing currently renders it.
- */
+/* Design tokens — PRD section 6. */
 @theme {
-  /* These resolve through the --sans-font / --mono-font / --serif-font
-     custom properties that next/font injects on <html> in layout.tsx.
-     Fallback stacks below only apply if next/font fails to load.
-     `font-display` and `font-body` are kept as two utility names for one
-     value on purpose (2026-09-19): the reference this matches
-     (github.com/DavidHDev/rbp-portfolio) uses a single Geist Sans face
-     for both headings and body copy, sized and weighted for hierarchy
-     rather than switched between two type families. Keeping both
-     Tailwind utility names avoids touching every className across the
-     codebase that already says font-display or font-body — only the
-     font itself changed, not which elements use "the heading font" vs
-     "the body font". font-serif is new: Fraunces, reserved for the rare,
-     selective display accent the reference uses on section headlines. */
+  /* Display and body utilities intentionally share the sans family. */
   --font-display: var(--sans-font), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--sans-font), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--mono-font), ui-monospace, "SFMono-Regular", monospace;
@@ -51,23 +26,10 @@
   --radius-control: 3px;
   --radius-panel: 4px;
 
-  /* Idle pulse on the Surabaya locator only (PRD 6.5) — approved,
-     motivated motion: storytelling for the lab's own location. Gated by
-     motion-safe: in HeroCanvas.tsx, so prefers-reduced-motion drops it. */
+  /* HeroCanvas gates locator motion with prefers-reduced-motion. */
   --animate-locator-pulse: locator-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 
-  /* Travelling-marker loop for the TeamsTeaser illustrations
-     (components/hero/TeamsTeaser.tsx) — a dot moving along an SVG path
-     via offset-distance. This has to be a plain CSS animation, not a
-     Motion `animate` prop: Motion doesn't recognise offsetDistance as
-     an animatable value (tried first — it silently produced
-     `transform: scale(0)` instead of moving anything, caught by
-     inspecting the actual computed style during a real hover, not
-     assumed to work from the code alone). offset-path itself stays a
-     static inline style per element (each illustration's path shape is
-     different); only the 0%->100% sweep along whatever path is set is
-     shared here. motion-safe: only — reduced motion gets the static
-     nodes/lines each illustration already draws in once, no looping. */
+  /* Motion cannot animate offsetDistance, so path markers use CSS. */
   --animate-travel-path: travel-path 2.4s linear infinite;
 }
 
@@ -103,19 +65,12 @@
 }
 
 @media (prefers-color-scheme: light) {
-  /* The site is dark-mode-first and locks to one theme (PRD 6.2). No light
-     palette is defined; a light-mode override would need its own token
-     pass, not a quick invert. */
+  /* Dark theme is intentional; no automatic inversion. */
 }
 
 html {
   color-scheme: dark;
-  /* components/shaders/shader-flow.tsx (kept verbatim from its source,
-     see that file's header comment) reads a plain --background variable
-     to know what colour to fade its canvas out to. This project's own
-     background token is --color-ink-900 (Tailwind's @theme convention);
-     this is an alias so the vendored shader works unmodified rather than
-     hand-editing the CSS variable name inside it. */
+  /* Compatibility alias used by the shader component. */
   --background: var(--color-ink-900);
 }
 
@@ -129,15 +84,6 @@ body {
   background: var(--color-ink-000);
   color: var(--color-ink-900);
 }
-
-/* Anchor-link smooth scrolling (the "Explore Research" hero CTA,
-   Header.tsx's nav, Footer.tsx) is handled by Lenis now (components/
-   layout/SmoothScroll.tsx, 2026-09-20) instead of this CSS property —
-   Lenis's own `anchors: true` intercepts those clicks, and running both
-   at once would have the browser's native smooth-behavior and Lenis's
-   JS-driven physics fighting over the same scroll. Lenis's
-   `respectReducedMotion` (passed explicitly, defaults to true anyway)
-   covers the reduced-motion case this rule used to gate. */
 
 :focus-visible {
   outline: 2px solid var(--color-ink-000);
@@ -155,22 +101,7 @@ body {
   }
 }
 
-/* Cursor-following border glow for the team filter cards
-   (components/sections/PublicationsShowcase.tsx) — site owner's
-   request, 2026-09-19, for a "more interesting" hover state than a flat
-   border-colour swap: a soft light that tracks the pointer around the
-   card's own outline. Monochrome only (white radial fading to
-   transparent), matching the site's single-neutral-emphasis rule
-   (PRD 6.2) — this is intentionally not a colour gradient, which would
-   both break that rule and read as the generic AI-glow default.
-   --mx/--my are written directly onto this element's inline style from
-   a mousemove handler (a ref mutation, not React state — state would
-   re-render the whole card tree on every pointer move, which is the
-   actual mechanism a "smoother" hover needs to avoid, not just an
-   easing curve). The padding + dual-background + mask-composite:
-   exclude trick is what makes the gradient paint only the ring (the
-   padding band) rather than a filled panel, so it reads as "the
-   outline is lit", not a glow box behind the card. */
+/* Pointer coordinates are written via refs to avoid per-frame React renders. */
 .card-spotlight {
   --mx: 50%;
   --my: 50%;

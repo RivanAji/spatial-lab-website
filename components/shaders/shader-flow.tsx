@@ -1,23 +1,9 @@
 "use client";
 
 /*
- * Verbatim from github.com/DavidHDev/rbp-portfolio
- * (components/shaders/shader-flow.tsx, fetched from the repo's `main`
- * branch, 2026-09-19), used under that project's license ("free to use
- * in personal and commercial projects... may not resell or redistribute
- * the template itself" — this is a component used inside a different
- * project, not a redistribution of the template). This is the "black
- * flag" effect the site owner asked for: a domain-warped flow-noise
- * fragment shader (ogl, not Three.js — a much smaller WebGL library),
- * rendered through the page's default `grayscale` CSS filter so it
- * reads as a monochrome, organically flowing fabric-like surface
- * rather than a colour visual, faded out radially toward the page
- * background via a shape baked directly into the fragment shader.
- *
- * Unmodified below this comment. Where and how it's mounted (page
- * backdrop, sizing, opacity, which uniforms are passed) lives in
- * components/hero/hero-backdrop.tsx instead, matching how the source
- * repo separates the shader itself from components/layout/page-backdrop.tsx.
+ * Verbatim from github.com/DavidHDev/rbp-portfolio, used under its license
+ * (free for personal/commercial use; do not resell or redistribute the template).
+ * Keep this source unmodified; mounting, sizing, and uniforms live in HeroBackdrop.tsx.
  */
 
 import { Mesh, Program, Renderer, Transform, Triangle } from "ogl";

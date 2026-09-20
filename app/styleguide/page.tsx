@@ -1,7 +1,6 @@
 import { Button, Card, Container, FilterChip, Hairline } from "@/components/ui";
 
-// Review-only route (PRD Phase 2). Not linked from the production nav —
-// reached directly at /styleguide during development and design review.
+// Review-only route; it is intentionally absent from the production navigation.
 export const metadata = { robots: { index: false, follow: false } };
 
 const swatches: Array<{ name: string; hex: string; note: string }> = [
@@ -14,13 +13,7 @@ const swatches: Array<{ name: string; hex: string; note: string }> = [
   { name: "ink-000", hex: "#F7F9FB", note: "display text, 18.87:1 on ink-900 — now also the accent" },
 ];
 
-// The blue-* ramp (brand navy/royal + a derived interactive pair) went
-// unused site-wide after the monochrome pivot (2026-09-19), then back
-// into real use 2026-09-20 for the new team detail page (app/research/
-// [team]/page.tsx) — the one place with a deliberate colour accent
-// again (site owner's own request). Still not part of the main
-// homepage scheme, which is why this stays its own muted-opacity
-// section below rather than folding into the swatches above.
+// These values are retained for the team detail page's deliberate accent, not the homepage palette.
 const retiredSwatches: Array<{ name: string; hex: string; note: string }> = [
   { name: "blue-900", hex: "#141C35", note: "darkest brand tint — team page WORK/PAPERS rail fill (bg-blue-900/30)" },
   { name: "blue-800", hex: "#273669", note: "brand navy, exact — unused" },

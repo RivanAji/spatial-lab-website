@@ -1,9 +1,5 @@
 #!/usr/bin/env node
-// Automated WCAG contrast gate for the token pairs actually used in the UI
-// (PRD section 6.2). Run this whenever a token value changes — the numbers
-// in PRD.md's contrast table were computed by an earlier one-off version of
-// this exact logic, this script is that logic made reusable so the claim
-// stays checkable instead of becoming stale prose.
+// Automated WCAG contrast gate for UI token pairs; rerun when token values change.
 
 const tokens = {
   "ink-900": "#08090B",
@@ -34,25 +30,7 @@ function ratio(a, b) {
 
 // [foreground, background, minimum ratio, where it's used]
 //
-// Monochrome pivot (2026-09-19): every blue-* pair below was retired —
-// nothing in the UI rendered those tokens for a while (app/globals.css
-// kept the values defined for reference, not active use). Emphasis that
-// used to be blue-400/blue-300 became ink-000 on the same grounds
-// already checked above.
-//
-// Un-retired 2026-09-20 for the new team detail page (app/research/
-// [team]/page.tsx) — the one place on the site with a deliberate colour
-// accent again (site owner: "boleh ditambahi warna biru untuk filter
-// baris di sebelah kiri, biru ITS yang cocok/match untuk warna hitam
-// backgroundnya"), reusing these same exact ITS-brand values rather
-// than inventing new ones (styleguide/page.tsx already documented
-// blue-800/blue-600 as "exact" brand navy/royal).
-//
-// Rebuilt same day, second pass (TeamTimeline.tsx): the rotated WORK/
-// PAPERS row label is blue-300 text in a bg-blue-900/30 rail — checked
-// against solid ink-900 below, which is a safe floor since blue-900/30
-// over ink-900 is strictly lighter than ink-900 alone (blue-900 is a
-// lighter value), so the real contrast only exceeds this number.
+// The blue check covers the team-detail rail; solid ink-900 is a conservative floor for its translucent background.
 const checks = [
   ["ink-100", "ink-900", 4.5, "body text on page ground"],
   ["ink-300", "ink-900", 4.5, "muted text on page ground"],

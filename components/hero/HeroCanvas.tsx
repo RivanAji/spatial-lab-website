@@ -3,25 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ASIA_GRID, GRID_COLS, GRID_ROWS, SURABAYA_CELL, SURABAYA_COORDS } from "@/data/asia-grid";
 
-// Approved motion for the hero only (PRD 6.5): resolve from noise, idle
-// pulse, slow scan line, subtle pointer parallax. Plus, added 2026-09-19
-// (site owner's request): click to replay the resolve. Nothing here runs
-// when `prefers-reduced-motion` is set, or while the hero is scrolled out
-// of view, or while the tab is hidden.
-
-const NOISE_CHARS = [".", "·", ":"] as const;
-const ASIA_CHARS = [".", ":", "+"] as const;
-const INDONESIA_CHARS = ["+", "*", "#"] as const;
-
-// Click-to-replay particles (2026-09-19, site owner's request, revised
-// the same day: "hilangkan aja teksnya, buat ukuran partikelnya lebih
-// kecil" — drop the readable phrase text, make the particles smaller).
-// Back to plain glyphs, the same small alphabet the map itself is built
-// from, not full words — scattered at arbitrary positions across the
-// panel (not grid-locked) rather than one per cell, which is what still
-// makes this a distinct "particle" pass from the map's own noise
-// texture, just abstract instead of literal text.
-const PARTICLE_CHARS = [".", "·", ":", "+", "*"] as const;
+const NOISE_CHARS = [".", "0", "1", ":"] as const;
+const ASIA_CHARS = [".", "0", "1", ":", "+"] as const;
+const INDONESIA_CHARS = ["0", "1", "+", "*", "#"] as const;
+const PARTICLE_CHARS = [".", "0", "1", ":", "+", "*"] as const;
 
 type CellDraw = {
   x: number; // column
@@ -29,6 +14,8 @@ type CellDraw = {
   char: string;
   baseAlpha: number;
   isIndonesia: boolean;
+  phase: number;
+  mutationMs: number;
 };
 
 function buildCells(): CellDraw[] {
@@ -37,33 +24,37 @@ function buildCells(): CellDraw[] {
     for (let col = 0; col < GRID_COLS; col++) {
       const cls = ASIA_GRID[row * GRID_COLS + col];
       if (cls === 0) {
-        // Ambient background texture: sparse, not a full grid of dots.
-        if (Math.random() > 0.16) continue;
+        if (Math.random() > 0.07) continue;
         out.push({
           x: col,
           y: row,
           char: NOISE_CHARS[Math.floor(Math.random() * NOISE_CHARS.length)],
-          baseAlpha: 0.05 + Math.random() * 0.05,
+          baseAlpha: 0.025 + Math.random() * 0.025,
           isIndonesia: false,
+          phase: Math.random() * NOISE_CHARS.length,
+          mutationMs: 2200 + Math.random() * 3200,
         });
       } else if (cls === 1) {
+        if (Math.random() > 0.48) continue;
         out.push({
           x: col,
           y: row,
           char: ASIA_CHARS[Math.floor(Math.random() * ASIA_CHARS.length)],
-          baseAlpha: 0.22 + Math.random() * 0.1,
+          baseAlpha: 0.2 + Math.random() * 0.12,
           isIndonesia: false,
+          phase: Math.random() * ASIA_CHARS.length,
+          mutationMs: 1800 + Math.random() * 2800,
         });
       } else {
-        // Indonesia: heavier glyph weight, brighter neutral (PRD 3.2 —
-        // brighter than the rest of Asia, but neutral, not accent-coloured;
-        // accent is reserved for the locator and the CTA, PRD 29.4).
+        if (Math.random() > 0.64) continue;
         out.push({
           x: col,
           y: row,
           char: INDONESIA_CHARS[Math.floor(Math.random() * INDONESIA_CHARS.length)],
-          baseAlpha: 0.55 + Math.random() * 0.15,
+          baseAlpha: 0.4 + Math.random() * 0.16,
           isIndonesia: true,
+          phase: Math.random() * INDONESIA_CHARS.length,
+          mutationMs: 1500 + Math.random() * 2200,
         });
       }
     }
@@ -73,15 +64,10 @@ function buildCells(): CellDraw[] {
 
 type Particle = {
   char: string;
-  xFrac: number; // 0-1, position within the canvas
+  xFrac: number;
   yFrac: number;
 };
 
-// Scattered across the whole panel, not tied to the character grid — a
-// separate pass at arbitrary positions (not one per cell), which is what
-// still makes this its own particle layer rather than just the map's
-// existing noise texture. A fresh scatter every time it's built, so a
-// replay doesn't look identical to the one before it.
 function buildParticles(): Particle[] {
   const count = 40;
   const out: Particle[] = [];
@@ -116,9 +102,6 @@ export function HeroCanvas() {
   const particlesRef = useRef<Particle[] | undefined>(undefined);
   const reduced = usePrefersReducedMotion();
 
-  // Stable across re-renders, but each cell's noise character/threshold is
-  // randomised per mount — this is decorative texture, not content, so it
-  // doesn't need to be deterministic or survive re-mounts.
   if (!cellsRef.current) cellsRef.current = buildCells();
   if (!particlesRef.current) particlesRef.current = buildParticles();
   const resolveSeed = useMemo(
@@ -140,36 +123,35 @@ export function HeroCanvas() {
     let dpr = 1;
     let panelWidth = 0;
     let panelHeight = 0;
+    let pointerX = -1000;
+    let pointerY = -1000;
+    let pointerActive = false;
+    let monoFont = "ui-monospace, monospace";
 
     function resize() {
       const rect = wrap!.getBoundingClientRect();
       panelWidth = rect.width;
       panelHeight = rect.height;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const resolvedMonoFont = getComputedStyle(document.documentElement)
+        .getPropertyValue("--mono-font")
+        .trim();
+      monoFont = resolvedMonoFont
+        ? `${resolvedMonoFont}, ui-monospace, monospace`
+        : "ui-monospace, monospace";
       canvas!.width = Math.round(rect.width * dpr);
       canvas!.height = Math.round(rect.height * dpr);
       canvas!.style.width = `${rect.width}px`;
       canvas!.style.height = `${rect.height}px`;
 
-      // Fit the grid's fixed aspect ratio inside the panel and letterbox
-      // rather than stretching it — the grid was rasterised at a specific
-      // aspect (PRD 21.2 / scripts/build-map-grid.mjs) and squashing it
-      // would distort the outline it was built from.
+      // Preserve the rasterised grid ratio instead of distorting coastlines.
       const cellW = rect.width / GRID_COLS;
       const cellH = rect.height / GRID_ROWS;
       cellSize = Math.min(cellW, cellH);
       offsetX = (rect.width - cellSize * GRID_COLS) / 2;
       offsetY = (rect.height - cellSize * GRID_ROWS) / 2;
 
-      // Locator position, in the same pixel space as the canvas cells
-      // above — NOT a static CSS percentage of the panel (that was the
-      // actual bug the site owner caught, not a UTM/WGS mixup: once the
-      // grid started letterboxing inside a taller-than-the-grid panel,
-      // a plain `(row+0.5)/GRID_ROWS * 100%` stopped matching where the
-      // canvas was actually drawing that row, since it never accounted
-      // for offsetY). Recomputed here, in the same function that
-      // recomputes offsetX/offsetY, so the two can never drift apart
-      // again — every place this needs updating updates together.
+      // Keep locator in the same letterboxed pixel space as the canvas.
       if (locatorRef.current) {
         const lx = offsetX + (SURABAYA_CELL.col + 0.5) * cellSize;
         const ly = offsetY + (SURABAYA_CELL.row + 0.5) * cellSize;
@@ -181,47 +163,54 @@ export function HeroCanvas() {
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
+    window.addEventListener("resize", resize);
 
-    const fontSize = () => Math.max(cellSize * 0.92, 6);
+    const fontSize = () => Math.max(cellSize * 0.55, 2.75);
 
-    function draw(progress: number, scanRow: number | null) {
+    function draw(progress: number, time: number) {
       ctx!.save();
       ctx!.scale(dpr, dpr);
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       ctx!.textBaseline = "middle";
       ctx!.textAlign = "center";
-      ctx!.font = `${fontSize()}px var(--font-mono, monospace)`;
+      ctx!.font = `${fontSize()}px ${monoFont}`;
 
       const cells = cellsRef.current!;
       for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
         const resolved = resolveSeed[i] <= progress;
-        const char = resolved ? cell.char : NOISE_CHARS[i % NOISE_CHARS.length];
+        const alphabet = cell.isIndonesia ? INDONESIA_CHARS : ASIA_CHARS;
+        const mutationCycle = time / cell.mutationMs + cell.phase;
+        const mutationIndex = Math.floor(mutationCycle) % alphabet.length;
+        const nextMutationIndex = (mutationIndex + 1) % alphabet.length;
+        const mutationProgress = mutationCycle - Math.floor(mutationCycle);
+        const mutationBlend = Math.max(0, Math.min(1, (mutationProgress - 0.72) / 0.28));
+        const char = resolved ? alphabet[mutationIndex] : NOISE_CHARS[i % NOISE_CHARS.length];
         let alpha = resolved ? cell.baseAlpha : 0.06;
-
-        if (scanRow !== null) {
-          const distance = Math.abs(cell.y - scanRow);
-          if (distance < 2.5) alpha = Math.min(1, alpha + (1 - distance / 2.5) * 0.35);
-        }
 
         const px = offsetX + cell.x * cellSize + cellSize / 2;
         const py = offsetY + cell.y * cellSize + cellSize / 2;
 
-        // Indonesia renders in near-white (brighter neutral); everything
-        // else in a dimmer neutral. Accent blue never appears in the grid
-        // itself — only the locator overlay uses it (PRD 29.4).
-        ctx!.fillStyle = cell.isIndonesia
-          ? `rgba(232, 235, 239, ${alpha})`
-          : `rgba(232, 235, 239, ${alpha * 0.85})`;
-        ctx!.fillText(char, px, py);
+        if (pointerActive) {
+          const distance = Math.hypot(px - pointerX, py - pointerY);
+          const hoverRadius = Math.max(70, panelWidth * 0.24);
+          const proximity = Math.max(0, 1 - distance / hoverRadius);
+          alpha = Math.min(0.72, alpha + proximity * proximity * 0.5);
+        }
+
+        const visibleAlpha = cell.isIndonesia ? alpha : alpha * 0.85;
+        if (resolved && mutationBlend > 0) {
+          ctx!.fillStyle = `rgba(232, 235, 239, ${visibleAlpha * (1 - mutationBlend)})`;
+          ctx!.fillText(char, px, py);
+          ctx!.fillStyle = `rgba(232, 235, 239, ${visibleAlpha * mutationBlend})`;
+          ctx!.fillText(alphabet[nextMutationIndex], px, py);
+        } else {
+          ctx!.fillStyle = `rgba(232, 235, 239, ${visibleAlpha})`;
+          ctx!.fillText(char, px, py);
+        }
       }
 
-      // Particles: visible while the map is still noise, gone well
-      // before it finishes resolving (fades out over the first 70% of
-      // the resolve, not the whole thing) — they read as the data the
-      // map is resolving OUT of, not decoration sitting on top of the
-      // finished map. Sized close to the map's own glyphs, not larger —
-      // "buat ukuran partikelnya lebih kecil".
+      // Resolve particles disappear before the geographic form is complete.
       if (progress < 1) {
         const particleProgress = Math.min(progress / 0.7, 1);
         const alpha = (1 - particleProgress) * 0.5;
@@ -229,7 +218,7 @@ export function HeroCanvas() {
           ctx!.save();
           ctx!.textAlign = "center";
           ctx!.textBaseline = "middle";
-          ctx!.font = `${Math.max(cellSize * 1.1, 7)}px var(--font-mono, monospace)`;
+          ctx!.font = `${Math.max(cellSize * 0.6, 3.25)}px ${monoFont}`;
           ctx!.fillStyle = `rgba(232, 235, 239, ${alpha})`;
           for (const particle of particlesRef.current!) {
             ctx!.fillText(particle.char, particle.xFrac * panelWidth, particle.yFrac * panelHeight);
@@ -256,12 +245,11 @@ export function HeroCanvas() {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     let start = 0;
-    const RESOLVE_MS = 1600;
-    let idleStart = 0;
+    const RESOLVE_MS = 2200;
     let onClick: (() => void) | null = null;
 
     if (reduced) {
-      draw(1, null);
+      draw(1, 0);
     } else {
       let lastFrame = 0;
 
@@ -276,61 +264,45 @@ export function HeroCanvas() {
         const elapsed = t - start;
 
         if (elapsed < RESOLVE_MS) {
-          draw(elapsed / RESOLVE_MS, null);
+          draw(elapsed / RESOLVE_MS, t);
           return;
         }
 
-        if (idleStart === 0) idleStart = t;
-        const idleElapsed = t - idleStart;
-        const scanPeriod = 7000;
-        const scanRow = ((idleElapsed % scanPeriod) / scanPeriod) * GRID_ROWS;
-        draw(1, scanRow);
+        draw(1, t);
       }
       raf = requestAnimationFrame(tick);
 
-      // Click to replay (site owner's request): re-runs the exact same
-      // resolve-from-noise choreography the map already does once on
-      // load, just re-triggered on demand, with a freshly scattered set
-      // of particles (buildParticles again) so a second click doesn't
-      // look identical to the first. Deliberately does NOT
-      // rebuild `cellsRef` — that array's length has to stay in lock-
-      // step with `resolveSeed` (computed once, in the same order, by
-      // the component body), and buildCells()'s ambient-noise threshold
-      // makes its own array length vary run to run; regenerating one
-      // without the other would desync the two and read stale/wrong
-      // resolve timing per cell.
+      // Rebuild particles only; rebuilding cells would desynchronise resolveSeed.
       onClick = () => {
         particlesRef.current = buildParticles();
         start = 0;
-        idleStart = 0;
       };
       wrap.addEventListener("click", onClick);
     }
 
-    // Pointer parallax on the whole composition, not the canvas alone
-    // (PRD 3.3 / 6.5) — small, capped range, skipped on touch devices.
-    //
-    // A plain CSS transition handles this two-value tween on its own; it
-    // doesn't need GSAP's sequencing or scrubbing. Reaching for the library
-    // here anyway would pull in its ~30KB gzip chunk (measured while
-    // building this) for something five lines of vanilla JS already does,
-    // which is exactly the kind of dependency weight PRD 8.4's hero JS
-    // budget exists to catch. GSAP stays reserved for the resolve/scan
-    // choreography's future scroll-driven work in later phases.
     const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     let onMove: ((e: PointerEvent) => void) | null = null;
+    let onLeave: (() => void) | null = null;
 
     if (!reduced && canHover && parallaxRef.current) {
       parallaxRef.current.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
       onMove = (e: PointerEvent) => {
         const rect = wrap!.getBoundingClientRect();
+        pointerX = e.clientX - rect.left;
+        pointerY = e.clientY - rect.top;
+        pointerActive = true;
         const nx = (e.clientX - rect.left) / rect.width - 0.5;
         const ny = (e.clientY - rect.top) / rect.height - 0.5;
         if (parallaxRef.current) {
           parallaxRef.current.style.transform = `translate3d(${nx * 10}px, ${ny * 8}px, 0)`;
         }
       };
+      onLeave = () => {
+        pointerActive = false;
+        if (parallaxRef.current) parallaxRef.current.style.transform = "translate3d(0,0,0)";
+      };
       wrap.addEventListener("pointermove", onMove);
+      wrap.addEventListener("pointerleave", onLeave);
     }
 
     return () => {
@@ -338,21 +310,15 @@ export function HeroCanvas() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
+      window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (onMove) wrap.removeEventListener("pointermove", onMove);
+      if (onLeave) wrap.removeEventListener("pointerleave", onLeave);
       if (onClick) wrap.removeEventListener("click", onClick);
     };
   }, [reduced, resolveSeed]);
 
   return (
-    // A real <button>, not a styled <div role="img"> (PRD 6.4 / this
-    // project's own "real interactive elements only" rule) — clicking it
-    // replays the resolve animation. The descriptive text that used to
-    // be the div's aria-label is the button's accessible name instead,
-    // extended to say what activating it does. The "Surabaya" caption
-    // was removed from the visible layer (site owner's request) but
-    // stays in this accessible name and in the coordinate label still
-    // on screen.
     <button
       type="button"
       aria-label="Stylised map of Asia rendered as a character grid, with Indonesia highlighted and Surabaya marked as the laboratory's location, at 07 degrees 15 minutes south, 112 degrees 45 minutes east. Activate to replay the resolve animation."
@@ -362,29 +328,7 @@ export function HeroCanvas() {
         <div ref={parallaxRef} className="absolute inset-0">
           <canvas ref={canvasRef} className="absolute inset-0" />
 
-          {/* Zero-size anchor at the exact pixel point resize() computes,
-              not a flex container: an earlier version wrapped this in
-              `flex items-center`, which centres children on the
-              CONTAINER's shrink-to-fit width (driven by the coordinate
-              label's text, ~112px wide) rather than on `left`/`top`
-              themselves — the dot rendered ~56px right of the point it
-              was actually given, a second, purely markup-level bug
-              layered on top of the letterbox-offset one this ref was
-              added to fix. Every marker below (including the label) is
-              its own absolutely-positioned, self-centring element
-              instead, so nothing here can drift off the anchor again
-              regardless of any sibling's size. */}
           <div ref={locatorRef} className="absolute" style={{ left: "50%", top: "50%" }}>
-            {/* Positioning (the -50%/-50% centring translate) lives on
-                this static wrapper only; the animated ring inside is a
-                plain `inset-0` fill with no translate of its own. Mixing
-                a percentage translate with the pulse's scale() in one
-                animated transform (the previous version) made the
-                browser resolve the translate in the ring's own
-                untransformed local space, then scale around the box's
-                center on top of that — the two didn't cancel out the
-                way a static translate+scale would, so the ring visibly
-                orbited off the dot instead of breathing around it. */}
             <span className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2">
               <span
                 className="absolute inset-0 rounded-full border border-ink-000 motion-safe:animate-locator-pulse"

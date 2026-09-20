@@ -1,11 +1,6 @@
 import { cn } from "@/lib/cn";
 
-/**
- * Archive filter control (PRD 7.4). Mono type. Active state is solid
- * white border+text rather than blue (monochrome pivot, 2026-09-19) —
- * brightness alone carries the distinction from the muted inactive
- * state, which is enough contrast to read clearly without colour.
- */
+/** Filter control with a neutral high-contrast active state. */
 export function FilterChip({
   active,
   className,

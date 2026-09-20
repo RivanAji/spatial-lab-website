@@ -1,28 +1,6 @@
 import type { Publication } from "./types";
 
-// Real publications collected from each member's Google Scholar profile
-// (PRD section 3.3, 2026-09-19). This is launch seed content, not
-// placeholder text — every title, author string, and citation count here
-// is real. A few venues came back blank from Scholar (theses, some
-// conference listings); those stay blank rather than getting a guessed-at
-// journal name (PRD 6.6 / 29.9 — no invented content).
-//
-// One placement note: the carbon-stock paper below is filed under
-// decision-support-climate, not spatial-data-science-ai as an earlier
-// draft of this table had it — Kurniawati isn't a member of that second
-// team, and climate is the better thematic fit anyway.
-//
-// coverImage: three entries below carry a TEMPORARY placeholder — stock
-// map photography from Unsplash, saved under public/images/
-// publications-dummy/ — at the site owner's explicit request, purely so
-// the new gallery card layout (PublicationsShowcase.tsx) could be
-// previewed with real images instead of empty slots. These are NOT real
-// covers and are not a quiet reversal of PRD 6.6's "no invented
-// content"/"no stock photography standing in for real output" rule —
-// they're marked here, and the plan is for the site owner to replace or
-// remove them with actual cover art once that exists. Every other
-// publication's coverImage stays unset, rendering the honest empty slot
-// this file's own type comment (lib/content/types.ts) describes.
+// Leave unverified metadata blank. Images under publications-dummy are temporary previews.
 export const publications: Publication[] = [
   // Team 01 — Sustainable Urban Transportation
   {
@@ -110,18 +88,8 @@ export const publications: Publication[] = [
     venue: "Journal of Regional and City Planning 34(2)",
     team: "sustainable-urban-transportation",
     citations: 4,
-    coverImage: "/images/publications-dummy/transport-map.jpg", // dummy, see file-top note
+    coverImage: "/images/publications-dummy/transport-map.jpg", // temporary preview
   },
-  // Added 2026-09-20 (site owner: "kok cuma segini, sepertinya masih
-  // banyak yang belum masuk ke sini") — sourced from each member's own
-  // ORCID record, Crossref (matched against ORCID/DOI where possible),
-  // and the "Daftar Publikasi Tim" table built earlier the same day.
-  // Two real candidates (Susetyo's "Orthogonal strategy..." and
-  // Wibowo's "Mengungkap Pembangunan Kota Berkelanjutan...") aren't
-  // here — neither has a confirmed publication year anywhere checked,
-  // and year is required on this type, so they stay in
-  // lib/content/publications.pending.json rather than getting a
-  // guessed one (PRD 6.6).
   {
     slug: "analysis-of-the-inclusiveness-of-the-maas-based-public",
     title:
@@ -419,10 +387,8 @@ export const publications: Publication[] = [
     year: 2023,
     venue: "Land 12(4)",
     team: "spatial-data-science-ai",
-    coverImage: "/images/publications-dummy/data-map.jpg", // dummy, see file-top note
+    coverImage: "/images/publications-dummy/data-map.jpg", // temporary preview
   },
-  // Added 2026-09-20 — see this file's own note at the top of Team 01's
-  // equivalent addition above for where these came from.
   {
     slug: "availability-assessment-of-sustainable-housing-materials",
     title:
@@ -441,10 +407,6 @@ export const publications: Publication[] = [
     venue: "Computers, Environment and Urban Systems 127",
     team: "spatial-data-science-ai",
     doi: "10.1016/j.compenvurbsys.2026.102423",
-    // Site owner's own attachment (2026-09-20), the paper's actual
-    // methodology figure — not a stock image; see this file's top
-    // comment on the three genuine placeholder exceptions, which this
-    // isn't one of.
     coverImage: "/images/publications/uncovering-merging-and-joining-as-urban-expansion-processes.png",
   },
   {
@@ -718,7 +680,7 @@ export const publications: Publication[] = [
     year: 2026,
     venue: "BIO Web of Conferences",
     team: "decision-support-climate",
-    coverImage: "/images/publications-dummy/climate-map.jpg", // dummy, see file-top note
+    coverImage: "/images/publications-dummy/climate-map.jpg", // temporary preview
   },
   {
     slug: "dampak-perubahan-lahan-stok-karbon-surabaya",
@@ -729,8 +691,6 @@ export const publications: Publication[] = [
     team: "decision-support-climate",
     citations: 24,
   },
-  // Added 2026-09-20 — see this file's own note at the top of Team 01's
-  // equivalent addition above for where these came from.
   {
     slug: "determining-priority-programs-for-community-based",
     title:

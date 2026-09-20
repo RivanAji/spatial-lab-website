@@ -1,26 +1,12 @@
 "use client";
 
-/*
- * Adapted from components/contact/contact-button.tsx,
- * github.com/DavidHDev/rbp-portfolio — the hover-to-reveal-email,
- * click-to-copy interaction and its motion timing are kept the same;
- * icons swapped from lucide-react (Mail/Copy/Check) to this project's
- * existing icon family, Phosphor (PRD 3.C — one icon library per
- * project, and Phosphor was already the established choice before this
- * component existed, so adding lucide-react just for this one button
- * would violate that rather than serve it).
- */
+// Adapted from github.com/DavidHDev/rbp-portfolio; Phosphor remains the project's single icon library.
 
 import { AnimatePresence, motion } from "motion/react";
 import { EnvelopeSimple, Copy, Check } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-// The lab's own address (2026-09-20, site owner's direct request),
-// replacing the earlier placeholder that pointed at Siti Nurlaela's
-// (Head of Laboratory) personal @its.ac.id — that was a guess pending
-// a real one; this is the site owner's own contact, the same address
-// Footer.tsx already carries.
 const EMAIL = "pwkitslabkom@gmail.com";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -66,9 +52,6 @@ export function ContactButton(): ReactNode {
       }
       transition={{ layout: { duration: 0.55, ease: EASE } }}
       style={{ borderRadius: 12 }}
-      // Monochrome pivot (2026-09-19), matching the reference's own
-      // bg-foreground/text-background primary button exactly now
-      // instead of the brand blue this used until this point.
       className="relative inline-flex h-11 cursor-pointer items-center justify-center bg-ink-000 px-5 font-body text-sm font-medium text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       <motion.span layout="position" className="relative inline-flex items-center">

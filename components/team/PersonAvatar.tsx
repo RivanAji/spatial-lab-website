@@ -1,31 +1,13 @@
-// Added 2026-09-20 for the new team detail page (app/research/[team]/
-// page.tsx) — the first place this site renders an actual person photo.
-// Person.photo has existed on the type since the very first team roster
-// (lib/content/people.ts) but stayed unset for everyone: reuse
-// permission for the ITS-hosted portraits was an open item, so every
-// member rendered as an initials block (PRD 7.7) instead. That's still
-// true for most of the team; this component is what makes the
-// difference visible per-person rather than site-wide, once a real
-// photo exists (Nursakti Adhi Pratomoatmojo's, sent directly by the
-// site owner this same day, is the first).
-//
-// Circular (site owner: "menurut saya dibuat lingkaran akan proper
-// fotonya"), and always a link to the person's own research-profile
-// page — an avatar with nothing behind it would be exactly the kind of
-// decorative-looking-but-dead control this project avoids (PRD 6.6 "no
-// dead navigation"); a person with no profileUrl on file renders the
-// same circle without the link instead.
+// Avatars fall back to initials when no permitted photo exists; linked avatars point to the person's research profile.
 import Image from "next/image";
+import { assetPath } from "@/lib/asset-path";
 import type { Person } from "@/lib/content/types";
 import { cn } from "@/lib/cn";
 
 const SIZES = {
   sm: "h-8 w-8 text-[10px]",
   md: "h-11 w-11 text-xs",
-  // Roughly double `sm` (site owner, 2026-09-20, on the team timeline
-  // cards specifically: "fotonya tetep lingkaran tapi agar besar
-  // dikit... mungkin 2x lipat lebih besar dari ukuran yang sekarang" —
-  // the "sekarang" being the sm size those cards used before).
+  // Timeline cards use a larger avatar for contributor visibility.
   lg: "h-16 w-16 text-base",
 } as const;
 
@@ -51,17 +33,9 @@ function Circle({ person, size }: { person: Person; size: keyof typeof SIZES }) 
       )}
     >
       {person.photo ? (
-        // object-top, not the object-cover default centre crop: a
-        // circular crop of a portrait photo centred by height cuts
-        // straight through the face on anything taller than a tight
-        // headshot (site owner, specifically about this: "posisinya
-        // muka/wajanya terlihat jangan sampai ter crop") — biasing
-        // toward the top keeps the face in frame for the standing
-        // portrait this site actually has, and is still a reasonable
-        // default for any future close headshot (top-biased and
-        // centred agree when the face already fills the top).
+        // Top-bias portrait crops so faces remain visible in circular frames.
         <Image
-          src={person.photo}
+          src={assetPath(person.photo)}
           alt=""
           fill
           sizes={IMAGE_SIZES[size]}

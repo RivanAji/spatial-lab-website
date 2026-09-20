@@ -1,11 +1,6 @@
 "use client";
 
-// Extracted from PublicationsShowcase.tsx (2026-09-20) so Project.tsx can
-// reuse the exact same widget for its own year filter (site owner's
-// request: "tambahi filter tahunnya dong, kyk yang research tadi") — same
-// compact dropdown-trigger pattern, same reasoning: a full row of year
-// chips wraps onto multiple lines above a horizontal slider, at any width
-// narrower than roughly four cards.
+// Shared dropdown keeps year filters compact when a chip row would wrap above a horizontal slider.
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CalendarBlank, CaretDown } from "@phosphor-icons/react";

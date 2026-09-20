@@ -288,8 +288,10 @@ These must be supplied by the lab. They are Phase 0 blockers where marked.
 /people/[slug]                      Member profile
 /about                              Mission, history, affiliation, contact
 /roadmap                            Lab roadmap (deferred, see 7.9)
-/admin                              Decap CMS editor interface
 ```
+
+Current implemented routes are `/`, `/research/[team]`, and `/styleguide`. Publication cards open
+their external `url` or DOI; no internal publication detail route is shipped.
 
 ### 4.1 Navigation
 
@@ -307,7 +309,11 @@ Rationale: five primary items maximum. The brief listed six. `Roadmap` is droppe
 
 ## 5. Content model
 
-Stored as Markdown with YAML frontmatter in the Git repository. Managed through Decap CMS.
+Current implementation uses typed records in `lib/content/*.ts` as its single source. The earlier
+Decap CMS scaffold was removed because it wrote Markdown that no application code consumed and
+required an unconfigured GitHub repository plus OAuth service. A future CMS must read and write
+this canonical model, or replace it through one tested migration rather than introduce a second
+source.
 
 ### 5.1 Collections
 
@@ -740,8 +746,8 @@ Framework    Next.js, App Router, static export (output: 'export')
 UI           React, Tailwind CSS v4
 Animation    GSAP (hero canvas), Motion (section reveals)
 Hero render  Canvas 2D
-Content      Markdown + YAML frontmatter in the repo
-CMS          Decap CMS at /admin, GitHub backend, GitHub OAuth
+Content      Typed records in lib/content/*.ts
+Editing      Manual, documented in CONTENT_EDITING.md
 Hosting      GitHub Pages
 CI/CD        GitHub Actions, build and deploy on push to main
 Domain       Custom domain via CNAME, free SSL
@@ -752,12 +758,7 @@ Cost         0
 
 - Static files only, no server runtime. All interactivity is client-side. This is compatible with every feature in this PRD.
 - `next/image` optimisation is unavailable at runtime, so images are optimised at build time with `sharp` and served as pre-generated `webp` at defined widths.
-- Decap CMS with the GitHub backend needs an OAuth handler. GitHub Pages cannot host one. Resolution options, decided in Phase 5:
-  1. A free external OAuth relay (Netlify's, or a small Cloudflare Worker).
-  2. Decap's GitHub App based auth if available for the repo.
-  3. Fallback: run the CMS locally with `npx decap-server` and have editors use a local admin. Least convenient, so this is the fallback only.
-
-This is the one genuine risk in the all-GitHub approach and it is scheduled explicitly in Phase 5.
+- Content changes require a new static build. `lib/content/*.ts` is the only canonical source.
 
 ### 8.3 Image pipeline
 
@@ -892,24 +893,15 @@ The highest-risk and highest-value piece. Built alone so it gets full attention.
 
 ---
 
-### Phase 5 - Content layer and CMS
+### Phase 5 - Content layer
 
-**Status: partially complete, 2026-09-19. Blocked on one step that needs the site owner's own GitHub account.**
+**Status: complete for manual maintenance.**
 
-**Done:**
-- `public/admin/config.yml` — all six collections (Research Teams, People, Research Projects, Publications, Research Products, Pages, Site settings), matching the schemas in section 5 exactly, including the relation widgets between them.
-- `public/admin/index.html` — the CMS entry point (Decap CMS via CDN, no build step of its own).
-- Seed content committed for the three "files"-type collections that don't need an OAuth session to exist as real files: `content/teams/*.md` (real team data, matching `lib/content/teams.ts`), `content/pages/about.md` (fields present, explicitly marked `[TODO]` rather than filled with invented mission copy), `content/settings/site.yml` (social links left blank on purpose).
-- `docs/cms-setup.md` — the exact remaining steps, verified against the current README of the actual Cloudflare Worker OAuth provider this points to (`ottmartens/decap-cms-github-oauth-provider-cloudflare`), not written from memory.
-- Verified the whole `public/admin/` directory survives the static export unchanged (`out/admin/config.yml` and `out/admin/index.html` both present after a clean build) and that every YAML file (`config.yml`, the three team files' frontmatter, `site.yml`) parses without error.
-
-**Not done, and why it's not a shortcut to skip:**
-- **The OAuth handshake itself.** GitHub Pages serves static files only; Decap's GitHub backend needs *something* to complete GitHub's OAuth flow before it can commit on the editors' behalf. That something needs a real GitHub account to register (an OAuth App under Settings → Developer settings) and a Cloudflare account to deploy the small proxy worker to. Neither can be done from a local clone with no credentials — this is the one step in the entire build that is *not* a coding task. `docs/cms-setup.md` has the exact commands.
-- **`config.yml`'s `repo:` field is still a placeholder** (`REPLACE_WITH_OWNER/REPLACE_WITH_REPO_NAME`) because the repository doesn't have a real GitHub remote yet either (Phase 1 built and verified the deploy pipeline locally; pushing it was left to the site owner for the same credentials reason).
-- **The content-loading layer** (section 5.6's relationship rule, actually reading `content/*.md` at build time instead of the hardcoded fixtures `lib/content/*.ts` that Phase 4 used) is genuinely unbuilt. This is real, separate work — a frontmatter parser, a content index, and rewiring every Phase 4 component to read from files instead of imports — not something to rush through at the tail end of a long session. Attempting it now, untested, would risk quietly breaking the four homepage sections that are currently verified and working.
-- The image-optimisation Action (PRD 8.3) and the full "unassisted lecturer" validation test are consequently also not yet possible.
-
-**Revised done-when, given the above:** once the repo exists on GitHub and the OAuth worker is deployed (both require the site owner), `/admin` should be reachable and editable immediately — that's what's been built and is ready. The content-loading layer that makes an edit *appear on the live site* without a code change is the remaining work, tracked here rather than glossed over.
+- `lib/content/*.ts` is the single source consumed at build time.
+- `CONTENT_EDITING.md` documents publication links and project metadata/images.
+- Publication cards use `url`, then DOI, and remain non-interactive when neither exists.
+- The unused Decap scaffold was removed. A future CMS is a separate migration and must replace,
+  not duplicate, the canonical source.
 
 ---
 
@@ -960,7 +952,7 @@ The highest-risk and highest-value piece. Built alone so it gets full attention.
 **Scope:** go live.
 
 - Custom domain and DNS if used.
-- Editor handover: a one-page guide for `/admin`, no Git terminology.
+- Editor handover: `CONTENT_EDITING.md` with field examples and validation commands.
 - Final content pass with the lab.
 
 **Done when:** the site is live at its final URL and both editors have published something themselves.
@@ -979,7 +971,7 @@ Triggered only when the lab supplies real roadmap content. Builds the three-trac
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Decap OAuth cannot run on GitHub Pages | Editors cannot use the CMS, which defeats goal 4 | Scheduled explicitly in Phase 5 with three fallback options in 8.2. If all fail, move hosting to Cloudflare Pages, still free, still Git-backed |
+| Manual content editing requires a code review | Invalid records can break a build | Follow `CONTENT_EDITING.md`; run typecheck and build before deployment |
 | Photo permission denied | People pages have no portraits | Initials blocks are already specified in 7.7, so the design does not break |
 | Repository bloat from image uploads | Slow clones, hitting Pages limits | Build-time optimisation Action in 8.3, enforced 400KB ceiling |
 | Hero canvas is heavy on low-end mobile | Poor LCP, bad first impression | Mobile simplified grid, visibility-based pause, 60KB budget, reduced-motion static path |

@@ -1,13 +1,6 @@
 import type { Person } from "./types";
 
-// Real members and roles, per PRD section 3.1 / 3.2. Most still have no
-// `photo`: reuse permission for the ITS-hosted portraits is still an
-// open item (PRD 3.5), so those members render as an initials block
-// (PRD 7.7) until that's confirmed and real files are brought into this
-// repo — hotlinking to another site's media isn't the answer either
-// way. Nursakti Adhi Pratomoatmojo is the first exception: the site
-// owner sent his portrait directly in this conversation (2026-09-20,
-// for the new team detail page), saved to public/images/people/.
+// Omitted photos render as initials until approved local images are available.
 export const people: Person[] = [
   {
     slug: "siti-nurlaela",
@@ -22,10 +15,6 @@ export const people: Person[] = [
     coordinatorOf: "sustainable-urban-transportation",
     scholarId: "BYOW-fMAAAAJ",
     profileUrl: "https://scholar.its.ac.id/en/persons/siti-nurlaela/",
-    // Seen on her Scopus author page (scopus.com/authid/detail.uri?
-    // authorId=57430713400), 2026-09-20; see the orcidId field's own
-    // comment in lib/content/types.ts. The rest of this file's orcidId
-    // values came directly from the site owner the same day.
     orcidId: "0000-0002-7562-6548",
   },
   {
@@ -124,9 +113,6 @@ export const people: Person[] = [
     slug: "caesario-arif-wibowo",
     name: "Caesario Arif Wibowo",
     role: "Lecturer",
-    // Newest member — no ITS Scholar profile yet (PRD 3.1 / 3.5), but
-    // the site owner gave a Google Scholar citations link directly
-    // (2026-09-20), unlike everyone else's ITS Scholar links above.
     expertise: [],
     teams: ["sustainable-urban-transportation"],
     profileUrl: "https://scholar.google.com/citations?user=Ri83cGgAAAAJ&hl=en",

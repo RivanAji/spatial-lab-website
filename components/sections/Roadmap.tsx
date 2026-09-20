@@ -1,37 +1,7 @@
 import { Container } from "@/components/ui/Container";
 
-// Added 2026-09-20 (site owner's correction to the previous pass): the
-// header's "Roadmap" link was first built as a disabled comingSoon nav
-// item, on the reasoning that a link to nothing is worse than no link
-// (PRD 7.9 had deferred this section outright for the same reason,
-// content not ready). The site owner's actual ask was the opposite
-// shape: a real section, reachable by clicking "Roadmap", sitting
-// below the publications gallery — it just doesn't have real content
-// yet, so it says so rather than shipping invented milestones (PRD
-// 6.6's "no invented content" rule) or not existing at all.
-//
-// Same frame language as the hero's map card and the publications
-// gallery (rounded-4xl border border-white/8 bg-ink-900) — the empty
-// canvas reads as "this section is real, just not filled in yet"
-// rather than a different, unfinished-looking component.
-//
-// Heading font (2026-09-20, site owner's correction): first pass used
-// font-serif (Fraunces), reusing the one selective-serif treatment
-// ResearchArchive.tsx used to carry for its own "Research archive"
-// heading — but that section is gone, so Fraunces had become an
-// orphaned one-off nowhere else on the page (checked: the only other
-// font-serif usage left in the codebase is the styleguide's own demo
-// swatch). font-display now, matching the Hero H1 and the footer
-// brand name's treatment exactly, so this is the same type system as
-// every other heading on the page, not a second one.
-//
-// "Lab roadmap" -> "Roadmap", heading roughly halved (site owner's
-// font-size audit, same day) from text-3xl/4xl to text-xl/2xl —
-// matching Project.tsx and Team.tsx's headings exactly now, the same
-// reasoning as both: one consistent heading tier across the page's
-// sections, not three different scales. Section padding cut from
-// py-16/20 to py-8/10 for the same audit ("dari roadmap ke team...
-// terlalu jauh, kurangi aja").
+// Keep the section reachable while showing an honest empty state until verified milestones exist.
+// Its frame and heading tier match the adjacent sections for consistent hierarchy.
 export function Roadmap() {
   return (
     <section id="roadmap" aria-label="Roadmap" className="scroll-mt-24 py-8 md:py-10">
