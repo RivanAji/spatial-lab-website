@@ -130,15 +130,14 @@ body {
   color: var(--color-ink-900);
 }
 
-/* The "Explore Research" hero CTA scrolls to #research (HeroCtas.tsx)
-   rather than navigating to a route. Smooth scrolling is gated behind
-   prefers-reduced-motion like every other motion in this project — under
-   reduced motion the anchor still jumps, just instantly. */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
+/* Anchor-link smooth scrolling (the "Explore Research" hero CTA,
+   Header.tsx's nav, Footer.tsx) is handled by Lenis now (components/
+   layout/SmoothScroll.tsx, 2026-09-20) instead of this CSS property —
+   Lenis's own `anchors: true` intercepts those clicks, and running both
+   at once would have the browser's native smooth-behavior and Lenis's
+   JS-driven physics fighting over the same scroll. Lenis's
+   `respectReducedMotion` (passed explicitly, defaults to true anyway)
+   covers the reduced-motion case this rule used to gate. */
 
 :focus-visible {
   outline: 2px solid var(--color-ink-000);

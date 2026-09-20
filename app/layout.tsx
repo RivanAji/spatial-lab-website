@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import "./globals.css";
 
 // Typography matches the reference repo exactly (2026-09-19 request):
@@ -64,9 +65,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
       <body className="flex min-h-[100dvh] flex-col">
-        <Header />
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <SmoothScroll>
+          <Header />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </SmoothScroll>
       </body>
     </html>
   );
