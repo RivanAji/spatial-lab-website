@@ -21,10 +21,46 @@
 // loops, the publications marquee) is gated the same way. Passed
 // explicitly below anyway, so that guarantee is visible here rather than
 // resting on an unstated library default.
+//
+// The extra click listener below works around a gap in Lenis's own
+// `anchors` handling (read directly from its source, node_modules/lenis/
+// dist/lenis.mjs's onClick): it calls scrollTo() but never calls
+// event.preventDefault(), so the browser's own native instant hash-jump
+// still fires from the same click. Lenis's onNativeScroll handler treats
+// any native scroll event as "the user scrolled" and resyncs its internal
+// state to match it whenever it isn't already mid-animation — so a native
+// jump landing before Lenis's own animation has visibly started risks
+// cancelling that animation before it's seen. Pre-empting the browser's
+// default action here (capture phase, so it runs before Lenis's own
+// bubble-phase listener) removes that competing native jump entirely;
+// Lenis's own listener still runs afterwards and drives the scroll alone.
+// A plain preventDefault() also throws away the browser's own default
+// behaviour of updating the URL's hash, which anyone bookmarking or
+// sharing a section link (or using back/forward) still needs — so this
+// pushes that same hash onto history manually, the one piece of the
+// default action actually worth keeping.
 import { ReactLenis } from "lenis/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 export function SmoothScroll({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    function onClickCapture(e: MouseEvent) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return;
+      }
+      const anchor = (e.target as Element).closest?.("a[href]");
+      if (!anchor) return;
+      const url = new URL((anchor as HTMLAnchorElement).href, window.location.href);
+      const here = window.location;
+      if (url.host === here.host && url.pathname === here.pathname && url.hash) {
+        e.preventDefault();
+        history.pushState(null, "", url.hash);
+      }
+    }
+    document.addEventListener("click", onClickCapture, true);
+    return () => document.removeEventListener("click", onClickCapture, true);
+  }, []);
+
   return (
     <ReactLenis root options={{ anchors: true, respectReducedMotion: true }}>
       {children}
