@@ -15,8 +15,33 @@ import { people } from "@/lib/content/people";
 // already the verified real roster (PRD 3.1/3.2), so pulling from it
 // instead of hand-typing the same nine names again here is what keeps
 // a spelling fix or a new member from ever needing to happen twice.
+// Same source for each name's link (site owner, 2026-09-20: "untuk
+// masing masing nama saya sertakan URL risetnya") — profileUrl on the
+// Person type, mostly ITS Scholar profile pages, one Google Scholar.
 const head = people.find((p) => p.slug === "siti-nurlaela")!;
 const members = people.filter((p) => p.slug !== "siti-nurlaela");
+
+// A name with no profileUrl on file (not the case for anyone right
+// now, but the type keeps it optional for a future member added
+// without one yet) renders as plain text instead of a dead link. Only
+// the underline/hover/focus styling lives here — size and colour come
+// from the surrounding text (a plain <a> inherits both once Tailwind's
+// preflight clears the browser's default link styling), so the same
+// component reads correctly at the head's larger size and the list's
+// smaller one without needing its own font classes.
+function PersonName({ person }: { person: (typeof members)[number] }) {
+  if (!person.profileUrl) return <>{person.name}</>;
+  return (
+    <a
+      href={person.profileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="underline decoration-ink-500 underline-offset-4 transition-colors hover:decoration-ink-000 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+    >
+      {person.name}
+    </a>
+  );
+}
 
 export function Team() {
   return (
@@ -28,14 +53,14 @@ export function Team() {
 
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
           <p className="font-body text-base text-ink-000 sm:text-lg">
-            {head.name}
+            <PersonName person={head} />
             <span className="ml-2 font-body text-sm italic text-ink-300">{head.role}</span>
           </p>
 
           <ul className="flex flex-col gap-1.5">
             {members.map((person) => (
               <li key={person.slug} className="font-body text-base text-ink-100">
-                {person.name}
+                <PersonName person={person} />
               </li>
             ))}
           </ul>

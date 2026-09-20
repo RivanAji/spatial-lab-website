@@ -18,6 +18,7 @@ export const people: Person[] = [
     teams: ["sustainable-urban-transportation", "decision-support-climate"],
     coordinatorOf: "sustainable-urban-transportation",
     scholarId: "BYOW-fMAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/siti-nurlaela/",
   },
   {
     slug: "cahyono-susetyo",
@@ -31,6 +32,7 @@ export const people: Person[] = [
     teams: ["decision-support-climate"],
     coordinatorOf: "decision-support-climate",
     scholarId: "NoF6s4gAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/cahyono-susetyo/",
   },
   {
     slug: "ketut-dewi-martha-erli-handayeni",
@@ -43,6 +45,7 @@ export const people: Person[] = [
     ],
     teams: ["sustainable-urban-transportation", "decision-support-climate"],
     scholarId: "SI7zbOsAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/ketut-dewi-martha-erli-handayeni/",
   },
   {
     slug: "nursakti-adhi-pratomoatmojo",
@@ -56,6 +59,7 @@ export const people: Person[] = [
     teams: ["spatial-data-science-ai"],
     coordinatorOf: "spatial-data-science-ai",
     scholarId: "bxZEsvwAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/nursakti-adhi-pratomoatmojo/",
   },
   {
     slug: "fendy-firmansyah",
@@ -64,6 +68,7 @@ export const people: Person[] = [
     expertise: ["Spatial Analysis and Machine Learning", "Spatial Data Analysis", "Remote Sensing"],
     teams: ["spatial-data-science-ai", "decision-support-climate"],
     scholarId: "n5SIxGUAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/fendy-firmansyah-2/",
   },
   {
     slug: "ummi-fadlilah-kurniawati",
@@ -76,6 +81,7 @@ export const people: Person[] = [
     ],
     teams: ["decision-support-climate"],
     scholarId: "qB5qFscAAAAJ",
+    profileUrl: "https://scholar.its.ac.id/en/persons/ummi-fadlilah-kurniawati/",
   },
   {
     slug: "anoraga-jatayu",
@@ -87,6 +93,7 @@ export const people: Person[] = [
       "Spatial Econometrics",
     ],
     teams: ["sustainable-urban-transportation", "spatial-data-science-ai"],
+    profileUrl: "https://scholar.its.ac.id/en/persons/anoraga-jatayu/",
   },
   {
     slug: "rivan-aji-wahyu-dyan-syafitri",
@@ -99,15 +106,18 @@ export const people: Person[] = [
       "Spatial Data-Driven Transport Analysis",
     ],
     teams: ["spatial-data-science-ai"],
+    profileUrl: "https://scholar.its.ac.id/en/persons/rivan-aji-wahyu-dyan-syafitri/",
   },
   {
     slug: "caesario-arif-wibowo",
     name: "Caesario Arif Wibowo",
     role: "Lecturer",
-    // Newest member — no public profile found yet (PRD 3.1 / 3.5). Left
-    // empty rather than guessed at.
+    // Newest member — no ITS Scholar profile yet (PRD 3.1 / 3.5), but
+    // the site owner gave a Google Scholar citations link directly
+    // (2026-09-20), unlike everyone else's ITS Scholar links above.
     expertise: [],
     teams: ["sustainable-urban-transportation"],
+    profileUrl: "https://scholar.google.com/citations?user=Ri83cGgAAAAJ&hl=en",
   },
 ];
 

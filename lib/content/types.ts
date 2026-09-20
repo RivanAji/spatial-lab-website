@@ -17,6 +17,14 @@ export type Person = {
   teams: TeamSlug[];
   coordinatorOf?: TeamSlug;
   scholarId?: string;
+  // Added 2026-09-20 for Team.tsx (site owner's direct request: "untuk
+  // masing masing nama saya sertakan URL risetnya") — the site owner's
+  // own links, mostly ITS's institutional research-profile pages
+  // (scholar.its.ac.id), one a direct Google Scholar citations URL.
+  // Deliberately its own field rather than folded into `scholarId`
+  // above: that field is a bare Google Scholar user ID for building a
+  // scholar.google.com URL, and most of these links aren't that.
+  profileUrl?: string;
 };
 
 export type Team = {
