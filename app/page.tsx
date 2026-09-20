@@ -2,8 +2,6 @@ import { Hero } from "@/components/hero/Hero";
 import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { PublicationsShowcase } from "@/components/sections/PublicationsShowcase";
 import { Roadmap } from "@/components/sections/Roadmap";
-import { Hairline } from "@/components/ui/Hairline";
-import { Container } from "@/components/ui/Container";
 
 // Homepage. Hero, Publications showcase, Footer (the last lives in the
 // root layout). Publications showcase added 2026-09-19 directly under
@@ -50,6 +48,12 @@ import { Container } from "@/components/ui/Container";
 // in place of real content (components/sections/Roadmap.tsx) — "don't
 // ship" and "ship an honest placeholder" both satisfy PRD 6.6's ban on
 // invented content; this is the site owner choosing the second one.
+//
+// No Hairline between Publications and Roadmap any more (2026-09-20,
+// site owner's follow-up: "garisnya mengganggu... cukup space padding
+// dan margin aja") — the two sections' own vertical padding (Publications-
+// Showcase's pb-16/pb-20, Roadmap's pt-16/pt-20) already reads as a
+// clear break without a drawn line on top of it.
 export default function Home() {
   return (
     <main>
@@ -58,9 +62,6 @@ export default function Home() {
         <Hero />
         <PublicationsShowcase />
       </div>
-      <Container>
-        <Hairline />
-      </Container>
       <Roadmap />
     </main>
   );
