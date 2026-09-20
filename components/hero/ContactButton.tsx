@@ -16,12 +16,12 @@ import { EnvelopeSimple, Copy, Check } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-// TODO: placeholder pending the real address. Siti Nurlaela (Head of
-// Laboratory, lib/content/people.ts) doesn't have a verified email on
-// file yet (PRD 3.5) — asked the site owner for it rather than
-// guessing at an @its.ac.id pattern, which risks sending someone to a
-// real inbox that isn't hers.
-const EMAIL = "siti.nurlaela@its.ac.id";
+// The lab's own address (2026-09-20, site owner's direct request),
+// replacing the earlier placeholder that pointed at Siti Nurlaela's
+// (Head of Laboratory) personal @its.ac.id — that was a guess pending
+// a real one; this is the site owner's own contact, the same address
+// Footer.tsx already carries.
+const EMAIL = "pwkitslabkom@gmail.com";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function ContactButton(): ReactNode {

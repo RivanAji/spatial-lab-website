@@ -27,9 +27,15 @@ import { FooterMapBackdrop } from "./FooterMapBackdrop";
 //    FooterMapBackdrop — the same ASCII character-grid map technique
 //    as the hero, filling the section behind the content instead of
 //    one static word.
+// Vertical padding widened 2026-09-20 (site owner: "kasih space
+// padding yang agak luas... biar tidak terlalu sempit") from a flat
+// py-16 to a responsive py-20/py-28 — noticeably more breathing room
+// top and bottom, matching how other sections on this page (Hero,
+// Roadmap) step their own padding up at `md` rather than staying flat
+// across every viewport.
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-ink-600 py-16">
+    <footer className="relative overflow-hidden border-t border-ink-600 py-20 md:py-28">
       <FooterMapBackdrop />
 
       <Container className="relative flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
