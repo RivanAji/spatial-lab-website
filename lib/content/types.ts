@@ -41,11 +41,16 @@ export type Team = {
 export type Project = {
   slug: string;
   name: string;
-  // No description/link fields yet — the site owner's own words when
-  // this section was added (2026-09-20): "kontennya menyusul". Adding
-  // them here (rather than adding a whole new type later) is what
-  // lets Project.tsx render whatever's filled in without a reshape.
+  // No link field yet — the site owner's own words when this section
+  // was added (2026-09-20): "kontennya menyusul". Adding fields here
+  // (rather than adding a whole new type later) is what lets
+  // Project.tsx render whatever's filled in without a reshape.
   description?: string;
+  // Added the same day the 10-item project list arrived: two of those
+  // projects genuinely have no known year yet, so this stays optional
+  // rather than a placeholder value standing in for a real one (PRD
+  // 6.6) — Project.tsx's year filter only lists years that exist.
+  year?: number;
   coverImage?: string; // same honest-empty-slot convention as
   // Publication.coverImage above — omitted renders a plain placeholder,
   // never a stock photo standing in for real project work.
