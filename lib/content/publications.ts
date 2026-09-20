@@ -438,8 +438,14 @@ export const publications: Publication[] = [
     title: "Uncovering merging and joining as urban expansion processes",
     authors: "Pratomoatmojo, N.A., Koomen, E., de Groot, H.L.F.",
     year: 2026,
-    venue: "",
+    venue: "Computers, Environment and Urban Systems 127",
     team: "spatial-data-science-ai",
+    doi: "10.1016/j.compenvurbsys.2026.102423",
+    // Site owner's own attachment (2026-09-20), the paper's actual
+    // methodology figure — not a stock image; see this file's top
+    // comment on the three genuine placeholder exceptions, which this
+    // isn't one of.
+    coverImage: "/images/publications/uncovering-merging-and-joining-as-urban-expansion-processes.png",
   },
   {
     slug: "urban-expansion-patterns-and-metropolitan-development-a",

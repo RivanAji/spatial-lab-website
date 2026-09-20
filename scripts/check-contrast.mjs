@@ -34,15 +34,19 @@ function ratio(a, b) {
 
 // [foreground, background, minimum ratio, where it's used]
 //
-// Monochrome pivot (2026-09-19): every blue-* pair below is retired —
-// nothing in the UI renders those tokens any more (app/globals.css keeps
-// the values defined for reference, not active use). Emphasis that used
-// to be blue-400/blue-300 is now ink-000 on the same grounds already
-// checked above, so no new pairs were needed for that change. The two
-// new pairs are the monochrome CTA fills (white background, dark text —
-// the inverse of the ink-000-on-ink-900 pair above, same ratio either
-// direction since contrast is symmetric, checked explicitly anyway so
-// the claim stays a checked one and not an assumption).
+// Monochrome pivot (2026-09-19): every blue-* pair below was retired —
+// nothing in the UI rendered those tokens for a while (app/globals.css
+// kept the values defined for reference, not active use). Emphasis that
+// used to be blue-400/blue-300 became ink-000 on the same grounds
+// already checked above.
+//
+// Un-retired 2026-09-20 for the new team detail page (app/research/
+// [team]/page.tsx) — the one place on the site with a deliberate colour
+// accent again (site owner: "boleh ditambahi warna biru untuk filter
+// baris di sebelah kiri, biru ITS yang cocok/match untuk warna hitam
+// backgroundnya"), reusing these same exact ITS-brand values rather
+// than inventing new ones (styleguide/page.tsx already documented
+// blue-800/blue-600 as "exact" brand navy/royal).
 const checks = [
   ["ink-100", "ink-900", 4.5, "body text on page ground"],
   ["ink-300", "ink-900", 4.5, "muted text on page ground"],
@@ -50,6 +54,8 @@ const checks = [
   ["ink-100", "ink-700", 4.5, "body text on card surface"],
   ["ink-300", "ink-700", 4.5, "muted text on card surface"],
   ["ink-900", "ink-000", 4.5, "primary CTA text (Contact button, Button.tsx primary) on white fill"],
+  ["blue-300", "ink-900", 4.5, "team page year labels (TeamTimeline.tsx)"],
+  ["ink-000", "blue-800", 4.5, "team page active Work/Papers tab label (solid floor for the actual bg-blue-800/60)"],
 ];
 
 let failed = false;

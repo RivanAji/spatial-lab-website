@@ -14,14 +14,18 @@ const swatches: Array<{ name: string; hex: string; note: string }> = [
   { name: "ink-000", hex: "#F7F9FB", note: "display text, 18.87:1 on ink-900 — now also the accent" },
 ];
 
-// The former blue-* ramp (brand navy/royal + a derived interactive pair)
-// is kept defined in globals.css but unused since the monochrome pivot
-// (2026-09-19) — listed here for reference, not as active tokens.
+// The blue-* ramp (brand navy/royal + a derived interactive pair) went
+// unused site-wide after the monochrome pivot (2026-09-19), then back
+// into real use 2026-09-20 for the new team detail page (app/research/
+// [team]/page.tsx) — the one place with a deliberate colour accent
+// again (site owner's own request). Still not part of the main
+// homepage scheme, which is why this stays its own muted-opacity
+// section below rather than folding into the swatches above.
 const retiredSwatches: Array<{ name: string; hex: string; note: string }> = [
-  { name: "blue-800", hex: "#273669", note: "brand navy, exact — unused" },
+  { name: "blue-800", hex: "#273669", note: "brand navy, exact — team page active tab fill" },
   { name: "blue-600", hex: "#445EA5", note: "brand royal, exact — unused" },
-  { name: "blue-400", hex: "#5B78BE", note: "derived interactive text — unused" },
-  { name: "blue-300", hex: "#7E97DC", note: "derived hover / focus — unused" },
+  { name: "blue-400", hex: "#5B78BE", note: "derived interactive text — team page tab border" },
+  { name: "blue-300", hex: "#7E97DC", note: "derived hover / focus — team page year labels" },
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

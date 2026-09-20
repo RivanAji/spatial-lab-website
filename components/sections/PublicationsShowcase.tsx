@@ -41,7 +41,6 @@ import { motion, useReducedMotion } from "motion/react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { teams } from "@/lib/content/teams";
 import { publications } from "@/lib/content/publications";
-import type { TeamSlug } from "@/lib/content/types";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { YearFilterMenu } from "@/components/ui/YearFilterMenu";
@@ -629,7 +628,6 @@ function ClimateIllustration({ playing }: { playing: boolean }) {
 const ILLUSTRATIONS = [TransportIllustration, DataScienceIllustration, ClimateIllustration];
 
 export function PublicationsShowcase(): ReactNode {
-  const [activeTeam, setActiveTeam] = useState<TeamSlug | "all">("all");
   const [activeYear, setActiveYear] = useState<string>("all");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -667,9 +665,7 @@ export function PublicationsShowcase(): ReactNode {
   const pauseUntilRef = useRef(0);
 
   // Years are computed from every publication, not the filtered subset —
-  // matching ResearchArchive.tsx's own year-filter behaviour, so a year
-  // button never shifts position or disappears just because a team filter
-  // is also active.
+  // matching ResearchArchive.tsx's own year-filter behaviour.
   const years = useMemo(
     () => Array.from(new Set(publications.map((p) => p.year))).sort((a, b) => b - a),
     [],
@@ -678,10 +674,9 @@ export function PublicationsShowcase(): ReactNode {
   const filtered = useMemo(
     () =>
       publications
-        .filter((p) => activeTeam === "all" || p.team === activeTeam)
         .filter((p) => activeYear === "all" || String(p.year) === activeYear)
         .sort((a, b) => b.year - a.year),
-    [activeTeam, activeYear],
+    [activeYear],
   );
 
   function updateScrollButtons() {
@@ -755,7 +750,7 @@ export function PublicationsShowcase(): ReactNode {
     // position the instant this effect runs — one rAF later, they have.
     requestAnimationFrame(updateCoverflow);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTeam, activeYear]);
+  }, [activeYear]);
 
   // Re-run on resize too (a wider/narrower frame moves the centre point
   // and every card's distance from it, independent of any scrolling).
@@ -860,9 +855,7 @@ export function PublicationsShowcase(): ReactNode {
     // "Publications" h2, the "All teams" text button, and the description
     // line that used to sit here, to save vertical space). aria-label
     // keeps the section a named landmark for assistive tech even with no
-    // visible heading; "All teams" as a reset control isn't missing
-    // functionality, since clicking an already-active team card toggles
-    // it off (TeamFilterCard's onSelect below).
+    // visible heading.
     <section id="research" aria-label="Publications" className="scroll-mt-24 pb-8 pt-2 md:pb-10 md:pt-4">
       <Container>
         {/* Full container width, not the cards' own natural width
@@ -872,18 +865,18 @@ export function PublicationsShowcase(): ReactNode {
             other row in this section already lines up to. Grid columns
             stretch to fill, matching that. Cards are fixed-height (see
             TeamFilterCard) so the default row-stretch has nothing to
-            visibly do here. */}
+            visibly do here.
+
+            These used to double as filter toggles for the gallery below
+            (clicking one narrowed it to that team). Site owner, 2026-
+            09-20: "kita set kalo misal cardnya itu di klik akan buka ke
+            page 2... jadi pas kursor diarahkan kesana bentuknya jadi
+            kaya tangan ketika mengarah ke button" — replaced with real
+            navigation to that team's own page (app/research/[team]/
+            page.tsx), the flip-on-hover preview otherwise unchanged. */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {teams.map((team, index) => (
-            <TeamFilterCard
-              key={team.slug}
-              team={team}
-              Illustration={ILLUSTRATIONS[index]}
-              active={activeTeam === team.slug}
-              onSelect={() =>
-                setActiveTeam((current) => (current === team.slug ? "all" : team.slug))
-              }
-            />
+            <TeamFilterCard key={team.slug} team={team} Illustration={ILLUSTRATIONS[index]} />
           ))}
         </div>
 
@@ -925,17 +918,9 @@ export function PublicationsShowcase(): ReactNode {
 
         {filtered.length === 0 ? (
           <div className="mt-8 flex flex-col items-start gap-4 border border-ink-500 p-10">
-            <p className="font-body text-ink-100">
-              No publications match this combination of team and year yet.
-            </p>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setActiveTeam("all");
-                setActiveYear("all");
-              }}
-            >
-              Reset filters
+            <p className="font-body text-ink-100">No publications match this year yet.</p>
+            <Button variant="secondary" onClick={() => setActiveYear("all")}>
+              Reset filter
             </Button>
           </div>
         ) : (
@@ -1116,23 +1101,19 @@ function PublicationCard({ publication }: { publication: (typeof publications)[n
 function TeamFilterCard({
   team,
   Illustration,
-  active,
-  onSelect,
 }: {
   team: (typeof teams)[number];
   Illustration: (props: { playing: boolean }) => ReactNode;
-  active: boolean;
-  onSelect: () => void;
 }): ReactNode {
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useReducedMotion();
   const glowRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
 
-  const revealed = active || hovered;
+  const revealed = hovered;
   const playing = revealed && !reducedMotion;
 
-  function handlePointerMove(e: React.MouseEvent<HTMLButtonElement>) {
+  function handlePointerMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
@@ -1152,10 +1133,8 @@ function TeamFilterCard({
   }
 
   return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onSelect}
+    <Link
+      href={`/research/${team.slug}/`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleLeave}
       onMouseMove={handlePointerMove}
@@ -1168,8 +1147,13 @@ function TeamFilterCard({
         // linear dengan kelengkungan boundary/kotak yang lain") rather
         // than sitting on its own smaller radius one section apart
         // from a bigger one.
-        "relative h-28 w-full overflow-hidden rounded-4xl border bg-ink-900 text-left transition-[border-color] duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
-        active ? "border-ink-000" : "border-white/8",
+        //
+        // cursor-pointer isn't a Tailwind default on every element this
+        // project treats as clickable — explicit here since this is now
+        // a real navigation control (site owner, 2026-09-20: "pas
+        // kursor diarahkan kesana bentuknya jadi kaya tangan ketika
+        // mengarah ke button").
+        "relative block h-28 w-full cursor-pointer overflow-hidden rounded-4xl border border-white/8 bg-ink-900 text-left transition-[border-color] duration-300 hover:border-ink-000 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
       )}
     >
       {/* Crossfade, not a flip (site owner's call, after weighing it
@@ -1228,6 +1212,6 @@ function TeamFilterCard({
         className="card-spotlight pointer-events-none rounded-4xl"
         style={{ opacity: hovered ? 1 : 0 }}
       />
-    </button>
+    </Link>
   );
 }

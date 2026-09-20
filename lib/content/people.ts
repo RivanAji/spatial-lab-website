@@ -1,10 +1,13 @@
 import type { Person } from "./types";
 
-// Real members and roles, per PRD section 3.1 / 3.2. No `photo` field yet:
-// reuse permission for the ITS-hosted portraits is still an open item
-// (PRD 3.5), so every member renders as an initials block (PRD 7.7) until
-// that's confirmed and real files are brought into this repo — hotlinking
-// to another site's media isn't the answer either way.
+// Real members and roles, per PRD section 3.1 / 3.2. Most still have no
+// `photo`: reuse permission for the ITS-hosted portraits is still an
+// open item (PRD 3.5), so those members render as an initials block
+// (PRD 7.7) until that's confirmed and real files are brought into this
+// repo — hotlinking to another site's media isn't the answer either
+// way. Nursakti Adhi Pratomoatmojo is the first exception: the site
+// owner sent his portrait directly in this conversation (2026-09-20,
+// for the new team detail page), saved to public/images/people/.
 export const people: Person[] = [
   {
     slug: "siti-nurlaela",
@@ -57,6 +60,7 @@ export const people: Person[] = [
     slug: "nursakti-adhi-pratomoatmojo",
     name: "Nursakti Adhi Pratomoatmojo",
     role: "Lecturer",
+    photo: "/images/people/nursakti-adhi-pratomoatmojo.webp",
     expertise: [
       "Urban Modelling and Scenario Testing",
       "Transportation Modelling",

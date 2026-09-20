@@ -95,3 +95,14 @@ export const projects: Project[] = [
     developer: "Nursakti Adhi Pratomoatmojo, Rivan Aji Wahyu Dyan Syafitri",
   },
 ];
+
+// Added 2026-09-20 for the new team detail page (app/research/[team]/
+// page.tsx)'s "Work" row — a project belongs to a team if any of its
+// listed developers is a member of that team. `developer` is a free-text
+// name string (not slugs), so this matches on each team member's full
+// name from lib/content/people.ts rather than an exact-equality lookup.
+export function projectsForTeam(teamMemberNames: string[]): Project[] {
+  return projects.filter(
+    (p) => p.developer && teamMemberNames.some((name) => p.developer!.includes(name)),
+  );
+}

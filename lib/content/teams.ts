@@ -30,7 +30,10 @@ export const teams: Team[] = [
     name: "Spatial Data Science and AI for Urban Analytics",
     displayName: "Spatial Data Science & AI",
     tagline: "Machine learning, big data, and spatial data infrastructure.",
-    focus: ["Machine learning", "Big data", "Spatial data infrastructure"],
+    // "Spatial Statistics" added 2026-09-20 (site owner, for the new
+    // team detail page's centred description) — the other three items
+    // were already here; this was the one gap.
+    focus: ["Spatial Statistics", "Machine Learning", "Big Data", "Spatial Data Infrastructure"],
     coordinatorSlug: "nursakti-adhi-pratomoatmojo",
     memberSlugs: ["fendy-firmansyah", "rivan-aji-wahyu-dyan-syafitri", "anoraga-jatayu"],
   },

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import "./globals.css";
 
@@ -65,11 +63,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
       <body className="flex min-h-[100dvh] flex-col">
-        <SmoothScroll>
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </SmoothScroll>
+        {/* Header/Footer moved to app/(site)/layout.tsx (2026-09-20) —
+            see that file's own comment for why. */}
+        <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
   );
