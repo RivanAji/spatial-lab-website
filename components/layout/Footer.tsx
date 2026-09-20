@@ -13,15 +13,16 @@ import { FooterMapBackdrop } from "./FooterMapBackdrop";
 //    logotype). The department affiliation line sits below in a
 //    lighter tone, with its own explicit line break rather than
 //    whatever width happens to wrap it.
-// 2. Right side gained a country + postal-code line and swapped the
-//    department's general address (pwk@its.ac.id) for the lab's own
-//    (pwkitslabkom@gmail.com) — the site owner's own contact details,
-//    not a guess. Copyright moved from a page-wide line under both
-//    columns into the bottom of this column specifically, with its own
-//    spacing above. Every multi-word line on this side breaks at an
-//    explicit, chosen point (site owner: "atur kapan harus enter agar
-//    rapi") instead of an arbitrary browser wrap, which reads
-//    especially ragged on right-aligned text.
+// 2. Right side gained a country + postal-code line (postal code folded
+//    onto the end of the address itself, not its own line — a site
+//    owner follow-up) and swapped the department's general address
+//    (pwk@its.ac.id) for the lab's own (pwkitslabkom@gmail.com) — the
+//    site owner's own contact details, not a guess. The page-wide
+//    copyright line this used to end with is gone outright (another
+//    site owner follow-up), not just moved. Every multi-word line on
+//    this side breaks at an explicit, chosen point (site owner: "atur
+//    kapan harus enter agar rapi") instead of an arbitrary browser
+//    wrap, which reads especially ragged on right-aligned text.
 // 3. The flat "TSAL" watermark text is gone, replaced by
 //    FooterMapBackdrop — the same ASCII character-grid map technique
 //    as the hero, filling the section behind the content instead of
@@ -60,9 +61,8 @@ export function Footer() {
           <p>
             Jalan Raya ITS, Kampus ITS Sukolilo,
             <br />
-            Surabaya, Jawa Timur, Indonesia
+            Surabaya, Jawa Timur, Indonesia 60111
           </p>
-          <p>60111</p>
 
           <div className="mt-4">
             <p>
@@ -79,10 +79,6 @@ export function Footer() {
               </a>
             </p>
           </div>
-
-          <p className="mt-6 font-mono text-xs text-ink-300">
-            © {new Date().getFullYear()}
-          </p>
         </div>
       </Container>
     </footer>
