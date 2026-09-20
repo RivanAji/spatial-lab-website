@@ -23,12 +23,16 @@ const members = people.filter((p) => p.slug !== "siti-nurlaela");
 
 // A name with no profileUrl on file (not the case for anyone right
 // now, but the type keeps it optional for a future member added
-// without one yet) renders as plain text instead of a dead link. Only
-// the underline/hover/focus styling lives here — size and colour come
-// from the surrounding text (a plain <a> inherits both once Tailwind's
-// preflight clears the browser's default link styling), so the same
-// component reads correctly at the head's larger size and the list's
-// smaller one without needing its own font classes.
+// without one yet) renders as plain text instead of a dead link.
+//
+// No underline any more (site owner's follow-up, 2026-09-20:
+// "hilangkan underline... tapi pastikan url tetap jalan") — the link
+// itself (href, target, rel) is unchanged, only the visual decoration
+// is gone; the focus-visible outline stays, since that's the
+// keyboard-accessible affordance, not a decorative one. Colour and
+// size still come from the surrounding text (a plain <a> inherits
+// both once Tailwind's preflight clears the browser's default link
+// styling).
 function PersonName({ person }: { person: (typeof members)[number] }) {
   if (!person.profileUrl) return <>{person.name}</>;
   return (
@@ -36,7 +40,7 @@ function PersonName({ person }: { person: (typeof members)[number] }) {
       href={person.profileUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="underline decoration-ink-500 underline-offset-4 transition-colors hover:decoration-ink-000 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
+      className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000"
     >
       {person.name}
     </a>
@@ -45,28 +49,32 @@ function PersonName({ person }: { person: (typeof members)[number] }) {
 
 export function Team() {
   return (
-    <section id="team" aria-label="Team" className="scroll-mt-24 py-16 md:py-20">
+    <section id="team" aria-label="Team" className="scroll-mt-24 py-8 md:py-10">
       <Container>
-        <h2 className="font-display text-3xl font-semibold tracking-tight text-ink-000 md:text-4xl">
+        {/* Heading roughly halved (site owner's font-size audit,
+            2026-09-20) from text-3xl/4xl to text-xl/2xl — matches
+            Project.tsx and Roadmap.tsx exactly, one heading tier
+            across the page instead of three separate scales. Section
+            padding cut from py-16/20 to py-8/10 for the same audit. */}
+        <h2 className="font-display text-xl font-semibold tracking-tight text-ink-000 md:text-2xl">
           Team
         </h2>
 
-        {/* Head's name was text-base sm:text-lg while every member
-            below was a flat text-base — a size bump with no
-            equivalent on the list it's meant to read alongside (site
-            owner's font-consistency pass, 2026-09-20). Flat text-base
-            on both now; the head still reads as distinct through
-            layout (alone in its own column) and the role beside it,
-            not through being a different font size. */}
+        {/* Names sized down from text-base to text-sm (site owner:
+            "perkecil juga ukurannya... disesuaikan dengan aturan yang
+            sebelumnya" — keeping the head's role at roughly the same
+            proportion to its name as before, text-sm dropped to
+            text-xs to match). Head and members stay the same size as
+            each other, per the previous pass's fix. */}
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[1fr_2fr] md:gap-16">
-          <p className="font-body text-base text-ink-000">
+          <p className="font-body text-sm text-ink-000">
             <PersonName person={head} />
-            <span className="ml-2 font-body text-sm italic text-ink-300">{head.role}</span>
+            <span className="ml-2 font-body text-xs italic text-ink-300">{head.role}</span>
           </p>
 
           <ul className="flex flex-col gap-1.5">
             {members.map((person) => (
-              <li key={person.slug} className="font-body text-base text-ink-100">
+              <li key={person.slug} className="font-body text-sm text-ink-100">
                 <PersonName person={person} />
               </li>
             ))}

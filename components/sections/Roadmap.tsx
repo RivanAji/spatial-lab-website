@@ -24,12 +24,20 @@ import { Container } from "@/components/ui/Container";
 // swatch). font-display now, matching the Hero H1 and the footer
 // brand name's treatment exactly, so this is the same type system as
 // every other heading on the page, not a second one.
+//
+// "Lab roadmap" -> "Roadmap", heading roughly halved (site owner's
+// font-size audit, same day) from text-3xl/4xl to text-xl/2xl —
+// matching Project.tsx and Team.tsx's headings exactly now, the same
+// reasoning as both: one consistent heading tier across the page's
+// sections, not three different scales. Section padding cut from
+// py-16/20 to py-8/10 for the same audit ("dari roadmap ke team...
+// terlalu jauh, kurangi aja").
 export function Roadmap() {
   return (
-    <section id="roadmap" aria-label="Lab roadmap" className="scroll-mt-24 py-16 md:py-20">
+    <section id="roadmap" aria-label="Roadmap" className="scroll-mt-24 py-8 md:py-10">
       <Container>
-        <h2 className="font-display text-3xl font-semibold tracking-tight text-ink-000 md:text-4xl">
-          Lab roadmap
+        <h2 className="font-display text-xl font-semibold tracking-tight text-ink-000 md:text-2xl">
+          Roadmap
         </h2>
         <div className="mt-8 flex min-h-[280px] items-center justify-center rounded-4xl border border-white/8 bg-ink-900 md:min-h-[360px]">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-300">Soon</p>

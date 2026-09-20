@@ -78,7 +78,10 @@ export function Hero() {
               <br />
               Spatial Analysis Laboratory
             </h1>
-            <p className="max-w-[38ch] font-body text-sm leading-relaxed text-ink-300 sm:text-base">
+            {/* Sized down again 2026-09-20 (site owner's font-size audit) —
+                text-sm/base still read heavier than the rest of the page's
+                secondary text after the footer/Team pass. */}
+            <p className="max-w-[38ch] font-body text-xs leading-relaxed text-ink-300 sm:text-sm">
               Exploring cities through space, mobility, data and intelligent
               systems.
             </p>

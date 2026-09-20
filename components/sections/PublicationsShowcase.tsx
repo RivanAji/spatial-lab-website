@@ -854,7 +854,7 @@ export function PublicationsShowcase(): ReactNode {
     // visible heading; "All teams" as a reset control isn't missing
     // functionality, since clicking an already-active team card toggles
     // it off (TeamFilterCard's onSelect below).
-    <section id="research" aria-label="Publications" className="scroll-mt-24 pb-16 pt-2 md:pb-20 md:pt-4">
+    <section id="research" aria-label="Publications" className="scroll-mt-24 pb-8 pt-2 md:pb-10 md:pt-4">
       <Container>
         {/* Full container width, not the cards' own natural width
             (site owner's request, 2026-09-19): a fixed-width flex row
@@ -897,18 +897,18 @@ export function PublicationsShowcase(): ReactNode {
                 aria-label="Scroll publications left"
                 disabled={!canScrollPrev}
                 onClick={() => scrollByPage(-1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
               >
-                <CaretLeft size={16} weight="bold" />
+                <CaretLeft size={13} weight="bold" />
               </button>
               <button
                 type="button"
                 aria-label="Scroll publications right"
                 disabled={!canScrollNext}
                 onClick={() => scrollByPage(1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-ink-500 text-ink-100 transition-colors hover:border-ink-000 hover:text-ink-000 disabled:opacity-30 disabled:hover:border-ink-500 disabled:hover:text-ink-100"
               >
-                <CaretRight size={16} weight="bold" />
+                <CaretRight size={13} weight="bold" />
               </button>
             </div>
           )}
@@ -1159,16 +1159,16 @@ function YearFilterMenu({
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 rounded-full border py-2 pl-3.5 pr-3 font-mono text-[13px] uppercase tracking-[0.08em] transition-colors duration-150",
+          "flex items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-2.5 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150",
           open || activeYear !== "all"
             ? "border-ink-000 text-ink-000"
             : "border-ink-500 text-ink-300 hover:border-ink-300 hover:text-ink-100",
         )}
       >
-        <CalendarBlank size={14} weight="bold" aria-hidden="true" />
+        <CalendarBlank size={12} weight="bold" aria-hidden="true" />
         {label}
         <CaretDown
-          size={12}
+          size={10}
           weight="bold"
           aria-hidden="true"
           className={cn("transition-transform duration-200", open && "rotate-180")}
@@ -1193,7 +1193,7 @@ function YearFilterMenu({
               aria-selected={activeYear === "all"}
               onClick={() => select("all")}
               className={cn(
-                "w-full rounded-xl px-3 py-2 text-left font-mono text-[12px] uppercase tracking-[0.06em] transition-colors",
+                "w-full rounded-xl px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
                 activeYear === "all"
                   ? "bg-white/10 text-ink-000"
                   : "text-ink-300 hover:bg-white/5 hover:text-ink-100",
@@ -1210,7 +1210,7 @@ function YearFilterMenu({
                   aria-selected={activeYear === String(year)}
                   onClick={() => select(String(year))}
                   className={cn(
-                    "rounded-lg px-2 py-2 text-center font-mono text-[12px] transition-colors",
+                    "rounded-lg px-2 py-1.5 text-center font-mono text-[10px] transition-colors",
                     activeYear === String(year)
                       ? "bg-white/10 text-ink-000"
                       : "text-ink-300 hover:bg-white/5 hover:text-ink-100",
@@ -1299,7 +1299,13 @@ function TeamFilterCard({
       onFocus={() => setHovered(true)}
       onBlur={handleLeave}
       className={cn(
-        "relative h-28 w-full overflow-hidden rounded-xl border bg-ink-900 text-left transition-[border-color] duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
+        // rounded-4xl, not the smaller rounded-xl this had — matches
+        // the gallery frame directly below it (site owner's font/
+        // shape-consistency pass, 2026-09-20: "kelengkungan yang
+        // linear dengan kelengkungan boundary/kotak yang lain") rather
+        // than sitting on its own smaller radius one section apart
+        // from a bigger one.
+        "relative h-28 w-full overflow-hidden rounded-4xl border bg-ink-900 text-left transition-[border-color] duration-300 hover:bg-white/4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-000",
         active ? "border-ink-000" : "border-white/8",
       )}
     >
@@ -1349,7 +1355,7 @@ function TeamFilterCard({
       <div
         ref={glowRef}
         aria-hidden="true"
-        className="card-spotlight pointer-events-none rounded-xl"
+        className="card-spotlight pointer-events-none rounded-4xl"
         style={{ opacity: hovered ? 1 : 0 }}
       />
     </button>

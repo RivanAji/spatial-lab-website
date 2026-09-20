@@ -40,19 +40,19 @@ export function Footer() {
 
       <Container className="relative flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
         <div>
-          {/* TSAL sized down 2026-09-20 (site owner: "footernya malah
-              terlihat terlalu besar" — a site-wide font-size audit
-              flagged this as the clearest offender): text-4xl/5xl
-              (36/48px) put a footer brand mark ahead of every actual
-              page heading (Roadmap/Team's own h2 tops out at 36px) —
-              a footer shouldn't outrank real content. Now sits clearly
-              below that scale, and the explainer beside it scaled down
-              with it to hold the same rough proportion. */}
+          {/* TSAL sized down TWICE now (site owner's font-size audits,
+              2026-09-20): text-4xl/5xl -> text-2xl/3xl in the first
+              pass, still flagged as "terlalu besar... konsisten dengan
+              ukuran teks team" in the second — Team.tsx's own text
+              dropped to text-sm in that same pass, so this needed to
+              come down again to stay in the same neighbourhood rather
+              than the gap re-opening. text-lg/xl now; the explainer
+              beside it scaled down with it, same as the first pass. */}
           <div className="flex items-start gap-3">
-            <span className="font-display text-2xl font-bold tracking-tight text-ink-000 md:text-3xl">
+            <span className="font-display text-lg font-bold tracking-tight text-ink-000 md:text-xl">
               TSAL
             </span>
-            <p className="-mt-1 font-body text-sm leading-snug text-ink-300 md:text-base">
+            <p className="-mt-1 font-body text-xs leading-snug text-ink-300 md:text-sm">
               Transportation and
               <br />
               Spatial Analysis Lab
@@ -63,7 +63,9 @@ export function Footer() {
               ~2.9:1, well under WCAG AA's 4.5:1 for body text) —
               ink-300 on its own already reads as the muted line next
               to the bright ink-000 "TSAL" above it without needing to
-              go below a passing contrast ratio to get there. */}
+              go below a passing contrast ratio to get there. Already
+              text-sm, matching Team.tsx's own body text — no change
+              needed here in the second size-audit pass. */}
           <p className="mt-3 font-body text-sm text-ink-300">
             Urban and Regional Planning
             <br />
