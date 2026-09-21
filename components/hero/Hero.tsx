@@ -23,12 +23,10 @@ export function Hero() {
 
           <div className="flex justify-center md:justify-end">
             <div
-              className="w-full rounded-4xl border border-white/8 bg-ink-900 p-1.5 shadow-sm md:w-2/3"
+              className="w-full md:w-2/3"
               style={{ aspectRatio: `${GRID_COLS} / ${GRID_ROWS}` }}
             >
-              <div className="h-full w-full overflow-hidden rounded-[1.6rem]">
-                <HeroCanvas />
-              </div>
+              <HeroCanvas />
             </div>
           </div>
         </div>
