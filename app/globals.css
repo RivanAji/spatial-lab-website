@@ -28,9 +28,6 @@
 
   /* HeroCanvas gates locator motion with prefers-reduced-motion. */
   --animate-locator-pulse: locator-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-
-  /* Motion cannot animate offsetDistance, so path markers use CSS. */
-  --animate-travel-path: travel-path 2.4s linear infinite;
 }
 
 @keyframes locator-pulse {
@@ -45,30 +42,8 @@
   }
 }
 
-@keyframes travel-path {
-  0%,
-  8% {
-    offset-distance: 0%;
-    opacity: 0;
-  }
-  16% {
-    opacity: 1;
-  }
-  84% {
-    opacity: 1;
-  }
-  92%,
-  100% {
-    offset-distance: 100%;
-    opacity: 0;
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  /* Dark theme is intentional; no automatic inversion. */
-}
-
 html {
+  /* Dark theme is intentional; there is no automatic light inversion. */
   color-scheme: dark;
   /* Compatibility alias used by the shader component. */
   --background: var(--color-ink-900);
@@ -101,22 +76,3 @@ body {
   }
 }
 
-/* Pointer coordinates are written via refs to avoid per-frame React renders. */
-.card-spotlight {
-  --mx: 50%;
-  --my: 50%;
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  background: radial-gradient(
-    140px circle at var(--mx) var(--my),
-    rgba(247, 249, 251, 0.9),
-    rgba(247, 249, 251, 0.22) 45%,
-    transparent 70%
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}

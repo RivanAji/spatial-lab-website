@@ -119,7 +119,3 @@ export const people: Person[] = [
     orcidId: "0009-0004-5080-2068",
   },
 ];
-
-export function getPerson(slug: string): Person | undefined {
-  return people.find((p) => p.slug === slug);
-}

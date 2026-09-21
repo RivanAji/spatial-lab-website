@@ -124,7 +124,7 @@ const CROSS_STREET = `M${iso(15, 0, STREET_Z).join(" ")} L${iso(15, 30, STREET_Z
 const STOP = iso(15, 15, STREET_Z);
 const RIPPLE = poly([iso(18, 15), iso(15, 18), iso(12, 15), iso(15, 12)]);
 
-export function CityScene({ shown, animated }: SceneProps) {
+function CityScene({ shown, animated }: SceneProps) {
   return (
     <svg viewBox={VIEW_CITY} fill="none" className="h-full w-full">
       <motion.g
@@ -250,7 +250,7 @@ const HIDDEN_NODES: [number, number][] = [
 ];
 const OUT_NODE = iso(12, 12, OUT_Z);
 
-export function DataScene({ shown, animated }: SceneProps) {
+function DataScene({ shown, animated }: SceneProps) {
   const surface = SLAB_LEVELS[2] + SLAB_THICKNESS;
 
   return (
@@ -436,7 +436,7 @@ const COLUMNS = TERRAIN.flatMap((row, i) =>
   })),
 ).sort((a, b) => a.depth - b.depth);
 
-export function ClimateScene({ shown, animated }: SceneProps) {
+function ClimateScene({ shown, animated }: SceneProps) {
   return (
     <svg viewBox={VIEW_CLIMATE} fill="none" className="h-full w-full">
       {/* Column, then that cell's patch of water, then the part of the

@@ -307,7 +307,6 @@ function TeamFilterCard({
   // changes nothing on screen.
   const [canHover, setCanHover] = useState(true);
   const reducedMotion = useReducedMotion();
-  const glowRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLAnchorElement>(null);
   const inView = useInView(cardRef, { amount: 0.55 });
@@ -329,9 +328,6 @@ function TeamFilterCard({
     const rect = e.currentTarget.getBoundingClientRect();
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
-    glowRef.current?.style.setProperty("--mx", `${px}px`);
-    glowRef.current?.style.setProperty("--my", `${py}px`);
-
     if (parallaxRef.current && !reducedMotion) {
       const nx = px / rect.width - 0.5;
       const ny = py / rect.height - 0.5;
@@ -393,13 +389,6 @@ function TeamFilterCard({
       >
         <Scene shown={sceneShown} animated={!reducedMotion} />
       </div>
-
-      <div
-        ref={glowRef}
-        aria-hidden="true"
-        className="card-spotlight pointer-events-none rounded-4xl"
-        style={{ opacity: hovered ? 1 : 0 }}
-      />
     </Link>
   );
 }
